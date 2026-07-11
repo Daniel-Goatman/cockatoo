@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		65DA8BC33001F7410015016B /* LearnerCore in Frameworks */ = {isa = PBXBuildFile; productRef = 65DA8BC23001F7410015016B /* LearnerCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		65189E233001F327005C1F20 /* Cockatoo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cockatoo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65DA8BC33001F7410015016B /* LearnerCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Cockatoo;
 			packageProductDependencies = (
+				65DA8BC23001F7410015016B /* LearnerCore */,
 			);
 			productName = Cockatoo;
 			productReference = 65189E233001F327005C1F20 /* Cockatoo.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 65189E1A3001F327005C1F20;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../../../Cockatoo" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 65189E243001F327005C1F20 /* Products */;
 			projectDirPath = "";
@@ -179,7 +188,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -237,7 +246,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -250,6 +259,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Cockatoo/Cockatoo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -265,7 +275,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Cockatoo;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -282,6 +292,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Cockatoo/Cockatoo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -297,7 +308,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Cockatoo;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -331,6 +342,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../../../Cockatoo" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../Cockatoo;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		65DA8BC23001F7410015016B /* LearnerCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LearnerCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 65189E1B3001F327005C1F20 /* Project object */;
 }

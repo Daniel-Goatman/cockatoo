@@ -8,7 +8,7 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
 
 | Piece | Where | Status |
 |---|---|---|
-| App code (SwiftUI, menu bar, XPC listener) | `Sources/Cockatoo/` | builds via SwiftPM |
+| App code (SwiftUI, menu bar, XPC listener) | `App/Cockatoo/Cockatoo/` | builds via SwiftPM |
 | Appex forwarder | `App/SafariWebExtensionHandler.swift` | source ready |
 | Extension resources | `extension/dist-resources/` (after `npm run build`) | built |
 | Entitlements | `App/*.entitlements` | ready |
@@ -16,8 +16,8 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
 ## One-time Xcode setup
 
 1. **New project** → macOS App, product name `Cockatoo`, bundle id `dev.cockatoo.app`.
-   Delete the template's ContentView/App files; add every file under
-   `Sources/Cockatoo/` to the app target, and add the local SwiftPM package
+   Delete the template's ContentView/App files; app sources live in
+   `App/Cockatoo/Cockatoo/` to the app target, and add the local SwiftPM package
    (repo root) so the target links `LearnerCore`.
 2. **Add target** → Safari Extension (macOS), name `CockatooExtension`,
    bundle id `dev.cockatoo.app.Extension`. Replace the template handler with

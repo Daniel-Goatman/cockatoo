@@ -20,7 +20,14 @@ let package = Package(
         ),
         .executableTarget(name: "packtool", dependencies: ["LearnerCore"]),
         .executableTarget(name: "learnerctl", dependencies: ["LearnerCore"]),
-        .executableTarget(name: "CockatooDev", dependencies: ["LearnerCore"], path: "Sources/Cockatoo"),
+        // Single source of truth for the app: the same folder the Xcode app
+        // target synchronizes with. `swift run CockatooDev` = dev loop.
+        .executableTarget(
+            name: "CockatooDev",
+            dependencies: ["LearnerCore"],
+            path: "App/Cockatoo/Cockatoo",
+            exclude: ["Assets.xcassets", "Cockatoo.entitlements"]
+        ),
         .testTarget(name: "LearnerCoreTests", dependencies: ["LearnerCore"]),
     ]
 )
