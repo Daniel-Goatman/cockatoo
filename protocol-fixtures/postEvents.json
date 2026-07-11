@@ -1,0 +1,23 @@
+{
+  "request": {
+    "events": [
+      {
+        "id": "01890a5d-ac96-774b-bcce-b302099a8057",
+        "itemId": "de.word.haus",
+        "type": "seen",
+        "occurredAt": "2026-07-11T09:30:00Z",
+        "host": "example.org"
+      },
+      {
+        "id": "01890a5d-ac96-774b-bcce-b302099a8058",
+        "itemId": "de.word.haus",
+        "type": "sentenceCaptured",
+        "occurredAt": "2026-07-11T09:30:05Z",
+        "host": "example.org",
+        "sentence": "We walked past the houses at dusk."
+      }
+    ]
+  },
+  "response": { "accepted": 2, "latestVersion": 413 },
+  "errorResponse": { "error": "appUnavailable" }
+}

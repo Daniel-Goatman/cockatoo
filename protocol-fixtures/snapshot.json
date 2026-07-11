@@ -1,0 +1,36 @@
+{
+  "version": 412,
+  "language": "de",
+  "settings": {
+    "enabled": true,
+    "blockedHosts": ["bank.example"],
+    "pageContextOptIn": false
+  },
+  "items": [
+    {
+      "id": "de.word.haus",
+      "kind": "word",
+      "tier": "formMatched",
+      "forms": [
+        { "match": "the house", "display": "das Haus" },
+        { "match": "a house", "display": "ein Haus" },
+        { "match": "house", "display": "Haus" },
+        { "match": "houses", "display": "Häuser" },
+        { "match": "the houses", "display": "die Häuser" }
+      ],
+      "hover": {
+        "target": "das Haus",
+        "pos": "noun",
+        "example": { "source": "The house is old.", "target": "Das Haus ist alt." },
+        "seenCount": 4
+      }
+    },
+    {
+      "id": "de.word.und",
+      "kind": "word",
+      "tier": "exact",
+      "forms": [{ "match": "and", "display": "und" }],
+      "hover": { "target": "und", "pos": "conjunction", "example": null, "seenCount": 12 }
+    }
+  ]
+}

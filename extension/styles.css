@@ -1,0 +1,80 @@
+/* Token marking (R1b): visible-but-subtle so a swap reads as a vocabulary
+   card in place. approximate tier (reserved, v1-empty) gets a dotted line. */
+
+.cck-token {
+  border-bottom: 1.5px solid color-mix(in srgb, currentColor 45%, #2f7d5a);
+  background: color-mix(in srgb, transparent 92%, #2f7d5a);
+  border-radius: 2px;
+  cursor: help;
+  padding: 0 1px;
+}
+
+.cck-token[data-cck-tier="approximate"] {
+  border-bottom-style: dotted;
+}
+
+.cck-token:focus-visible {
+  outline: 2px solid #2f7d5a;
+  outline-offset: 1px;
+}
+
+.cck-hovercard {
+  position: absolute;
+  z-index: 2147483647;
+  max-width: 300px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1c1c1e;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font: 13px/1.45 -apple-system, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cck-hovercard {
+    background: #2c2c2e;
+    color: #f2f2f7;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.cck-hovercard-target {
+  font-size: 17px;
+  font-weight: 650;
+  margin-bottom: 2px;
+}
+
+.cck-hovercard-original {
+  opacity: 0.8;
+}
+
+.cck-hovercard-pos {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.cck-hovercard-example {
+  margin-top: 8px;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.cck-hovercard-seen {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.cck-hovercard-open {
+  margin-top: 10px;
+  font: inherit;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  cursor: pointer;
+}

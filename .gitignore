@@ -1,0 +1,6 @@
+.build/
+node_modules/
+extension/build/
+extension/dist-resources/
+dist/
+.DS_Store

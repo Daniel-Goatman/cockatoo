@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Cockatoo",
+  "version": "1.0",
+  "description": "Learn German while you read — a few words per page, quietly swapped. Hover to see the original.",
+  "permissions": ["storage", "nativeMessaging", "alarms"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "scripts": ["build/background.js"],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["build/content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Cockatoo"
+  }
+}

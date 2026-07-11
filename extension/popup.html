@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font: 13px/1.4 -apple-system, system-ui, sans-serif; margin: 0; padding: 14px; width: 260px; }
+    h1 { font-size: 14px; margin: 0 0 8px; }
+    #status { opacity: 0.75; }
+    #warning { color: #b3541e; margin-top: 8px; display: none; }
+    button { margin-top: 10px; font: inherit; padding: 4px 10px; }
+  </style>
+</head>
+<body>
+  <h1>Cockatoo</h1>
+  <div id="status">Checking…</div>
+  <div id="warning">Cockatoo isn't running — progress is being saved locally and will sync when it's back.</div>
+  <button id="open">Open Cockatoo</button>
+  <script src="build/popup.js"></script>
+</body>
+</html>
