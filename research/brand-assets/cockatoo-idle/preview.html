@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cockatoo Idle Preview</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f2ee;
+      color: #171717;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    main {
+      width: min(920px, calc(100vw - 32px));
+      display: grid;
+      gap: 18px;
+    }
+
+    .stage {
+      min-height: 560px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #d7d2c8;
+      border-radius: 8px;
+      background:
+        linear-gradient(45deg, #d8d8d8 25%, transparent 25%),
+        linear-gradient(-45deg, #d8d8d8 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #d8d8d8 75%),
+        linear-gradient(-45deg, transparent 75%, #d8d8d8 75%);
+      background-color: #eeeeee;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-size: 24px 24px;
+    }
+
+    img {
+      width: min(442px, 80vw);
+      image-rendering: auto;
+    }
+
+    .strip {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .strip img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      border: 1px solid #d7d2c8;
+      border-radius: 6px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="stage" aria-label="Looping idle animation preview">
+      <img src="cockatoo_idle_preview.gif" alt="Looping cockatoo idle animation">
+    </section>
+    <section class="strip" aria-label="Extracted frame sequence">
+      <img src="frames/cockatoo_idle_01.png" alt="Frame 1">
+      <img src="frames/cockatoo_idle_02.png" alt="Frame 2">
+      <img src="frames/cockatoo_idle_03.png" alt="Frame 3">
+      <img src="frames/cockatoo_idle_04.png" alt="Frame 4">
+      <img src="frames/cockatoo_idle_05.png" alt="Frame 5">
+      <img src="frames/cockatoo_idle_06.png" alt="Frame 6">
+      <img src="frames/cockatoo_idle_07.png" alt="Frame 7">
+      <img src="frames/cockatoo_idle_08.png" alt="Frame 8">
+    </section>
+  </main>
+</body>
+</html>

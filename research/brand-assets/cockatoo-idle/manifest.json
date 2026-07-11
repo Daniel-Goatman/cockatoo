@@ -1,0 +1,181 @@
+{
+  "source": "/Users/daniel/Downloads/cockatoo.png",
+  "sourceSize": [
+    1774,
+    887
+  ],
+  "grid": {
+    "columns": 4,
+    "rows": 2,
+    "xBounds": [
+      0,
+      444,
+      887,
+      1330,
+      1774
+    ],
+    "yBounds": [
+      0,
+      444,
+      887
+    ]
+  },
+  "frameDurationMs": 110,
+  "loop": true,
+  "frames": [
+    {
+      "index": 1,
+      "sourceCell": {
+        "row": 1,
+        "col": 1,
+        "box": [
+          0,
+          0,
+          444,
+          444
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_01.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_01.png",
+      "trimmedSize": [
+        215,
+        403
+      ]
+    },
+    {
+      "index": 2,
+      "sourceCell": {
+        "row": 1,
+        "col": 2,
+        "box": [
+          444,
+          0,
+          887,
+          444
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_02.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_02.png",
+      "trimmedSize": [
+        222,
+        402
+      ]
+    },
+    {
+      "index": 3,
+      "sourceCell": {
+        "row": 1,
+        "col": 3,
+        "box": [
+          887,
+          0,
+          1330,
+          444
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_03.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_03.png",
+      "trimmedSize": [
+        222,
+        403
+      ]
+    },
+    {
+      "index": 4,
+      "sourceCell": {
+        "row": 1,
+        "col": 4,
+        "box": [
+          1330,
+          0,
+          1774,
+          444
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_04.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_04.png",
+      "trimmedSize": [
+        222,
+        403
+      ]
+    },
+    {
+      "index": 5,
+      "sourceCell": {
+        "row": 2,
+        "col": 1,
+        "box": [
+          0,
+          444,
+          444,
+          887
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_05.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_05.png",
+      "trimmedSize": [
+        217,
+        401
+      ]
+    },
+    {
+      "index": 6,
+      "sourceCell": {
+        "row": 2,
+        "col": 2,
+        "box": [
+          444,
+          444,
+          887,
+          887
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_06.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_06.png",
+      "trimmedSize": [
+        221,
+        401
+      ]
+    },
+    {
+      "index": 7,
+      "sourceCell": {
+        "row": 2,
+        "col": 3,
+        "box": [
+          887,
+          444,
+          1330,
+          887
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_07.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_07.png",
+      "trimmedSize": [
+        221,
+        401
+      ]
+    },
+    {
+      "index": 8,
+      "sourceCell": {
+        "row": 2,
+        "col": 4,
+        "box": [
+          1330,
+          444,
+          1774,
+          887
+        ]
+      },
+      "cellPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_cell_08.png",
+      "trimmedPng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/frames/cockatoo_idle_08.png",
+      "trimmedSize": [
+        221,
+        401
+      ]
+    }
+  ],
+  "previewGif": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/cockatoo_idle_preview.gif",
+  "previewApng": "/Users/daniel/Documents/Mac Language Learner/PreviewAssets/cockatoo-idle/cockatoo_idle_preview.png"
+}
