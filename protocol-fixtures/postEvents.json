@@ -5,7 +5,7 @@
         "id": "01890a5d-ac96-774b-bcce-b302099a8057",
         "itemId": "de.word.haus",
         "type": "seen",
-        "occurredAt": "2026-07-11T09:30:00Z",
+        "occurredAt": "2026-07-11T09:30:00.123Z",
         "host": "example.org"
       },
       {

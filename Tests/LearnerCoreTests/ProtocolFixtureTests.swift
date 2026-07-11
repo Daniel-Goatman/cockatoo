@@ -18,9 +18,7 @@ final class ProtocolFixtureTests: XCTestCase {
     }
 
     func testSnapshotFixtureDecodes() throws {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let snapshot = try decoder.decode(Snapshot.self, from: load("snapshot.json"))
+        let snapshot = try JSONCoding.decoder.decode(Snapshot.self, from: load("snapshot.json"))
         XCTAssertEqual(snapshot.version, 412)
         XCTAssertEqual(snapshot.items.count, 2)
         let haus = snapshot.items[0]
@@ -64,9 +62,7 @@ final class ProtocolFixtureTests: XCTestCase {
             var response: PostEventsResponse
             var errorResponse: SyncErrorResponse
         }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let fixture = try decoder.decode(Fixture.self, from: load("postEvents.json"))
+        let fixture = try JSONCoding.decoder.decode(Fixture.self, from: load("postEvents.json"))
         XCTAssertEqual(fixture.request.events.count, 2)
         XCTAssertEqual(fixture.request.events[0].type, .seen)
         XCTAssertEqual(fixture.request.events[1].sentence, "We walked past the houses at dusk.")

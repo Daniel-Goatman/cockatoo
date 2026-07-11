@@ -136,8 +136,11 @@ public enum SyncError: String, Codable, Sendable, Error {
 
 public struct SyncErrorResponse: Codable, Equatable, Sendable {
     public var error: SyncError
+    /// Debug context (e.g. the decode failure); never parsed, only shown.
+    public var detail: String?
 
-    public init(error: SyncError) {
+    public init(error: SyncError, detail: String? = nil) {
         self.error = error
+        self.detail = detail
     }
 }

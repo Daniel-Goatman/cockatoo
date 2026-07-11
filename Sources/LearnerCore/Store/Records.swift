@@ -95,9 +95,27 @@ enum JSONCoding {
         return e
     }()
 
+    static let iso8601Fractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    static let iso8601Plain = ISO8601DateFormatter()
+
     static let decoder: JSONDecoder = {
         let d = JSONDecoder()
-        d.dateDecodingStrategy = .iso8601
+        // JS Date.toISOString() emits fractional seconds; Swift's stock
+        // .iso8601 strategy rejects them. Accept both (regression: every
+        // real postEvents batch once failed as internalError over this).
+        d.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            if let date = iso8601Fractional.date(from: string) ?? iso8601Plain.date(from: string) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "invalid ISO-8601 date: \(string)")
+        }
         return d
     }()
 }

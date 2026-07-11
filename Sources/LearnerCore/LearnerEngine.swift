@@ -190,7 +190,7 @@ public struct SyncService: Sendable {
                 return Data("{}".utf8)
             }
         } catch {
-            return encodeError(.internalError)
+            return encodeError(.internalError, detail: String(describing: error).prefix(200).description)
         }
     }
 
@@ -199,7 +199,7 @@ public struct SyncService: Sendable {
         return try JSONCoding.decoder.decode(T.self, from: Data(payload.utf8))
     }
 
-    func encodeError(_ error: SyncError) -> Data {
-        (try? JSONCoding.encoder.encode(SyncErrorResponse(error: error))) ?? Data("{\"error\":\"internalError\"}".utf8)
+    func encodeError(_ error: SyncError, detail: String? = nil) -> Data {
+        (try? JSONCoding.encoder.encode(SyncErrorResponse(error: error, detail: detail))) ?? Data("{\"error\":\"internalError\"}".utf8)
     }
 }

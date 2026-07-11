@@ -64,6 +64,8 @@ export type SyncErrorCode =
 
 export interface SyncErrorResponse {
   error: SyncErrorCode;
+  /** Debug context from the app (e.g. a decode failure); shown, never parsed. */
+  detail?: string;
 }
 
 export function isSyncError(value: unknown): value is SyncErrorResponse {

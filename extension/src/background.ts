@@ -33,7 +33,7 @@ const transport: Transport = {
     const response = await raw.call<T>(method, payload);
     if (isSyncError(response)) {
       appUnavailable = response.error === "appUnavailable";
-      lastSyncError = response.error;
+      lastSyncError = response.detail ? `${response.error} — ${response.detail}` : response.error;
     } else {
       appUnavailable = false;
       lastSyncError = null;
