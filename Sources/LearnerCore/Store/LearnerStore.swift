@@ -124,6 +124,26 @@ public struct LearnerStore: Sendable {
         }
     }
 
+    /// Today's raw exposure events per item — what the daily crediting caps
+    /// compare against. Lets the UI say "done for today" instead of
+    /// promising sightings that won't credit.
+    public func exposureCountsToday(now: Date) throws -> [String: (seen: Int, engaged: Int)] {
+        let dayStart = Calendar(identifier: .gregorian).startOfDay(for: now)
+        let rows = try db.writer.read { dbc in
+            try Row.fetchAll(dbc, sql: """
+                SELECT itemId,
+                       SUM(CASE WHEN type = 'seen' THEN 1 ELSE 0 END) AS seen,
+                       SUM(CASE WHEN type IN ('engaged', 'pinned') THEN 1 ELSE 0 END) AS engaged
+                FROM exposure_event
+                WHERE occurredAt >= ?
+                GROUP BY itemId
+                """, arguments: [dayStart])
+        }
+        return Dictionary(uniqueKeysWithValues: rows.map {
+            ($0["itemId"] as String, (seen: $0["seen"] as Int, engaged: $0["engaged"] as Int))
+        })
+    }
+
     // MARK: - Maintenance
 
     /// Prune processed events older than the retention window and enforce

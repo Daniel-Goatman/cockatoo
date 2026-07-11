@@ -166,6 +166,16 @@ public struct LearnerEngine: Sendable {
         /// Seen credits that suffice once engagedForReady is also met.
         public var seenForFastReady: Int
         public var engagedForFastReady: Int
+        /// Raw exposure events today vs the daily crediting caps — when
+        /// capped, "more sightings today" is a lie and the UI must not
+        /// suggest it.
+        public var seenToday: Int
+        public var engagedToday: Int
+        public var seenDailyCap: Int
+        public var engagedDailyCap: Int
+
+        public var seenCappedToday: Bool { seenToday >= seenDailyCap }
+        public var engagedCappedToday: Bool { engagedToday >= engagedDailyCap }
     }
 
     /// Progress toward unlocking the next tier, when one exists in the pack.
@@ -221,9 +231,11 @@ public struct LearnerEngine: Sendable {
         }.count
 
         let ambientItems = items.filter { progress[$0.id]?.stage == .ambient }
+        let countsToday = try store.exposureCountsToday(now: now)
         let almostReady = ambientItems
             .compactMap { item -> ExposureNeed? in
                 guard let p = progress[item.id] else { return nil }
+                let today = countsToday[item.id] ?? (seen: 0, engaged: 0)
                 return ExposureNeed(
                     itemId: item.id,
                     source: item.bareSourceForm ?? item.id,
@@ -232,7 +244,11 @@ public struct LearnerEngine: Sendable {
                     engagedCount: p.engagedCount,
                     seenForReady: config.readySeenThreshold,
                     seenForFastReady: config.readySeenWithEngagementThreshold,
-                    engagedForFastReady: config.readyEngagedThreshold
+                    engagedForFastReady: config.readyEngagedThreshold,
+                    seenToday: today.seen,
+                    engagedToday: today.engaged,
+                    seenDailyCap: config.seenCreditDailyCap,
+                    engagedDailyCap: config.engagedCreditDailyCap
                 )
             }
             .sorted { a, b in

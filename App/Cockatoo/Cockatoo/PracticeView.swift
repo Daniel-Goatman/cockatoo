@@ -343,18 +343,35 @@ struct PracticeSessionView: View {
 }
 
 /// Turns an ExposureNeed into the one-line human hint used by Practice and
-/// the dashboard: what would make this word practicable.
+/// the dashboard: what would make this word practicable. Cap-aware — the
+/// hint never suggests an action that won't credit today (P4: a hint on
+/// screen must be true).
 enum ExposureHint {
     static func text(for need: LearnerEngine.ExposureNeed) -> String {
         let seenRemaining = max(0, need.seenForReady - need.seenCount)
         let fastRemaining = max(0, need.seenForFastReady - need.seenCount)
         let hasEngagement = need.engagedCount >= need.engagedForFastReady
+        // A hover helps only if it completes the fast path and can still
+        // credit today.
+        let hoverHelpsNow = !hasEngagement && !need.engagedCappedToday && fastRemaining == 0
+
+        if need.seenCappedToday {
+            if hoverHelpsNow {
+                return "hover it once on a page — sightings are done for today"
+            }
+            return "done for today — sightings count again tomorrow"
+        }
         if hasEngagement, fastRemaining > 0 {
             return "\(fastRemaining) more sighting\(fastRemaining == 1 ? "" : "s") on pages"
         }
-        if fastRemaining == 0 {
+        if hoverHelpsNow {
             return "hover it once on a page — or \(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s")"
         }
-        return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s") — hovering speeds this up"
+        if fastRemaining == 0 {
+            // Fast path blocked (hover capped today, none banked yet).
+            return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s") — hovers count again tomorrow"
+        }
+        let hoverNote = need.engagedCappedToday ? "" : " — hovering speeds this up"
+        return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s")\(hoverNote)"
     }
 }

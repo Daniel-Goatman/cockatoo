@@ -165,6 +165,33 @@ final class IngestionTests: XCTestCase {
         XCTAssertEqual(sentences.first?.text, "Sentence number 7 with house.", "newest kept")
     }
 
+    /// The daily-cap UI ("done today") reads raw today counts; they must
+    /// track events even past the crediting cap and reset with the day.
+    func testExposureCountsTodayTrackRawEventsAndDayBoundary() throws {
+        let progress = try engine.store.allProgress()
+        let ambient = progress.values.filter { $0.stage == .ambient }.map(\.itemId).sorted()
+        let itemId = ambient[0]
+        let otherId = ambient[1]
+        // 5 raw sightings (credits cap at 3, stays ambient — no engagement),
+        // plus a pin on a different item to check engagement counting.
+        let events = (0..<5).map { i in seenEvent(itemId, at: t0.addingTimeInterval(Double(i) * 600), id: "raw\(i)") }
+            + [ExposureEvent(id: "rawg", itemId: otherId, type: .pinned, occurredAt: t0)]
+        try engine.postEvents(events, now: t0.addingTimeInterval(3600))
+
+        let counts = try engine.store.exposureCountsToday(now: t0.addingTimeInterval(3600))
+        XCTAssertEqual(counts[itemId]?.seen, 5, "raw events counted past the credit cap of 3")
+        XCTAssertEqual(counts[otherId]?.engaged, 1, "pinned counts as engagement")
+
+        let overview = try engine.overview(now: t0.addingTimeInterval(3600))
+        let need = try XCTUnwrap(overview.almostReady.first { $0.itemId == itemId })
+        XCTAssertTrue(need.seenCappedToday)
+        XCTAssertFalse(need.engagedCappedToday)
+
+        // Next day the counters reset.
+        let tomorrow = t0.addingTimeInterval(25 * 3600)
+        XCTAssertNil(try engine.store.exposureCountsToday(now: tomorrow)[itemId])
+    }
+
     func testEventsForUnknownItemsAreAcceptedButInert() throws {
         let outcome = try engine.postEvents([seenEvent("de.word.nonexistent", at: t0, id: "x1")], now: t0)
         XCTAssertEqual(outcome.accepted, 1, "stored for idempotency, applied to nothing")

@@ -257,6 +257,9 @@ struct LibraryView: View {
         let due: String
         let seenCount: Int
         let engagedCount: Int
+        /// Today's sighting credit is exhausted — show it, don't imply
+        /// more looking would help today.
+        let seenCappedToday: Bool
     }
 
     var body: some View {
@@ -343,9 +346,14 @@ struct LibraryView: View {
                         .font(.caption2)
                         .foregroundStyle(.blue)
                 }
+                if row.seenCappedToday {
+                    Text("· done today")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
             }
             .foregroundStyle(.secondary)
-            .help("Sightings credit up to 3 per word per day (hovers 2) — spaced encounters beat cramming. A hover halves the sightings needed.")
+            .help("Sightings credit up to 3 per word per day (hovers 2) — spaced encounters beat cramming. A hover halves the sightings needed. \"Done today\" means today's credit is banked; counts resume tomorrow.")
         case .ready:
             Text("practice now")
                 .font(.caption.weight(.medium))
@@ -360,6 +368,8 @@ struct LibraryView: View {
         let language = (try? model.engine.store.setting(SettingsKey.activeLanguage) ?? "de") ?? "de"
         guard let items = try? model.engine.store.items(language: language),
               let progress = try? model.engine.store.allProgress() else { return }
+        let countsToday = (try? model.engine.store.exposureCountsToday(now: Date())) ?? [:]
+        let seenCap = EngineConfig.default.seenCreditDailyCap
         unlockedTier = model.overview?.unlockedTier ?? 1
 
         let rows = items.map { item -> (Int, LibraryRow) in
@@ -372,7 +382,8 @@ struct LibraryView: View {
                 box: p?.srsBox ?? 0,
                 due: p?.dueAt.map { formatter.localizedString(for: $0, relativeTo: Date()) } ?? "—",
                 seenCount: p?.seenCount ?? 0,
-                engagedCount: p?.engagedCount ?? 0
+                engagedCount: p?.engagedCount ?? 0,
+                seenCappedToday: (countsToday[item.id]?.seen ?? 0) >= seenCap
             ))
         }
         tiers = Dictionary(grouping: rows, by: \.0)

@@ -168,6 +168,12 @@ struct HowSwappingWorksView: View {
                     Text("Reserved for future word classes (verbs). Not used today; will carry a dotted underline.")
                 }
             }
+            Text("""
+            Exposure is deliberately rate-limited: a word earns credit for at most \
+            3 sightings and 2 hovers per day, because spaced encounters build memory \
+            and cramming doesn't. When a word shows "done today", more looking won't \
+            move it until tomorrow — that's the spacing working, not a bug.
+            """)
             Text("Words and genders first; grammar later — that's the deal, stated plainly.")
                 .italic()
         }
