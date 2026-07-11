@@ -101,47 +101,158 @@ struct StatTile: View {
 
 struct LibraryView: View {
     @EnvironmentObject var model: AppModel
-    @State private var rows: [LibraryRow] = []
+    @State private var tiers: [TierGroup] = []
+    @State private var unlockedTier = 1
+
+    struct TierGroup: Identifiable {
+        let id: Int
+        let rows: [LibraryRow]
+        var knownCount: Int { rows.filter { $0.stage >= .known }.count }
+    }
 
     struct LibraryRow: Identifiable {
         let id: String
         let source: String
         let target: String
-        let band: Int
-        let stage: String
+        let stage: Stage
         let box: Int
         let due: String
     }
 
     var body: some View {
-        Table(rows) {
-            TableColumn("English") { Text($0.source) }
-            TableColumn("German") { Text($0.target) }
-            TableColumn("Band") { Text("\($0.band)") }.width(50)
-            TableColumn("Stage") { Text($0.stage) }.width(80)
-            TableColumn("Box") { Text("\($0.box)") }.width(40)
-            TableColumn("Next review") { Text($0.due) }
+        List {
+            columnHeader
+            ForEach(tiers) { tier in
+                Section {
+                    ForEach(tier.rows, content: row)
+                } header: {
+                    tierHeader(tier)
+                }
+            }
         }
+        .listStyle(.inset)
         .onAppear(perform: reload)
         .onChange(of: model.overview?.countsByStage) { reload() }
         .navigationTitle("Library")
+    }
+
+    var columnHeader: some View {
+        HStack(spacing: 12) {
+            Text("English").frame(width: 170, alignment: .leading)
+            Text("German").frame(width: 190, alignment: .leading)
+            Text("Stage").frame(width: 84, alignment: .leading)
+            Text("Strength").frame(width: 90, alignment: .leading)
+            Text("Next review").frame(minWidth: 90, alignment: .leading)
+            Spacer()
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+    }
+
+    func tierHeader(_ tier: TierGroup) -> some View {
+        HStack(spacing: 8) {
+            Text("Tier \(tier.id)").font(.headline)
+            if tier.id <= unlockedTier {
+                Text("unlocked")
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Color.green.opacity(0.18), in: Capsule())
+                    .foregroundStyle(.green)
+            } else {
+                Label("locked", systemImage: "lock.fill")
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(.quaternary.opacity(0.6), in: Capsule())
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text("\(tier.knownCount) of \(tier.rows.count) known")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
+    }
+
+    func row(_ row: LibraryRow) -> some View {
+        HStack(spacing: 12) {
+            Text(row.source).frame(width: 170, alignment: .leading)
+            Text(row.target).frame(width: 190, alignment: .leading)
+            StageChip(stage: row.stage).frame(width: 84, alignment: .leading)
+            StrengthDots(box: row.box).frame(width: 90, alignment: .leading)
+            Text(row.due).foregroundStyle(.secondary).frame(minWidth: 90, alignment: .leading)
+            Spacer()
+        }
+        .font(.callout)
+        .opacity(row.stage == .locked ? 0.55 : 1)
     }
 
     func reload() {
         let formatter = RelativeDateTimeFormatter()
         guard let items = try? model.engine.store.items(language: "de"),
               let progress = try? model.engine.store.allProgress() else { return }
-        rows = items.map { item in
+        unlockedTier = model.overview?.unlockedTier ?? 1
+
+        let rows = items.map { item -> (Int, LibraryRow) in
             let p = progress[item.id]
-            return LibraryRow(
+            return (item.frequencyBand, LibraryRow(
                 id: item.id,
-                source: item.sourceForms.first?.form ?? item.id,
+                source: bareSource(item),
                 target: (item.targetMeta?.gender).map { "\($0) \(item.target)" } ?? item.target,
-                band: item.frequencyBand,
-                stage: (p?.stage ?? .locked).rawValue,
+                stage: p?.stage ?? .locked,
                 box: p?.srsBox ?? 0,
                 due: p?.dueAt.map { formatter.localizedString(for: $0, relativeTo: Date()) } ?? "—"
-            )
+            ))
         }
+        tiers = Dictionary(grouping: rows, by: \.0)
+            .sorted { $0.key < $1.key }
+            .map { TierGroup(id: $0.key, rows: $0.value.map(\.1).sorted { $0.source < $1.source }) }
+    }
+
+    /// Bare form for display: "book", not "the book" — the determiner
+    /// variants exist for the matcher, not for reading lists.
+    func bareSource(_ item: VocabItem) -> String {
+        item.sourceForms.first { form in
+            let lowered = form.form.lowercased()
+            return !lowered.hasPrefix("the ") && !lowered.hasPrefix("a ") && !lowered.hasPrefix("an ")
+        }?.form ?? item.sourceForms.first?.form ?? item.id
+    }
+}
+
+struct StageChip: View {
+    let stage: Stage
+
+    var color: Color {
+        switch stage {
+        case .locked: return .gray
+        case .ambient: return .blue
+        case .ready: return .teal
+        case .learning: return .orange
+        case .known: return .green
+        case .mastered: return .green
+        }
+    }
+
+    var body: some View {
+        Text(stage.rawValue)
+            .font(.caption.weight(.medium))
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(color.opacity(0.16), in: Capsule())
+            .foregroundStyle(color)
+    }
+}
+
+/// SRS box 0–6 as filled dots — "Strength" without the jargon.
+struct StrengthDots: View {
+    let box: Int
+
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<6, id: \.self) { i in
+                Circle()
+                    .fill(i < box ? Color.accentColor : Color.secondary.opacity(0.25))
+                    .frame(width: 7, height: 7)
+            }
+        }
+        .accessibilityLabel("strength \(box) of 6")
     }
 }

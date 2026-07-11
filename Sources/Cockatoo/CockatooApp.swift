@@ -5,8 +5,18 @@ import LearnerCore
 struct CockatooApp: App {
     @StateObject private var model = AppModel()
 
+    init() {
+        // Unbundled dev runs (`swift run Cockatoo`) have no Info.plist, so
+        // make the process a regular app: Dock icon + Cmd-Tab, and come to
+        // the front on launch. Without this a hidden window is unfindable.
+        DispatchQueue.main.async {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
     var body: some Scene {
-        WindowGroup("Cockatoo") {
+        WindowGroup("Cockatoo", id: "main") {
             RootView()
                 .environmentObject(model)
                 .frame(minWidth: 860, minHeight: 560)
@@ -34,12 +44,32 @@ struct MenuBarContent: View {
                 model.togglePaused()
             }
             Button("Open Cockatoo") {
-                NSApp.activate(ignoringOtherApps: true)
+                openDashboardWindow(openWindow)
             }
+            .keyboardShortcut("o")
             Divider()
             Button("Quit") { NSApp.terminate(nil) }
         }
     }
+}
+
+/// Bring the dashboard back no matter what state it's in: closed (recreate),
+/// hidden via Cmd-H (unhide), miniaturized (deminiaturize), or just buried.
+@MainActor
+func openDashboardWindow(_ openWindow: OpenWindowAction) {
+    NSApp.setActivationPolicy(.regular)
+    NSApp.unhide(nil)
+    let existing = NSApp.windows.filter {
+        $0.identifier?.rawValue.hasPrefix("main") == true || $0.title == "Cockatoo"
+    }
+    if existing.isEmpty {
+        openWindow(id: "main")
+    }
+    for window in existing {
+        window.deminiaturize(nil)
+        window.makeKeyAndOrderFront(nil)
+    }
+    NSApp.activate(ignoringOtherApps: true)
 }
 
 struct RootView: View {
