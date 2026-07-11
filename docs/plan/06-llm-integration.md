@@ -56,6 +56,7 @@ On demand from the Library item view (and later the hover card's "Explain"). Gen
 - Called by the appex via `getContextualForm`; **cached in `enrichment`** keyed `(itemId, kind: contextualForm, cacheKey: sentenceHash)` so repeated encounters are free and offline-safe.
 - Latency posture: the extension renders the authored `sourceForms` target **immediately** and upgrades the token text if/when the resolver answers (< 2 s budget, else keep authored form). Ambient rendering never blocks on the network.
 - Also used at pack-build time in reverse ([07-content-pipeline.md](07-content-pipeline.md)) — same prompt family, different caller.
+- Scope note: in v1 this refines forms for items already ambient (nouns/chunks). It is also the most plausible unlock for **ambient verbs** later — that investigation, including a local non-LLM alternative (on-device tagger + morphological lexicon), is specced in [09-open-problems.md](09-open-problems.md).
 
 ### 4. Pack authoring (build-time, packtool)
 Not a runtime feature, but it rides the same `ChatProvider` — see [07-content-pipeline.md](07-content-pipeline.md).

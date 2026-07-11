@@ -17,6 +17,23 @@ Difficulty layers on with demonstrated comfort. You start with high-frequency, s
 - **Exposure primes; retrieval cements.** Ambient encounters (seeing, hovering) prepare a word; only active retrieval (short review sessions) advances its scheduled strength. Hovering can never power-level a word — this cap is a hard rule inherited from the prototype ([04-learning-engine.md](04-learning-engine.md)).
 - **Spacing over cramming.** A Leitner cooldown ladder (1h → 720h) spaces reviews; items surface in the browser and in sessions when due, not when convenient for a streak counter.
 - **Dependencies before structures.** Chunks and patterns declare the words they're built from and unlock only when those are known.
+- **Words and genders first; grammar agreement later — honestly.** A swapped word inside an English sentence cannot always be perfectly inflected (German case is only meaningful in a German sentence — see [09-open-problems.md](09-open-problems.md)). Cockatoo embraces this rather than hiding it: v1 teaches **vocabulary and noun gender** (nouns swap with their citation-form article: "the house" → "das Haus"), and full grammatical agreement arrives in later stages of the product. This tradeoff is a *named, user-visible concept* — fidelity tiers, below — stated in onboarding, in Settings, and in the docs, never fine print.
+
+## Fidelity tiers
+
+Every vocabulary item carries a fidelity tier describing what its ambient swap guarantees. The tier is authored in the pack, carried through the snapshot, and surfaced in the UI.
+
+| Tier | Guarantee | Example | v1 status |
+|---|---|---|---|
+| **Exact** | The swap is grammatically perfect — invariant words | "and" → *und* | shipping |
+| **Form-matched** | Word, gender/article, and number are correct; case agreement is not attempted | "the houses" → *die Häuser* | shipping |
+| **Approximate** | The word is correct; its form may not agree with context | conservative verb swaps | empty in v1 — reserved pending [09-open-problems.md](09-open-problems.md) |
+
+Transparency requirements (binding on the app UI, [05-extension.md](05-extension.md) and the P5 scope in [08-roadmap.md](08-roadmap.md)):
+1. **Onboarding** states the philosophy in one plain paragraph: words and genders first, grammar later; swapped words are marked; hovering always shows the true original.
+2. **The hover card always shows the original English** — the ground truth is one hover away, on every token, forever.
+3. **Settings has a "How swapping works" page** explaining the tiers with examples.
+4. **Approximate-tier tokens get a visually distinct marker** (e.g. dotted vs solid underline) so reduced-confidence swaps are identifiable at a glance when that tier ships.
 
 ## Design principles
 
@@ -58,3 +75,4 @@ Used consistently across all documents.
 | **Event** | An append-only, idempotent exposure record (`seen`, `engaged`, `sentenceCaptured`, …) emitted by the extension and ingested by LearnerCore. |
 | **Session** | A short (~2 min) review session in the app: recognition, recall, and cloze questions over due items. |
 | **Enrichment** | Cached LLM-generated depth content for an item (forms, examples, mnemonic, deep-dive). |
+| **Fidelity tier** | What an item's ambient swap guarantees grammatically: `exact`, `formMatched`, or `approximate`. See §Fidelity tiers. |

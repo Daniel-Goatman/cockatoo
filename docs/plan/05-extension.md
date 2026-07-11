@@ -15,6 +15,8 @@ Runs before anything else; if it says no, the content script does nothing (no ob
 
 - Built **once per snapshot** from the snapshot's match table: `Map<lowercasedSurfaceForm, {itemId, formIndex}>`. Multi-word chunks are stored under their first word with full-phrase confirmation at match time.
 - Matching is per **surface form** (`house`, `houses` are separate entries with separate targets) — this is the R1a mechanism: inflection is resolved at authoring time, not at match time.
+- **Determiner-extended forms match preferentially** (decision D10): a noun item's forms include `"the house" → "das Haus"` and `"a house" → "ein Haus"` alongside the bare forms; longest match wins, so "the house" swaps as a unit and shows the citation-form article (teaching gender), while a bare "houses" still swaps to "Häuser".
+- **Capitalization is preserved**: a match at sentence start renders with the display form's first letter uppercased ("The house" → "Das Haus"); German noun capitalization comes from the display form itself.
 - Word-boundary regex per form (`\bform\b`, case-insensitive; `(?<!\w)phrase(?!\w)` for chunks), compiled lazily and cached.
 - Budget: matcher build **< 5 ms** for a 200-item snapshot (test-enforced, R3).
 
@@ -24,7 +26,7 @@ Carried-over rules (from `transformer.js`, validated by the prototype):
 
 - **Block model**: only inside `p, li, blockquote, [role='listitem']` etc.; excluded: inputs, `contenteditable`, `code/pre/kbd/samp`, `nav/header/footer/button`, `[aria-hidden]`, anything inside a form with sensitive attributes (password/checkout/billing patterns).
 - **Budget math**: page budget = `clamp(floor(totalWords/40), 3, 20)`; per-block = `max(1, floor(blockWords/25))`, blocks < 8 words skipped; even distribution across candidate blocks; one instance per item per block.
-- **Token DOM contract**: `<span class="cck-token" data-cck-item data-cck-form data-cck-original tabindex="0" role="button" aria-label="Cockatoo vocabulary: <target>, originally <original>">` containing the target-language text. Original text restorable from the attribute. Tokens get a **subtle but visible mark** (light underline + tint) — the R1b stance: a swapped token reads as a vocabulary card in place, so an imperfectly inflected form doesn't read as broken prose.
+- **Token DOM contract**: `<span class="cck-token" data-cck-item data-cck-form data-cck-original data-cck-tier tabindex="0" role="button" aria-label="Cockatoo vocabulary: <target>, originally <original>">` containing the target-language text. Original text restorable from the attribute. Tokens get a **subtle but visible mark** (light underline + tint) — the R1b stance: a swapped token reads as a vocabulary card in place, so an imperfectly inflected form doesn't read as broken prose. **Fidelity marking** ([01-vision-and-principles.md](01-vision-and-principles.md) §Fidelity tiers): `exact` and `formMatched` tokens share the standard solid-underline marker; `approximate` tokens (empty tier in v1, reserved for ambient verbs per [09-open-problems.md](09-open-problems.md)) render with a distinct dotted underline.
 - **Visibility check** fixed relative to prototype: element must have a non-empty client rect and effective `opacity > 0` before counting toward budget (closes the invisible-token "seen" credit hole).
 
 New behavior (the R4 fixes — these are requirements, not suggestions):
@@ -51,6 +53,8 @@ Content (all from the snapshot — no lookups, no learning math): target form, o
 
 All messages are JSON envelopes: `{protocolVersion: 1, method, payload}`. The Swift handler rejects unknown/mismatched `protocolVersion` with a structured error the popup surfaces as "Update Cockatoo". TypeScript types for the payloads are the mirror of Swift Codables in `LearnerCore/Sync` — one spec, two encodings, covered by shared JSON fixture tests on both sides.
 
+The appex is a **stateless forwarder** ([02-architecture.md](02-architecture.md) D9): it relays each message to the app over XPC. If the app is unreachable (after one launch-and-retry attempt), any method may return `{error: "appUnavailable"}`. Extension behavior on `appUnavailable`: keep serving the cached snapshot, keep queuing events (at-least-once queue is unaffected), retry on the normal flush/heartbeat cadence, and show "Cockatoo isn't running — progress is being saved locally" in the popup. No data is dropped; sync resumes automatically when the app returns.
+
 | Method | Request | Response |
 |---|---|---|
 | `getSnapshot` | `{sinceVersion?: number}` | `{version, unchanged: true}` or `{version, snapshot}` |
@@ -70,8 +74,12 @@ All messages are JSON envelopes: `{protocolVersion: 1, method, payload}`. The Sw
     {
       "id": "de.word.haus",
       "kind": "word",
-      "forms": [ {"match": "house", "display": "Haus"},
-                 {"match": "houses", "display": "Häuser"} ],
+      "tier": "formMatched",
+      "forms": [ {"match": "the house",  "display": "das Haus"},
+                 {"match": "a house",    "display": "ein Haus"},
+                 {"match": "house",      "display": "Haus"},
+                 {"match": "houses",     "display": "Häuser"},
+                 {"match": "the houses", "display": "die Häuser"} ],
       "hover": { "target": "das Haus", "pos": "noun", "original": null,
                  "example": {"source": "…", "target": "…"}, "seenCount": 4 }
     }

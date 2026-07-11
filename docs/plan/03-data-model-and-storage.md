@@ -1,19 +1,18 @@
 # 03 — Data Model and Storage
 
-> The single source of truth: SQLite via GRDB in the App Group container. Resolves risk **R2** (cross-process access) and enforces **P2** (one progress store) and the **no-legacy-migration** anti-goal. See [02-architecture.md](02-architecture.md) decisions D1, D7, D8, D9.
+> The single source of truth: SQLite via GRDB, owned exclusively by the app process. Enforces **P2** (one progress store) and the **no-legacy-migration** anti-goal. The app-as-server design (decision D9 in [02-architecture.md](02-architecture.md)) means there is **no cross-process database access anywhere** — the appex reaches the data only through the app's XPC API. Risk **R2** covers the residual app-availability concern.
 
 ## Storage engine
 
-- **GRDB `DatabasePool`**, SQLite in **WAL mode**, database file in the App Group container (`group.<bundle-prefix>.cockatoo`).
-- Both the app and the appex open the same file. WAL permits one writer + concurrent readers across processes; writes set a **busy timeout** (e.g. 2 s) and retry once on `SQLITE_BUSY`.
-- **Change signaling**: any process that commits a write posts a Darwin notification `<bundle-prefix>.cockatoo.db.changed`. The app listens and refreshes its queries. GRDB's `ValueObservation` is in-process only and must not be relied on for cross-process freshness.
-- **Appex statelessness**: the appex opens the pool, handles one message, posts the notification if it wrote, and returns. It never caches state between invocations.
+- **GRDB `DatabasePool`**, SQLite in WAL mode, database file in the App Group container (`group.<bundle-prefix>.cockatoo`). The App Group location is kept so a future adapter or diagnostic tool has a stable home, but **only the app process ever opens the database**.
+- **Single writer by design**: no busy-timeout choreography, no cross-process locking, no killed-mid-write recovery scenarios. The appex is a stateless XPC client with zero database code.
+- **Live UI**: GRDB `ValueObservation` drives the SwiftUI dashboard directly — writes from event ingestion or practice grading appear in the UI without any signaling plumbing.
 - **Migrations**: GRDB `DatabaseMigrator` with numbered, append-only migrations (`v1`, `v2`, …). No decode-time migration logic anywhere (the prototype's `Codable`-migration habit is banned).
-- **Keychain**: LLM API keys live in the Keychain under a shared access group, never in the DB, UserDefaults, or any plist. Nothing learning-related lives in UserDefaults at all.
+- **Keychain**: LLM API keys live in the Keychain, never in the DB, UserDefaults, or any plist. Nothing learning-related lives in UserDefaults at all.
 
 ### R2 spike (must run in Phase 0, see [08-roadmap.md](08-roadmap.md))
 
-Prove before building on it: app + minimal appex, both with the App Group entitlement, can (a) open the same `DatabasePool`, (b) appex writes while app reads, (c) appex is killed mid-transaction without corrupting the DB (WAL recovery), (d) Darwin notification wakes the app. **Fallback if blocked**: the appex talks to the app via `NSXPCConnection` (app-owned agent) and only the app touches SQLite. The Store API is designed so this swap changes no callers.
+The old R2 (cross-process SQLite) is eliminated by D9; what remains is verifying the XPC path and the app-down story. The Phase 0 spike proves: (a) a sandboxed appex can connect to the app's `NSXPCConnection` listener on the App-Group-prefixed mach service name (entitlements verified on both targets), (b) round-trip latency is acceptable for a per-message-batch hop (< 50 ms), (c) with the app not running, the appex's launch-and-retry path works, and (d) with launch blocked, the appex returns a clean `appUnavailable` error the extension handles by degrading to cache + queue. The Store API stays behind a protocol so even a transport change would touch no callers.
 
 ## Schema (migration v1)
 
@@ -31,13 +30,17 @@ CREATE TABLE vocab_item (
   id                TEXT PRIMARY KEY,   -- stable content-addressed: "de.word.haus"
   language          TEXT NOT NULL,
   kind              TEXT NOT NULL,      -- word | chunk | pattern
-  sourceForms       TEXT NOT NULL,      -- JSON: [{form:"house", target:"Haus"},
-                                        --        {form:"houses", target:"Häuser"}]
+  sourceForms       TEXT NOT NULL,      -- JSON: [{form:"the house",  target:"das Haus"},
+                                        --        {form:"a house",    target:"ein Haus"},
+                                        --        {form:"house",      target:"Haus"},
+                                        --        {form:"houses",     target:"Häuser"},
+                                        --        {form:"the houses", target:"die Häuser"}]
   target            TEXT NOT NULL,      -- canonical target: "Haus"
   targetMeta        TEXT,               -- JSON: gender, plural, pronunciation, POS
   level             TEXT NOT NULL,      -- CEFR: a1 | a2 | b1
   frequencyBand     INTEGER NOT NULL,   -- 1..10, corpus-derived
   replacementPolicy TEXT NOT NULL,      -- ambientSafe | reviewOnly | never
+  fidelityTier      TEXT NOT NULL,      -- exact | formMatched | approximate (01 §fidelity)
   dependencies      TEXT NOT NULL,      -- JSON array of item ids
   explanation       TEXT NOT NULL,
   examples          TEXT NOT NULL,      -- JSON array {source, target}
@@ -97,7 +100,7 @@ CREATE TABLE settings (                 -- sync-relevant flags only; no secrets
 
 ## Domain types (GRDB `Codable` records in `LearnerCore/Domain`)
 
-- **`VocabItem`** — evolves the prototype's `CurriculumItem` (`Sources/LanguageLearnerCore/CurriculumItem.swift`). Carried over: `kind`, `replacementPolicy`, `dependencies`, `frequencyBand`, `explanation`, `examples`. New and load-bearing: **`sourceForms`** — the enumerated English surface forms each with its own target-language form (`"houses" → "Häuser"`), authored at pack-build time. This is the default (non-LLM) answer to the inflection problem **R1a**; the matcher matches forms, not lemmas ([05-extension.md](05-extension.md)), and the contextual LLM path ([06-llm-integration.md](06-llm-integration.md)) is an opt-in upgrade, not a requirement.
+- **`VocabItem`** — evolves the prototype's `CurriculumItem` (`Sources/LanguageLearnerCore/CurriculumItem.swift`). Carried over: `kind`, `replacementPolicy`, `dependencies`, `frequencyBand`, `explanation`, `examples`. New and load-bearing: **`sourceForms`** — the enumerated English surface forms each with its own target-language form, authored at pack-build time. For nouns this includes the **determiner-extended variants** (`"the house" → "das Haus"`, `"a house" → "ein Haus"`, decision D10) so every noun swap shows the citation-form article and teaches gender, plus the bare number forms (`"houses" → "Häuser"`). This is the default (non-LLM) answer to the inflection problem **R1a**; the matcher matches forms, not lemmas ([05-extension.md](05-extension.md)), and the contextual LLM path ([06-llm-integration.md](06-llm-integration.md)) is an opt-in upgrade, not a requirement. Each item carries its **fidelity tier** (`exact` / `formMatched` / `approximate` — defined in [01-vision-and-principles.md](01-vision-and-principles.md)); `approximate` is unused in v1 (ambient verbs deferred, [09-open-problems.md](09-open-problems.md)).
   - `kind` drops the prototype's speculative `sentenceFrame` until a generator exists for it (P4).
 - **`ItemProgress`** — the unification of the prototype's `WordStats` and `ItemLearningState`. Invariants (enforced in code, tested as properties):
   - stage transitions are monotonic except `learning → ready` on lapse (see [04-learning-engine.md](04-learning-engine.md));
@@ -114,7 +117,7 @@ CREATE TABLE settings (                 -- sync-relevant flags only; no secrets
 - The pack's declared checksum is verified before import.
 
 ### Event ingestion
-- `EventIngestor` runs inside one transaction: insert events (ignoring duplicate UUIDs — idempotency, **R5**), fold unprocessed events into `item_progress`, stamp `processedAt`, bump the snapshot version in `settings`, post the Darwin notification.
+- `EventIngestor` runs inside one transaction: insert events (ignoring duplicate UUIDs — idempotency, **R5**), fold unprocessed events into `item_progress`, stamp `processedAt`, bump the snapshot version in `settings`. The dashboard updates automatically via `ValueObservation`; the extension learns the new version on its next event flush (piggyback, [05-extension.md](05-extension.md)).
 - **Pruning**: processed events older than 30 days are deleted; counts already live in `item_progress`.
 
 ### Sentence capture retention
