@@ -22,7 +22,7 @@ Ground-up rebuild of the earlier prototype. The full design lives in
 | `Sources/packtool/` | Content pipeline CLI: validate / checksum / review / import-test |
 | `Sources/learnerctl/` | Debug CLI: import, overview, snapshot, sandboxed 30-day simulation, session dump |
 | `extension/` | TypeScript WebExtension: matcher, transformer, hover card, exposure tracker, event queue (Safari adapter is the only browser-specific code) |
-| `packs/` | Language packs: `sources/de/build-seed.mjs` → `build/de-2026.07.json` (54 items, bands 1–4) |
+| `packs/` | Language packs: `sources/de/build-seed.mjs` → `build/de-2026.08.json` (212 items, bands 1–10) |
 | `protocol-fixtures/` | Shared JSON fixtures decoded by BOTH Swift and TS tests — protocol drift fails tests on either side |
 | `App/*.entitlements` | App + appex entitlements (App Group `group.dev.cockatoo.shared`) |
 
@@ -51,13 +51,13 @@ cd extension && npm install && npm test   # 32 tests: matcher, transformer budge
                                           # exclusions/incremental mutations, event queue,
                                           # page gate, protocol fixtures
 npm run lint:boundaries         # sendNativeMessage confined to adapters/safari/
-swift run packtool validate packs/build/de-2026.07.json
+swift run packtool validate packs/build/de-2026.08.json
 ```
 
 Full-loop simulation without Safari (sandboxed by default — saves nothing):
 
 ```sh
-swift run learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.07.json
+swift run learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.08.json
 swift run learnerctl --db /tmp/dev.sqlite simulate --days 30
 swift run learnerctl --db /tmp/dev.sqlite overview
 ```
@@ -79,8 +79,11 @@ says so honestly in its popup.
 ## Status vs the roadmap ([docs/plan/08-roadmap.md](docs/plan/08-roadmap.md))
 
 - **P1 LearnerCore** — done, all exit-criteria tests green
-- **P2 pack** — seed pack (54 items) validator-green; the full ~1000-item
-  frequency-list + LLM authoring run is pending (`packtool author`)
+- **P2 pack** — 212 items across bands 1–10 (2026.08): hand-curated seed +
+  model-authored expansion, validator-green, human spot-review checklist in
+  [docs/pack-review-2026.08.md](docs/pack-review-2026.08.md); pack updates
+  auto-import on app launch (progress preserved via stable IDs). The full
+  ~1000-item FrequencyWords + `packtool author` run is still pending
 - **P3 extension core** — done, tests green
 - **P4 Safari integration** — **done and verified on-device**: snapshot/event
   round-trip, app-down drill (cached rendering + queued events + honest

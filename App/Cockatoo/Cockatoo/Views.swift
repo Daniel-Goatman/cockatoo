@@ -30,7 +30,7 @@ struct OnboardingView: View {
                     .buttonStyle(.borderedProminent)
                 Button("Import a custom pack…") { pickPack() }
             }
-            Text("The built-in starter pack has 54 hand-checked words and phrases. You can practice your first words right away — no browsing required.")
+            Text("The built-in pack has over 200 frequency-ordered words and phrases. You can practice your first words right away — no browsing required.")
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: 560, alignment: .leading)
 

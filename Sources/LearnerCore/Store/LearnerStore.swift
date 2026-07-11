@@ -114,6 +114,21 @@ public struct LearnerStore: Sendable {
         }
     }
 
+    // MARK: - Packs
+
+    /// The most recently imported pack version for a language — lets the
+    /// app upgrade to a newer bundled pack on launch (upsert import keeps
+    /// all progress; stable IDs are validator-enforced).
+    public func latestPackVersion(language: String) throws -> String? {
+        try db.writer.read { dbc in
+            try PackRecord
+                .filter(Column("language") == language)
+                .order(Column("importedAt").desc)
+                .fetchOne(dbc)?
+                .version
+        }
+    }
+
     // MARK: - Diagnostics
 
     /// When the last exposure event was ingested — the honest answer to

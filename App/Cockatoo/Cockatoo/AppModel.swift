@@ -38,6 +38,7 @@ final class AppModel: ObservableObject {
         refresh()
         needsOnboarding = (overview?.totalItems ?? 0) == 0
         paused = (try? engine.store.setting(SettingsKey.enabled)) == "false"
+        upgradeBundledPackIfNeeded()
         startObservation()
         startXPC()
         contactObserver = NotificationCenter.default.addObserver(
@@ -106,15 +107,18 @@ final class AppModel: ObservableObject {
     }
 
     /// The starter pack ships in the app bundle so first run is one click —
-    /// no file picker, no dev workflow leaking into onboarding.
+    /// no file picker, no dev workflow leaking into onboarding. Found by
+    /// prefix so pack version bumps don't need code changes.
     static func bundledPackURL() -> URL? {
+        var candidates: [URL] = []
         #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: "de-2026.07", withExtension: "json", subdirectory: "Resources")
-            ?? Bundle.module.url(forResource: "de-2026.07", withExtension: "json") {
-            return url
-        }
+        candidates += Bundle.module.urls(forResourcesWithExtension: "json", subdirectory: "Resources") ?? []
         #endif
-        return Bundle.main.url(forResource: "de-2026.07", withExtension: "json")
+        candidates += Bundle.main.urls(forResourcesWithExtension: "json", subdirectory: nil) ?? []
+        return candidates
+            .filter { $0.lastPathComponent.hasPrefix("de-") }
+            .sorted { $0.lastPathComponent > $1.lastPathComponent } // newest version wins
+            .first
     }
 
     func importBundledPack() {
@@ -123,6 +127,27 @@ final class AppModel: ObservableObject {
             return
         }
         importPack(from: url)
+    }
+
+    /// Pack updates ship with the app: when the bundled pack is a different
+    /// version than the imported one, upgrade on launch. The importer
+    /// upserts by stable ID, so all progress is preserved (and the
+    /// validator blocks any pack that drops an existing ID).
+    func upgradeBundledPackIfNeeded() {
+        guard !needsOnboarding, let url = Self.bundledPackURL() else { return }
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let pack = try decoder.decode(PackFile.self, from: data)
+            let installed = try engine.store.latestPackVersion(language: pack.language)
+            guard let installed, installed != pack.version else { return }
+            try engine.importPack(pack, rawData: data, now: Date())
+            NSLog("Cockatoo: upgraded \(pack.language) pack \(installed) → \(pack.version)")
+            refresh()
+        } catch {
+            NSLog("Cockatoo: bundled pack upgrade failed: \(error)")
+        }
     }
 
     // MARK: - LLM
