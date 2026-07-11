@@ -43,6 +43,15 @@ final class XPCHandler: NSObject, CockatooXPCProtocol, @unchecked Sendable {
     }
 
     func handle(_ envelope: Data, reply: @escaping @Sendable (Data) -> Void) {
+        // openDashboard is the one method with a UI side effect: front the
+        // window (LearnerCore just acks it — it has no UI).
+        if let object = try? JSONSerialization.jsonObject(with: envelope) as? [String: Any],
+           object["method"] as? String == "openDashboard" {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .cockatooOpenDashboard, object: nil)
+            }
+        }
+
         // SyncService is synchronous over the database; hop to a utility
         // queue so the XPC thread never blocks on SQLite.
         let service = self.service
@@ -82,4 +91,9 @@ enum KeychainStore {
         add[kSecValueData as String] = Data(value.utf8)
         SecItemAdd(add as CFDictionary, nil)
     }
+}
+
+extension Notification.Name {
+    /// Posted by the XPC handler when the extension asks to open the app.
+    static let cockatooOpenDashboard = Notification.Name("dev.cockatoo.openDashboard")
 }

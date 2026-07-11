@@ -70,6 +70,20 @@ export function isSyncError(value: unknown): value is SyncErrorResponse {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
+export interface MessageEnvelope {
+  protocolVersion: number;
+  method: string;
+  /** JSON TEXT of the payload — plain string, never base64. Mirrors Swift's
+   * MessageEnvelope; the envelope fixture test enforces both sides. */
+  payload?: string;
+}
+
+export function buildEnvelope(method: string, payload?: unknown): MessageEnvelope {
+  const envelope: MessageEnvelope = { protocolVersion: PROTOCOL_VERSION, method };
+  if (payload !== undefined) envelope.payload = JSON.stringify(payload);
+  return envelope;
+}
+
 /** The one seam a Chrome port replaces (docs/plan/05-extension.md). */
 export interface Transport {
   call<T>(method: string, payload?: unknown): Promise<T | SyncErrorResponse>;

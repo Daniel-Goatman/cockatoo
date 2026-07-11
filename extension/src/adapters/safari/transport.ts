@@ -1,5 +1,5 @@
 import type { SyncErrorResponse, Transport } from "../../core/types";
-import { PROTOCOL_VERSION } from "../../core/types";
+import { buildEnvelope } from "../../core/types";
 
 // The ONLY file that touches sendNativeMessage (lint-enforced boundary).
 // A Chrome port implements the same Transport over another mechanism.
@@ -21,11 +21,7 @@ const NATIVE_APP_ID = "application.id"; // Safari resolves to the containing app
 export class SafariTransport implements Transport {
   async call<T>(method: string, payload?: unknown): Promise<T | SyncErrorResponse> {
     try {
-      const response = await browser.runtime.sendNativeMessage(NATIVE_APP_ID, {
-        protocolVersion: PROTOCOL_VERSION,
-        method,
-        payload: payload === undefined ? undefined : JSON.stringify(payload),
-      });
+      const response = await browser.runtime.sendNativeMessage(NATIVE_APP_ID, buildEnvelope(method, payload));
       return (typeof response === "string" ? JSON.parse(response) : response) as T;
     } catch {
       return { error: "appUnavailable" };

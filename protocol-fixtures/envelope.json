@@ -1,0 +1,11 @@
+{
+  "withPayload": {
+    "protocolVersion": 1,
+    "method": "getSnapshot",
+    "payload": "{\"sinceVersion\":412}"
+  },
+  "withoutPayload": {
+    "protocolVersion": 1,
+    "method": "getSettings"
+  }
+}

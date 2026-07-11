@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ExposureEvent, PostEventsResponse, Snapshot, SyncErrorResponse } from "../src/core/types";
+import type { ExposureEvent, MessageEnvelope, PostEventsResponse, Snapshot, SyncErrorResponse } from "../src/core/types";
+import { buildEnvelope } from "../src/core/types";
 import { Matcher } from "../src/core/matcher";
 
 // Same fixture files the Swift tests decode (protocol-fixtures/ at the repo
@@ -20,6 +21,15 @@ describe("protocol fixtures", () => {
     const matcher = new Matcher(snapshot);
     const matches = matcher.matches("We saw the houses and left");
     expect(matches.map((m) => m.display)).toEqual(["die Häuser", "und"]);
+  });
+
+  it("envelope.json matches what the transport actually builds", () => {
+    const fixture = load<{ withPayload: MessageEnvelope; withoutPayload: MessageEnvelope }>("envelope.json");
+    expect(buildEnvelope("getSnapshot", { sinceVersion: 412 })).toEqual(fixture.withPayload);
+    expect(buildEnvelope("getSettings")).toEqual(fixture.withoutPayload);
+    // The payload is JSON TEXT (string), never base64/object — the Swift
+    // side decodes exactly this shape (ProtocolFixtureTests).
+    expect(typeof fixture.withPayload.payload).toBe("string");
   });
 
   it("postEvents.json request/response/error decode", () => {

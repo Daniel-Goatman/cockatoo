@@ -26,8 +26,23 @@ struct CockatooApp: App {
             MenuBarContent()
                 .environmentObject(model)
         } label: {
-            Label(model.dueBadge, systemImage: "bird")
+            MenuBarLabel(badge: model.dueBadge)
         }
+    }
+}
+
+/// The menu bar label is the one view that exists for the app's whole
+/// lifetime, so it hosts the listener that fronts the dashboard when the
+/// Safari extension (via XPC) asks for it.
+struct MenuBarLabel: View {
+    let badge: String
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Label(badge, systemImage: "bird")
+            .onReceive(NotificationCenter.default.publisher(for: .cockatooOpenDashboard)) { _ in
+                openDashboardWindow(openWindow)
+            }
     }
 }
 

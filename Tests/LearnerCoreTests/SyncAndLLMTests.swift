@@ -11,7 +11,9 @@ final class SyncServiceTests: XCTestCase {
     }
 
     func envelope(_ method: String, payload: Data? = nil, version: Int = SyncProtocol.version) throws -> Data {
-        try JSONEncoder().encode(MessageEnvelope(protocolVersion: version, method: method, payload: payload))
+        // payload rides as JSON TEXT, exactly like the TypeScript transport.
+        let text = payload.map { String(data: $0, encoding: .utf8)! }
+        return try JSONEncoder().encode(MessageEnvelope(protocolVersion: version, method: method, payload: text))
     }
 
     func decodeError(_ data: Data) -> SyncError? {

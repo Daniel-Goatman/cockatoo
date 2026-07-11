@@ -1,6 +1,7 @@
 import { EventQueue, FLUSH_INTERVAL_MS } from "./core/eventQueue";
 import { SnapshotStore } from "./core/snapshotStore";
-import type { ExposureEvent } from "./core/types";
+import type { ExposureEvent, SyncErrorResponse, Transport } from "./core/types";
+import { isSyncError } from "./core/types";
 import { SafariTransport } from "./adapters/safari/transport";
 
 // Background script: owns the snapshot cache and the event queue. Content
@@ -21,9 +22,33 @@ declare const browser: {
   };
 };
 
-const transport = new SafariTransport();
-const snapshots = new SnapshotStore(transport);
+const raw = new SafariTransport();
 let appUnavailable = false;
+let lastSyncError: string | null = null;
+
+// Every native call flows through here so the popup can tell the truth:
+// the prototype's sin of optimistic status displays stops at this seam.
+const transport: Transport = {
+  async call<T>(method: string, payload?: unknown): Promise<T | SyncErrorResponse> {
+    const response = await raw.call<T>(method, payload);
+    if (isSyncError(response)) {
+      appUnavailable = response.error === "appUnavailable";
+      lastSyncError = response.error;
+    } else {
+      appUnavailable = false;
+      lastSyncError = null;
+    }
+    return response;
+  },
+  cacheGet<T>(key: string): Promise<T | undefined> {
+    return raw.cacheGet<T>(key);
+  },
+  cachePut(key: string, value: unknown): Promise<void> {
+    return raw.cachePut(key, value);
+  },
+};
+
+const snapshots = new SnapshotStore(transport);
 
 const queue = new EventQueue(transport, {
   onLatestVersion(version) {
@@ -76,7 +101,15 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       void transport.call("openDashboard", { itemId: msg.itemId }).then(() => sendResponse({ ok: true }));
       return true;
     case "status":
-      void queue.pending().then((pending) => sendResponse({ appUnavailable, pendingEvents: pending }));
+      void Promise.all([queue.pending(), snapshots.cached()]).then(([pending, snapshot]) =>
+        sendResponse({
+          appUnavailable,
+          lastSyncError,
+          pendingEvents: pending,
+          snapshotVersion: snapshot?.version ?? null,
+          activeWords: snapshot?.items.length ?? 0,
+        }),
+      );
       return true;
   }
 });

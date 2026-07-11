@@ -10,9 +10,13 @@ public enum SyncProtocol {
 public struct MessageEnvelope: Codable, Equatable, Sendable {
     public var protocolVersion: Int
     public var method: String
-    public var payload: Data?
+    /// JSON TEXT of the request payload — a plain string, never base64.
+    /// Must match the TypeScript transport byte-for-byte; the envelope
+    /// fixture test enforces this on both sides (a Data-typed payload here
+    /// once silently broke every extension request as internalError).
+    public var payload: String?
 
-    public init(protocolVersion: Int = SyncProtocol.version, method: String, payload: Data? = nil) {
+    public init(protocolVersion: Int = SyncProtocol.version, method: String, payload: String? = nil) {
         self.protocolVersion = protocolVersion
         self.method = method
         self.payload = payload

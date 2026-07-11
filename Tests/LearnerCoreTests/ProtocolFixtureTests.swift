@@ -31,6 +31,33 @@ final class ProtocolFixtureTests: XCTestCase {
         XCTAssertEqual(snapshot.settings.blockedHosts, ["bank.example"])
     }
 
+    /// The regression test for the bug where a Data-typed payload made
+    /// every extension request fail as internalError: the envelope payload
+    /// is JSON TEXT, and a fixture envelope must round-trip through a real
+    /// SyncService without an error response.
+    func testEnvelopeFixtureRoundTripsThroughSyncService() throws {
+        let fixtures = try JSONSerialization.jsonObject(with: load("envelope.json")) as! [String: Any]
+
+        let withPayload = try JSONSerialization.data(withJSONObject: fixtures["withPayload"]!)
+        let envelope = try JSONDecoder().decode(MessageEnvelope.self, from: withPayload)
+        XCTAssertEqual(envelope.method, "getSnapshot")
+        let request = try JSONDecoder().decode(GetSnapshotRequest.self, from: Data(envelope.payload!.utf8))
+        XCTAssertEqual(request.sinceVersion, 412)
+
+        let withoutPayload = try JSONSerialization.data(withJSONObject: fixtures["withoutPayload"]!)
+        let bare = try JSONDecoder().decode(MessageEnvelope.self, from: withoutPayload)
+        XCTAssertNil(bare.payload)
+
+        // End-to-end: a real service must answer, not error.
+        let engine = try Fixtures.makeEngine()
+        let service = SyncService(engine: engine)
+        let response = service.handle(withPayload, now: Fixtures.t0)
+        XCTAssertNil(try? JSONDecoder().decode(SyncErrorResponse.self, from: response),
+                     "fixture envelope produced an error response: \(String(data: response, encoding: .utf8) ?? "?")")
+        let snapshot = try JSONDecoder().decode(GetSnapshotResponse.self, from: response)
+        if case .unchanged = snapshot { XCTFail("sinceVersion 412 cannot match a fresh engine") }
+    }
+
     func testPostEventsFixtureDecodes() throws {
         struct Fixture: Decodable {
             var request: PostEventsRequest

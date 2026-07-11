@@ -11,15 +11,26 @@ async function init(): Promise<void> {
 
   const reply = (await browser.runtime
     .sendMessage({ kind: "status" })
-    .catch(() => null)) as { appUnavailable: boolean; pendingEvents: number } | null;
+    .catch(() => null)) as {
+    appUnavailable: boolean;
+    lastSyncError: string | null;
+    pendingEvents: number;
+    snapshotVersion: number | null;
+    activeWords: number;
+  } | null;
 
   if (!reply) {
     status.textContent = "Extension starting…";
     return;
   }
-  status.textContent = reply.pendingEvents > 0
-    ? `${reply.pendingEvents} progress events waiting to sync`
-    : "Everything synced";
+  if (reply.lastSyncError && reply.lastSyncError !== "appUnavailable") {
+    status.textContent = `Sync problem: ${reply.lastSyncError}`;
+  } else if (reply.activeWords === 0) {
+    status.textContent = "No words active yet — open Cockatoo to import a language pack.";
+  } else {
+    const pending = reply.pendingEvents > 0 ? ` · ${reply.pendingEvents} events waiting` : " · synced";
+    status.textContent = `${reply.activeWords} words in rotation${pending}`;
+  }
   warning.style.display = reply.appUnavailable ? "block" : "none";
 }
 

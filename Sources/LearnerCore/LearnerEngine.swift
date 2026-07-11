@@ -196,7 +196,7 @@ public struct SyncService: Sendable {
 
     func decodePayload<T: Decodable>(_ type: T.Type, _ envelope: MessageEnvelope) throws -> T? {
         guard let payload = envelope.payload else { return nil }
-        return try JSONCoding.decoder.decode(T.self, from: payload)
+        return try JSONCoding.decoder.decode(T.self, from: Data(payload.utf8))
     }
 
     func encodeError(_ error: SyncError) -> Data {
