@@ -16,11 +16,11 @@
 │  │                      ▼                                 │         │
 │  │        App Group container DB file                    │         │
 │  │                                                        │         │
-│  │   XPC listener: mach service                          │         │
+│  │   CFMessagePort listener:                             │         │
 │  │   "group.<prefix>.cockatoo.api"                       │         │
 │  └────────────────▲─────────────────────────────────────┘         │
-│                   │ NSXPCConnection (App-Group-prefixed            │
-│                   │ mach service; code-signature-verified)         │
+│                   │ CFMessagePort request/reply (App-Group-        │
+│                   │ prefixed port name authorizes both sides)      │
 │  ┌────────────────┴─────────────────────────────────────┐         │
 │  │ CockatooExtension.appex — stateless forwarder         │         │
 │  │ native message ⇄ XPC call; NO database access;        │         │

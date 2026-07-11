@@ -14,6 +14,10 @@
 
 The old R2 (cross-process SQLite) is eliminated by D9; what remains is verifying the XPC path and the app-down story. The Phase 0 spike proves: (a) a sandboxed appex can connect to the app's `NSXPCConnection` listener on the App-Group-prefixed mach service name (entitlements verified on both targets), (b) round-trip latency is acceptable for a per-message-batch hop (< 50 ms), (c) with the app not running, the appex's launch-and-retry path works, and (d) with launch blocked, the appex returns a clean `appUnavailable` error the extension handles by degrading to cache + queue. The Store API stays behind a protocol so even a transport change would touch no callers.
 
+### R2 outcome (verified live, 2026-07-11)
+
+`NSXPCListener(machServiceName:)` does NOT reliably register an App-Group-prefixed mach service from a normally launched app — it only worked when Xcode launched the process (launchd never owned the name otherwise). The shipped mechanism is **CFMessagePort**: the app registers a local port named `group.<prefix>.cockatoo.shared.api` (the group prefix is what the sandbox authorizes), the appex does a remote lookup + synchronous request/reply with the same JSON envelopes. Verified against an `open`-launched sandboxed app.
+
 ## Schema (migration v1)
 
 ```sql
