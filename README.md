@@ -85,10 +85,13 @@ says so honestly in its popup.
 - **P4 Safari integration** — **done and verified on-device**: snapshot/event
   round-trip, app-down drill (cached rendering + queued events + honest
   popup), openDashboard fronting, launch-path-independent IPC
-- **P5 app UI** — done: dashboard (next-action card, tier progress, extension
-  status), practice (3 modes + introductions + repair + session ledger,
-  resumable across tab switches), tier-grouped library with exposure
-  progress, settings (provider, privacy, blocked sites, launch-at-login,
-  pack import), one-click onboarding (bundled starter pack)
+- **P5 app UI** — done: dashboard (next-action card, tier progress + check
+  status, extension status), practice (3 modes + introductions + repair +
+  session arc with warm-up/new-words/mix/tier-check beats, card motion,
+  progress strip, session ledger, resumable across tab switches; tier
+  unlocks are earned in-session through the tier check), tier-grouped
+  library with exposure progress, settings (provider, privacy, blocked
+  sites, launch-at-login, pack import), one-click onboarding (bundled
+  starter pack)
 - **P6 LLM layer** — built + unit-tested; not yet exercised against a live provider
 - **P7 hardening** — in progress: daily-use soak underway

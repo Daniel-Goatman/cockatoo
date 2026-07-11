@@ -124,22 +124,37 @@ struct DashboardView: View {
         if o.dueNow > 0 { parts.append("\(o.dueNow) due") }
         if o.readyCount > 0 { parts.append("\(o.readyCount) ready") }
         if o.introAvailable > 0 { parts.append("\(o.introAvailable) new word\(o.introAvailable == 1 ? "" : "s")") }
+        if o.tierCheckReady { parts.append("tier check") }
         return parts.joined(separator: " · ")
     }
 
     func tierProgressCard(_ tier: LearnerEngine.TierProgress) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let checkReady = model.overview?.tierCheckReady == true
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Tier \(tier.nextTier)").font(.headline)
+                if checkReady {
+                    Label("check ready", systemImage: "flag.checkered")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Color.purple.opacity(0.13), in: Capsule())
+                        .foregroundStyle(.purple)
+                }
                 Spacer()
                 Text("\(tier.knownInCurrentTier) of \(tier.neededInCurrentTier) known")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            ProgressView(value: Double(tier.knownInCurrentTier), total: Double(tier.neededInCurrentTier))
-            Text("Unlocks when \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            ProgressView(value: Double(min(tier.knownInCurrentTier, tier.neededInCurrentTier)), total: Double(tier.neededInCurrentTier))
+            if checkReady {
+                Text("Your next practice session ends with a \(EngineConfig.default.tierCheckQuestionCount)-question tier check — pass it to unlock tier \(tier.nextTier).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Unlocks through a short tier check once \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(16)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))

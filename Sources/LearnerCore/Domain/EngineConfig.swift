@@ -40,6 +40,12 @@ public struct EngineConfig: Sendable {
     /// fresh install can practice immediately (cold start, transition c').
     public var sessionIntroLimit: Int = 3
     public var sessionMasteredLimit: Int = 1
+    /// Warm-up questions at the session start: easiest due items, forced
+    /// recognition (session arc, docs/plan/04 §Session planner).
+    public var sessionWarmupLimit: Int = 2
+    /// Tier-check burst size. The check rides on top of the session target
+    /// and only appears when the tier-unlock condition is met.
+    public var tierCheckQuestionCount: Int = 3
     /// A missed question re-enters the same session this many positions later.
     public var repairOffset: Int = 3
 

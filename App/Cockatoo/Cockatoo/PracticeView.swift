@@ -16,15 +16,22 @@ struct PracticeView: View {
 struct PracticeSessionView: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var session: PracticeSessionModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 20) {
             if let planned = session.currentQuestion {
-                if session.showingIntro, let item = session.introItem {
-                    introCard(item)
-                } else {
-                    questionCard(planned)
+                progressStrip
+                Group {
+                    if session.showingIntro, let item = session.introItem {
+                        introCard(item)
+                            .transition(revealTransition)
+                    } else {
+                        questionCard(planned)
+                            .transition(cardTransition)
+                    }
                 }
+                .id("card-\(session.index)-\(session.showingIntro)")
             } else if !session.ledger.isEmpty {
                 summaryView
             } else {
@@ -33,8 +40,62 @@ struct PracticeSessionView: View {
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(cardAnimation, value: session.index)
+        .animation(cardAnimation, value: session.showingIntro)
+        .animation(.easeOut(duration: 0.18), value: session.feedback)
         .onAppear { session.ensureSession() }
         .navigationTitle("Practice")
+    }
+
+    // MARK: - Motion (slide/stack base, flip-ish reveal; calm under
+    // Reduce Motion — the living-deck language from the design mockups)
+
+    var cardAnimation: Animation? {
+        reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.35, dampingFraction: 0.85)
+    }
+
+    var cardTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+    }
+
+    var revealTransition: AnyTransition {
+        reduceMotion ? .opacity : .scale(scale: 0.96).combined(with: .opacity)
+    }
+
+    // MARK: - Session progress strip (answers collapse into chips)
+
+    var progressStrip: some View {
+        HStack(spacing: 4) {
+            ForEach(Array(session.answerTrail.enumerated()), id: \.offset) { _, outcome in
+                Capsule()
+                    .fill(outcomeColor(outcome))
+                    .frame(width: 14, height: 6)
+            }
+            Capsule()
+                .fill(Color.accentColor)
+                .frame(width: 22, height: 6)
+            let remaining = max(0, session.queue.count - session.index - 1)
+            ForEach(0..<remaining, id: \.self) { _ in
+                Capsule()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: 14, height: 6)
+            }
+        }
+        .accessibilityLabel("question \(min(session.index + 1, session.queue.count)) of \(session.queue.count)")
+    }
+
+    func outcomeColor(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> Color {
+        switch outcome {
+        case .introduced: return .blue
+        case .strengthened, .repaired: return .green
+        case .almost: return .orange
+        case .missed: return .red.opacity(0.8)
+        }
     }
 
     // MARK: - Introduction card (cold-start path c')
@@ -76,6 +137,9 @@ struct PracticeSessionView: View {
     @ViewBuilder
     func questionCard(_ planned: SessionPlanner.PlannedQuestion) -> some View {
         VStack(spacing: 6) {
+            if planned.beat == .tierCheck, !planned.isRepair {
+                tierCheckBanner
+            }
             // Honest progress: current position / current total (repairs grow it).
             Text(progressLabel(planned))
                 .font(.caption).foregroundStyle(.secondary)
@@ -83,16 +147,44 @@ struct PracticeSessionView: View {
         }
         if let feedback = session.feedback {
             feedbackView(feedback)
+            if let unlocked = session.unlockedTier {
+                Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.green)
+            } else if let chip = reviewChip {
+                Text(chip).font(.caption).foregroundStyle(.secondary)
+            }
             Button(session.index + 1 >= session.queue.count ? "Finish" : "Next") { session.advance() }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.return, modifiers: [])
         }
     }
 
+    /// The per-answer micro chip: what just changed for this word.
+    var reviewChip: String? {
+        guard let p = session.lastGraded, let dueAt = p.dueAt else { return nil }
+        let when = RelativeDateTimeFormatter().localizedString(for: dueAt, relativeTo: Date())
+        return "next review \(when)"
+    }
+
+    var tierCheckBanner: some View {
+        let next = (model.overview?.tierProgress?.nextTier).map(String.init) ?? "next"
+        return Label("Tier \(next) check — all correct unlocks it", systemImage: "flag.checkered")
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 9).padding(.vertical, 3)
+            .background(Color.purple.opacity(0.13), in: Capsule())
+            .foregroundStyle(.purple)
+    }
+
     func progressLabel(_ planned: SessionPlanner.PlannedQuestion) -> String {
         var label = "\(min(session.index + 1, session.queue.count)) of \(session.queue.count)"
         if planned.isRepair { label += " · repair" }
-        if planned.isIntro { label += " · new word" }
+        switch planned.beat {
+        case .warmup: label += " · warm-up"
+        case .newWords: label += " · new word"
+        case .tierCheck: label += " · tier check"
+        case .mix: break
+        }
         return label
     }
 
@@ -150,6 +242,20 @@ struct PracticeSessionView: View {
 
     var summaryView: some View {
         VStack(spacing: 14) {
+            if let unlocked = session.unlockedTier {
+                VStack(spacing: 4) {
+                    Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.green)
+                    Text("New words are entering rotation — they'll start appearing in Safari and in practice.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(14)
+                .frame(maxWidth: 420)
+                .background(Color.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+            }
             Text("Session complete").font(.title2.bold())
             Text("\(session.correctCount) of \(session.answeredCount) correct")
                 .foregroundStyle(.secondary)

@@ -60,18 +60,27 @@ Controls what becomes ambient (transition a) and when tiers unlock.
 - **Ambient set size**: keep **8–15 items** in `ambient` at once (below the page replacement cap of 20 so a rich page can show most of the working set plus due `learning` items).
 - **Admission order** within the unlocked tier: `isCore`/priority metadata first, then ascending `frequencyBand`, then corpus rank.
 - **Dependency gating**: chunks/patterns require every ID in `dependencies` to be ≥ `known`.
-- **Tier unlock**: tier N+1 unlocks when **≥ 70% of tier N items are ≥ `known`** and at least 7 days have elapsed since tier N unlocked (comfort takes time, not just correct answers).
+- **Tier unlock is quiz-gated, never a background flip**: when **≥ 70% of tier N items are ≥ `known`** and at least 7 days have elapsed since tier N unlocked (comfort takes time, not just correct answers), the next practice session ends with a **tier-check burst** — the `tierCheckQuestionCount` (3) weakest current-tier items, normal mode ladder, riding on top of the session target. Passing (every check question correct on its first ask — repairs don't count; `SessionPlanner.tierCheckPassed`) fires `LearnerEngine.unlockNextTier`, which re-validates the condition server-side (P1) before unlocking and admitting new items. A miss lapses the item as usual, readiness self-corrects, and the check reappears in a later session.
 - **Demotion**: if the ambient set is full and a new item is admitted, the oldest `ready` item without recent engagement yields its slot (stays `ready`, just leaves the snapshot).
 
 ## Session planner
 
 A session is short by design (~2 minutes, P7 spirit): **default 10 questions, minimum 4** (if fewer items qualify, the session is shorter — never padded with repeats of the same question back-to-back, and never advertised as longer than it is, P4).
 
+Sessions have a visible **arc** — warm-up → new words → mix → tier check —
+where the warm-up is the 1–2 *easiest* (lowest-box) due items opening the
+session and the tier check appears only when the unlock condition holds
+(§ActivationEngine). Beats change ordering and framing only; **question
+modes always follow the stage/box ladder** (forcing recognition for warm-ups
+would starve recall and stall `learning → known` — tested by the simulated
+learner).
+
 Mix per session, in priority order:
-1. All due `learning`/`known` items (up to 7).
+1. All due `learning`/`known` items (up to 7; easiest 1–2 open as warm-up).
 2. `ready` items awaiting their first question (up to 3).
 3. `ambient` introductions, admission-ordered, filling leftover room (up to 3) — reviews always come first.
 4. At most 1 sampled `mastered` item.
+5. The tier-check burst (3) on top of the target, when readiness holds.
 
 **Missed-question repair is real**: a wrongly answered item re-enters the same session's queue at position +3 (once). This implements what the prototype's "repair lane" faked.
 

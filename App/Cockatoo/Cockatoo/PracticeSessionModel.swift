@@ -17,6 +17,16 @@ final class PracticeSessionModel: ObservableObject {
     @Published var showingIntro = false
     @Published var introItem: VocabItem?
     @Published var ledger: [LedgerEntry] = []
+    /// Outcome of every answer in order (repairs included) — drives the
+    /// session progress strip.
+    @Published var answerTrail: [LedgerEntry.Outcome] = []
+    /// The just-graded item's progress, for the post-answer micro chip.
+    @Published var lastGraded: ItemProgress?
+    /// Set when this session's tier check passed and the unlock fired.
+    @Published var unlockedTier: Int?
+
+    /// First-ask results for tier-check questions (repairs don't count).
+    private var tierCheckFirsts: [String: Bool] = [:]
 
     enum Feedback: Equatable {
         case correct
@@ -69,6 +79,10 @@ final class PracticeSessionModel: ObservableObject {
         feedback = nil
         sessionDone = queue.isEmpty
         ledger = []
+        answerTrail = []
+        lastGraded = nil
+        unlockedTier = nil
+        tierCheckFirsts = [:]
         prepareCurrent()
     }
 
@@ -125,11 +139,25 @@ final class PracticeSessionModel: ObservableObject {
             nearMiss: nearMiss,
             answeredAt: Date()
         ), now: Date())
+        lastGraded = updated
 
         updateLedger(planned: planned, correct: isCorrect, nearMiss: nearMiss, progress: updated)
 
         if !isCorrect {
             engine.planner.requeueMissed(planned.question, into: &queue, afterIndex: index)
+        }
+
+        // Tier check: pass = every check question correct on its first ask.
+        // The engine re-validates the unlock condition (P1), so this call
+        // can never skip ahead.
+        if planned.beat == .tierCheck, !planned.isRepair,
+           tierCheckFirsts[planned.question.itemId] == nil {
+            tierCheckFirsts[planned.question.itemId] = isCorrect
+            let total = queue.filter { $0.beat == .tierCheck && !$0.isRepair }.count
+            if tierCheckFirsts.count == total,
+               SessionPlanner.tierCheckPassed(firstResults: Array(tierCheckFirsts.values)) {
+                unlockedTier = try? engine.unlockNextTier(now: Date())
+            }
         }
     }
 
@@ -147,6 +175,8 @@ final class PracticeSessionModel: ObservableObject {
         } else {
             outcome = .missed
         }
+
+        answerTrail.append(outcome)
 
         let display = ledgerDisplay(planned.question)
         if let i = ledger.firstIndex(where: { $0.id == planned.question.itemId }) {

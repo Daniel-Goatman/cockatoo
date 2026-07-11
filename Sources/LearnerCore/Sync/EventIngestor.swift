@@ -118,26 +118,17 @@ public struct EventIngestor: Sendable {
             """, arguments: [itemId, since, eventId]) ?? 0
     }
 
-    /// Promote locked → ambient per ActivationEngine; unlock tiers.
+    /// Promote locked → ambient per ActivationEngine. Tier unlocking is NOT
+    /// automatic: it happens through the tier-check beat in practice
+    /// sessions (LearnerEngine.unlockNextTier) — an earned, visible moment,
+    /// never a background flip.
     func runActivation(dbc: Database, now: Date) throws {
         let language = try SettingRecord.fetchOne(dbc, key: SettingsKey.activeLanguage)?.value ?? "de"
         let itemRecords = try VocabItemRecord.filter(Column("language") == language).fetchAll(dbc)
         let items = try itemRecords.map { try $0.item() }
         var progress = Dictionary(uniqueKeysWithValues: try ItemProgress.fetchAll(dbc).map { ($0.itemId, $0) })
 
-        var unlockedTier = Int(try SettingRecord.fetchOne(dbc, key: SettingsKey.unlockedTier)?.value ?? "1") ?? 1
-        let unlockedAtRaw = try SettingRecord.fetchOne(dbc, key: SettingsKey.tierUnlockedAt(unlockedTier))?.value
-        let unlockedAt = unlockedAtRaw.flatMap { ISO8601DateFormatter().date(from: $0) }
-
-        let tierState = ActivationEngine.TierState(unlockedTier: unlockedTier, unlockedAt: unlockedAt)
-        if activation.shouldUnlockNextTier(items: items, progress: progress, tier: tierState, now: now) {
-            unlockedTier += 1
-            try SettingRecord(key: SettingsKey.unlockedTier, value: String(unlockedTier)).save(dbc)
-            try SettingRecord(
-                key: SettingsKey.tierUnlockedAt(unlockedTier),
-                value: ISO8601DateFormatter().string(from: now)
-            ).save(dbc)
-        }
+        let unlockedTier = Int(try SettingRecord.fetchOne(dbc, key: SettingsKey.unlockedTier)?.value ?? "1") ?? 1
 
         for id in activation.admissions(items: items, progress: progress, unlockedTier: unlockedTier) {
             var p = progress[id] ?? ItemProgress(itemId: id, now: now)

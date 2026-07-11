@@ -74,9 +74,16 @@ public struct LearnerEngine: Sendable {
         let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
-        let selected = planner.selectItems(items: items, progress: progress, now: now)
+        let tier = try tierState()
+        let checkReady = ingestor.activation.shouldUnlockNextTier(
+            items: items, progress: progress, tier: tier, now: now
+        )
+        let selection = planner.select(
+            items: items, progress: progress, now: now,
+            currentTier: tier.unlockedTier, tierCheckReady: checkReady
+        )
         let queue = try planner.plan(
-            items: selected,
+            selection: selection,
             allItems: items,
             progress: progress,
             sentences: { try store.sentences(itemId: $0) },
@@ -84,6 +91,42 @@ public struct LearnerEngine: Sendable {
         )
         let grading = try importer.gradingConfig(language: language, store: store)
         return Session(queue: queue, grading: grading)
+    }
+
+    // MARK: - Tier unlock (the earned moment, fired from the tier-check beat)
+
+    func tierState() throws -> ActivationEngine.TierState {
+        let unlockedTier = Int(try store.setting(SettingsKey.unlockedTier) ?? "1") ?? 1
+        let unlockedAt = (try store.setting(SettingsKey.tierUnlockedAt(unlockedTier)))
+            .flatMap { ISO8601DateFormatter().date(from: $0) }
+        return ActivationEngine.TierState(unlockedTier: unlockedTier, unlockedAt: unlockedAt)
+    }
+
+    /// Unlock tier N+1 after a passed tier check. The unlock condition is
+    /// re-validated here (P1: the UI reports, the engine decides), so a
+    /// stray call can never skip ahead. Returns the newly unlocked tier, or
+    /// nil when the condition doesn't hold.
+    @discardableResult
+    public func unlockNextTier(now: Date) throws -> Int? {
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let items = try store.items(language: language)
+        let progress = try store.allProgress()
+        let tier = try tierState()
+        guard ingestor.activation.shouldUnlockNextTier(
+            items: items, progress: progress, tier: tier, now: now
+        ) else { return nil }
+
+        let next = tier.unlockedTier + 1
+        try store.db.writer.write { dbc in
+            try SettingRecord(key: SettingsKey.unlockedTier, value: String(next)).save(dbc)
+            try SettingRecord(
+                key: SettingsKey.tierUnlockedAt(next),
+                value: ISO8601DateFormatter().string(from: now)
+            ).save(dbc)
+            try ingestor.runActivation(dbc: dbc, now: now)
+            try store.bumpSnapshotVersion(dbc)
+        }
+        return next
     }
 
     /// Grade an answered question, persist progress, bump snapshot version.
@@ -147,6 +190,9 @@ public struct LearnerEngine: Sendable {
         public var almostReady: [ExposureNeed]
         /// nil when the pack has no tier above the unlocked one.
         public var tierProgress: TierProgress?
+        /// True when the tier-unlock condition holds — the next practice
+        /// session will include a tier-check burst.
+        public var tierCheckReady: Bool
         /// Earliest upcoming review among scheduled items (nil when none).
         public var nextDueAt: Date?
 
@@ -192,7 +238,11 @@ public struct LearnerEngine: Sendable {
                 return ra == rb ? a.itemId < b.itemId : ra < rb
             }
 
-        let unlockedTier = Int(try store.setting(SettingsKey.unlockedTier) ?? "1") ?? 1
+        let tier = try tierState()
+        let unlockedTier = tier.unlockedTier
+        let tierCheckReady = ingestor.activation.shouldUnlockNextTier(
+            items: items, progress: progress, tier: tier, now: now
+        )
         var tierProgress: TierProgress?
         let currentTierItems = items.filter { $0.frequencyBand == unlockedTier }
         if !currentTierItems.isEmpty,
@@ -223,6 +273,7 @@ public struct LearnerEngine: Sendable {
             introAvailable: min(counts[.ambient] ?? 0, config.sessionIntroLimit),
             almostReady: Array(almostReady.prefix(3)),
             tierProgress: tierProgress,
+            tierCheckReady: tierCheckReady,
             nextDueAt: nextDueAt
         )
     }

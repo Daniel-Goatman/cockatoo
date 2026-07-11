@@ -52,6 +52,7 @@ final class SimulatedLearnerTests: XCTestCase {
                     let session = try engine.planSession(now: clock, seed: rng.next())
                     var queue = session.queue
                     var index = 0
+                    var tierCheckFirsts: [Bool] = []
                     while index < queue.count {
                         let planned = queue[index]
                         let correct = rng.next() % 100 < 85
@@ -63,12 +64,20 @@ final class SimulatedLearnerTests: XCTestCase {
                         )
                         let updated = try engine.grade(result: result, now: clock)
                         XCTAssertEqual(updated.validateInvariants(), [], "invariant violation day \(day) item \(updated.itemId)")
+                        if planned.beat == .tierCheck, !planned.isRepair {
+                            tierCheckFirsts.append(correct)
+                        }
                         if !correct {
                             engine.planner.requeueMissed(planned.question, into: &queue, afterIndex: index)
                         }
                         questionsAnswered += 1
                         index += 1
                         clock = clock.addingTimeInterval(20)
+                    }
+                    // Tier unlocking is quiz-gated: a clean tier-check burst
+                    // fires the unlock, exactly as the practice UI does.
+                    if SessionPlanner.tierCheckPassed(firstResults: tierCheckFirsts) {
+                        try engine.unlockNextTier(now: clock)
                     }
                 }
             }

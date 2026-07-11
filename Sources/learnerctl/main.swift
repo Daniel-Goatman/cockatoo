@@ -155,6 +155,7 @@ case "simulate":
                 try sim.postEvents(events, now: clock)
                 if bout % 2 == 0 {
                     let session = try sim.planSession(now: clock, seed: rng.next())
+                    var tierCheckFirsts: [Bool] = []
                     for planned in session.queue {
                         let correct = rng.next() % 100 < 85
                         _ = try sim.grade(result: .init(
@@ -162,9 +163,15 @@ case "simulate":
                             mode: planned.question.mode,
                             correct: correct, answeredAt: clock
                         ), now: clock)
+                        if planned.beat == .tierCheck { tierCheckFirsts.append(correct) }
                         answeredToday += 1
                         totalAnswered += 1
                         if correct { totalCorrect += 1 }
+                    }
+                    // Tier unlocking is quiz-gated: a clean tier-check burst
+                    // fires the unlock, exactly as the app's practice UI does.
+                    if SessionPlanner.tierCheckPassed(firstResults: tierCheckFirsts) {
+                        _ = try sim.unlockNextTier(now: clock)
                     }
                 }
             }
