@@ -65,9 +65,9 @@ struct DashboardView: View {
                     nextActionCard(o)
                     HStack(spacing: 12) {
                         StatTile(title: "Due now", value: "\(o.dueNow)")
-                        StatTile(title: "Ready to practice", value: "\(o.readyCount)")
-                        StatTile(title: "Words known", value: "\((o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0))")
                         StatTile(title: "In rotation", value: "\((o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0))")
+                        StatTile(title: "Practicing", value: "\(o.countsByStage[.learning] ?? 0)")
+                        StatTile(title: "Words known", value: "\((o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0))")
                     }
                     if let tier = o.tierProgress {
                         tierProgressCard(tier)
@@ -191,31 +191,31 @@ struct DashboardView: View {
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    // Pipeline order with the parked (locked) words last and muted — the
-    // dashboard shows motion, not a wall of unavailable items.
+    // The four user-facing stages, pipeline-ordered, with the parked
+    // (upcoming) words last and muted — the dashboard shows motion, not a
+    // wall of unavailable items.
     func stageBars(_ o: LearnerEngine.Overview) -> some View {
-        let order: [Stage] = [.ambient, .ready, .learning, .known, .mastered, .locked]
-        return ForEach(order, id: \.self) { stage in
-            let count = o.countsByStage[stage] ?? 0
+        func count(_ stages: Stage...) -> Int {
+            stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
+        }
+        let groups: [(label: String, count: Int, color: Color, muted: Bool)] = [
+            ("on pages", count(.ambient, .ready), Color.accentColor.opacity(0.5), false),
+            ("practicing", count(.learning), Color.orange.opacity(0.55), false),
+            ("known", count(.known, .mastered), Color.green.opacity(0.7), false),
+            ("upcoming", count(.locked), Color.secondary.opacity(0.3), true),
+        ]
+        return ForEach(groups, id: \.label) { group in
             HStack {
-                Text(stage.displayName).frame(width: 110, alignment: .leading).font(.callout)
+                Text(group.label).frame(width: 110, alignment: .leading).font(.callout)
                 GeometryReader { geo in
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(stageBarColor(stage))
-                        .frame(width: max(2, geo.size.width * CGFloat(count) / CGFloat(max(1, o.totalItems))))
+                        .fill(group.color)
+                        .frame(width: max(2, geo.size.width * CGFloat(group.count) / CGFloat(max(1, o.totalItems))))
                 }
                 .frame(height: 14)
-                Text("\(count)").font(.callout.monospaced()).frame(width: 40, alignment: .trailing)
+                Text("\(group.count)").font(.callout.monospaced()).frame(width: 40, alignment: .trailing)
             }
-            .opacity(stage == .locked ? 0.5 : 1)
-        }
-    }
-
-    func stageBarColor(_ stage: Stage) -> Color {
-        switch stage {
-        case .locked: return Color.secondary.opacity(0.3)
-        case .known, .mastered: return Color.green.opacity(0.7)
-        default: return Color.accentColor.opacity(0.5)
+            .opacity(group.muted ? 0.5 : 1)
         }
     }
 }
@@ -392,17 +392,18 @@ struct LibraryView: View {
     }
 }
 
-/// Human names for the engine's stage machine — the rawValues are engine
-/// jargon and never shown to users.
+/// The user-facing model is FOUR stages: upcoming → on pages → practicing
+/// → known. The engine's six states stay load-bearing underneath (P2), but
+/// "ready" is only a session-priority hint (any on-pages word can be
+/// introduced in practice anyway) and "mastered" is a badge on known — not
+/// mental-model stages of their own.
 extension Stage {
     var displayName: String {
         switch self {
         case .locked: return "upcoming"
-        case .ambient: return "on pages"
-        case .ready: return "ready"
+        case .ambient, .ready: return "on pages"
         case .learning: return "practicing"
-        case .known: return "known"
-        case .mastered: return "mastered"
+        case .known, .mastered: return "known"
         }
     }
 }
@@ -413,20 +414,24 @@ struct StageChip: View {
     var color: Color {
         switch stage {
         case .locked: return .gray
-        case .ambient: return .blue
-        case .ready: return .teal
+        case .ambient, .ready: return .blue
         case .learning: return .orange
-        case .known: return .green
-        case .mastered: return .green
+        case .known, .mastered: return .green
         }
     }
 
     var body: some View {
-        Text(stage.displayName)
-            .font(.caption.weight(.medium))
-            .padding(.horizontal, 7).padding(.vertical, 2)
-            .background(color.opacity(0.16), in: Capsule())
-            .foregroundStyle(color)
+        HStack(spacing: 3) {
+            Text(stage.displayName)
+            if stage == .mastered {
+                Image(systemName: "star.fill").font(.system(size: 7))
+            }
+        }
+        .font(.caption.weight(.medium))
+        .padding(.horizontal, 7).padding(.vertical, 2)
+        .background(color.opacity(0.16), in: Capsule())
+        .foregroundStyle(color)
+        .help(stage == .mastered ? "Mastered — retired from pages, kept fresh with rare reviews" : "")
     }
 }
 
