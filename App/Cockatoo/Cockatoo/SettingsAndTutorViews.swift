@@ -1,4 +1,5 @@
 import SwiftUI
+import ServiceManagement
 import LearnerCore
 
 // MARK: - Settings (provider config, privacy, How swapping works)
@@ -12,9 +13,23 @@ struct SettingsView: View {
     @State private var pageContextOptIn = false
     @State private var blockedHostsText = ""
     @State private var testResult: String?
+    @State private var launchAtLogin = false
+    @State private var launchAtLoginError: String?
 
     var body: some View {
         Form {
+            Section("General") {
+                Toggle("Launch Cockatoo at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { setLaunchAtLogin(launchAtLogin) }
+                if let launchAtLoginError {
+                    Text(launchAtLoginError).font(.caption).foregroundStyle(.red)
+                }
+                Text("""
+                Recommended: the Safari extension reads its vocabulary from the app, \
+                so keeping Cockatoo running means swaps and progress sync are always live.
+                """).font(.caption).foregroundStyle(.secondary)
+            }
+
             Section("Language model (OpenAI-compatible)") {
                 TextField("Base URL", text: $baseURL, prompt: Text("https://openrouter.ai/api/v1"))
                 TextField("Model", text: $modelName, prompt: Text("e.g. anthropic/claude-sonnet-5"))
@@ -64,6 +79,24 @@ struct SettingsView: View {
         apiKey = KeychainStore.read(key: "llm.apiKey") ?? ""
         pageContextOptIn = (try? model.engine.store.setting(SettingsKey.pageContextOptIn)) == "true"
         blockedHostsText = ((try? model.engine.store.blockedHosts()) ?? []).joined(separator: ", ")
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    /// SMAppService requires a stable bundle path — effectively the
+    /// /Applications copy installed by script/install.sh. From a DerivedData
+    /// build the registration may fail; surface that instead of hiding it.
+    func setLaunchAtLogin(_ enable: Bool) {
+        launchAtLoginError = nil
+        do {
+            if enable {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            launchAtLoginError = "Couldn't update login item: \(error.localizedDescription)"
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
     }
 
     func save() {

@@ -9,7 +9,7 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
 | Piece | Where | Status |
 |---|---|---|
 | App code (SwiftUI, menu bar, XPC listener) | `App/Cockatoo/Cockatoo/` | builds via SwiftPM |
-| Appex forwarder | `App/SafariWebExtensionHandler.swift` | source ready |
+| Appex forwarder | `App/Cockatoo/CockatooExtension Extension/SafariWebExtensionHandler.swift` | source ready |
 | Extension resources | `extension/dist-resources/` (after `npm run build`) | built |
 | Entitlements | `App/*.entitlements` | ready |
 
@@ -21,7 +21,7 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
    (repo root) so the target links `LearnerCore`.
 2. **Add target** → Safari Extension (macOS), name `CockatooExtension`,
    bundle id `dev.cockatoo.app.Extension`. Replace the template handler with
-   `App/SafariWebExtensionHandler.swift`. Point the
+   `App/Cockatoo/CockatooExtension Extension/SafariWebExtensionHandler.swift`. Point the
    extension's Resources at `extension/dist-resources/` (folder reference so
    `npm run build` output flows in).
 3. **Entitlements**: assign `App/Cockatoo.entitlements` to the app and
