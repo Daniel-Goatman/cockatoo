@@ -6,8 +6,12 @@ import LearnerCore
 //   learnerctl --db <path> import <pack.json>
 //   learnerctl --db <path> overview
 //   learnerctl --db <path> snapshot
-//   learnerctl --db <path> simulate --days 30
+//   learnerctl --db <path> simulate --days 30 [--seed N] [--persist]
 //   learnerctl --db <path> session
+//
+// simulate runs in an in-memory SANDBOX seeded from the database's pack:
+// nothing is saved unless --persist is passed (which runs against the real
+// database, e.g. to seed dev state for the app).
 
 let args = Array(CommandLine.arguments.dropFirst())
 
@@ -85,39 +89,124 @@ case "snapshot":
 
 case "simulate":
     let days = Int(option("--days") ?? "30") ?? 30
+    let seed = UInt64(option("--seed") ?? "1") ?? 1
+    let persist = args.contains("--persist")
     do {
-        let grading = try engine.importer.gradingConfig(language: "de", store: engine.store)
-        _ = grading
-        var rng = SplitMix64(seed: 1)
+        // Sandbox by default: copy the pack into an in-memory engine so
+        // repeated runs never contaminate real learning state.
+        let sim: LearnerEngine
+        if persist {
+            sim = engine
+        } else {
+            let language = try engine.store.setting(SettingsKey.activeLanguage) ?? "de"
+            let items = try engine.store.items(language: language)
+            guard !items.isEmpty else { fail("no pack in database — run 'learnerctl import <pack.json>' first") }
+            let pack = PackFile(
+                language: language,
+                version: "sandbox",
+                provenance: .init(corpus: "sandbox copy", license: "-", packtool: "-", generatedAt: "-"),
+                grading: try engine.importer.gradingConfig(language: language, store: engine.store),
+                items: items
+            )
+            sim = LearnerEngine(store: LearnerStore(db: try AppDatabase.inMemory()))
+            try sim.importPack(pack, now: now)
+        }
+
+        var rng = SplitMix64(seed: seed)
         var clock = now
         var counter = 0
+        var totalAnswered = 0
+        var totalCorrect = 0
+        var lastTier = try sim.overview(now: clock).unlockedTier
+        var firstMasteredReported = false
+        let itemName: (String) throws -> String = { id in
+            guard let item = try sim.store.item(id: id) else { return id }
+            let english = item.sourceForms.first { !$0.form.contains(" ") }?.form ?? item.sourceForms[0].form
+            return "\(item.target) (\(english))"
+        }
+
+        print("Simulating \(days) days of browsing + practice at 85% accuracy (seed \(seed))\(persist ? " — PERSISTING to database" : " — sandbox, nothing will be saved")")
+        print("")
+        print("day   tier   ambient  ready  learning  known  mastered   answered")
+        print("────  ────   ───────  ─────  ────────  ─────  ────────   ────────")
+
         for day in 0..<days {
+            var answeredToday = 0
             for bout in 0..<4 {
                 clock = clock.addingTimeInterval(4 * 3600)
                 var events: [ExposureEvent] = []
-                for p in try engine.store.allProgress().values where p.stage == .ambient || p.stage == .ready {
+                for p in try sim.store.allProgress().values where p.stage == .ambient || p.stage == .ready {
                     counter += 1
                     events.append(ExposureEvent(id: "ctl-\(counter)", itemId: p.itemId, type: .seen, occurredAt: clock))
                     if rng.next() % 100 < 40 {
                         counter += 1
                         events.append(ExposureEvent(id: "ctl-\(counter)", itemId: p.itemId, type: .engaged, occurredAt: clock))
                     }
+                    if rng.next() % 100 < 20, let item = try sim.store.item(id: p.itemId) {
+                        counter += 1
+                        events.append(ExposureEvent(
+                            id: "ctl-\(counter)", itemId: p.itemId, type: .sentenceCaptured, occurredAt: clock,
+                            sentence: "Yesterday we talked about the \(item.sourceForms.last!.form) for a while."
+                        ))
+                    }
                 }
-                try engine.postEvents(events, now: clock)
+                try sim.postEvents(events, now: clock)
                 if bout % 2 == 0 {
-                    let session = try engine.planSession(now: clock, seed: rng.next())
+                    let session = try sim.planSession(now: clock, seed: rng.next())
                     for planned in session.queue {
                         let correct = rng.next() % 100 < 85
-                        _ = try engine.grade(result: .init(
+                        _ = try sim.grade(result: .init(
                             itemId: planned.question.itemId,
                             mode: planned.question.mode,
                             correct: correct, answeredAt: clock
                         ), now: clock)
+                        answeredToday += 1
+                        totalAnswered += 1
+                        if correct { totalCorrect += 1 }
                     }
                 }
             }
-            let o = try engine.overview(now: clock)
-            print("day \(day + 1): tier \(o.unlockedTier), known+ \( (o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0) )")
+
+            let o = try sim.overview(now: clock)
+            func col(_ stage: Stage) -> String { String(o.countsByStage[stage] ?? 0).leftPadded(to: 5) }
+            print("\(String(day + 1).leftPadded(to: 4))  \(String(o.unlockedTier).leftPadded(to: 4))   \(col(.ambient).leftPadded(to: 7))  \(col(.ready))  \(col(.learning).leftPadded(to: 8))  \(col(.known))  \(col(.mastered).leftPadded(to: 8))   \(String(answeredToday).leftPadded(to: 8))")
+
+            if o.unlockedTier > lastTier {
+                print("      ▸ tier \(o.unlockedTier) unlocked — new words entering rotation")
+                lastTier = o.unlockedTier
+            }
+            if !firstMasteredReported, (o.countsByStage[.mastered] ?? 0) > 0 {
+                let mastered = try sim.store.allProgress().values.first { $0.stage == .mastered }
+                if let mastered {
+                    print("      ▸ first word mastered: \(try itemName(mastered.itemId))")
+                }
+                firstMasteredReported = true
+            }
+        }
+
+        // Final report.
+        let o = try sim.overview(now: clock)
+        let accuracy = totalAnswered > 0 ? Int((Double(totalCorrect) / Double(totalAnswered) * 100).rounded()) : 0
+        print("")
+        print("── after \(days) simulated days ──")
+        print("questions answered: \(totalAnswered) (\(accuracy)% correct)   tier reached: \(o.unlockedTier)")
+        let maxCount = max(1, Stage.allCases.map { o.countsByStage[$0] ?? 0 }.max() ?? 1)
+        for stage in Stage.allCases {
+            let count = o.countsByStage[stage] ?? 0
+            let bar = String(repeating: "█", count: Int((Double(count) / Double(maxCount) * 24).rounded()))
+            print("  \(stage.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0)) \(String(count).leftPadded(to: 3))  \(bar)")
+        }
+        let knownIds = try sim.store.allProgress().values
+            .filter { $0.stage >= .known }
+            .sorted { $0.itemId < $1.itemId }
+            .prefix(8)
+            .map(\.itemId)
+        if !knownIds.isEmpty {
+            print("  now knows: \(try knownIds.map(itemName).joined(separator: ", "))\((o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0) > 8 ? ", …" : "")")
+        }
+        if !persist {
+            print("")
+            print("(sandbox run — nothing was saved; pass --persist to write into the database)")
         }
     } catch {
         fail("\(error)")
@@ -145,4 +234,10 @@ case "session":
 
 default:
     fail("unknown command '\(command)'")
+}
+
+extension String {
+    func leftPadded(to width: Int) -> String {
+        count >= width ? self : String(repeating: " ", count: width - count) + self
+    }
 }
