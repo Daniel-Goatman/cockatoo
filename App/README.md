@@ -51,6 +51,13 @@ If the mach-service lookup fails despite matching App Group prefixes, the
 fallback is an `NSXPCListener.anonymous` endpoint published via the app group
 container — see docs/plan/03-data-model-and-storage.md §R2.
 
+## Install / update the real copy
+
+`script/install.sh` — builds extension resources + the Xcode project
+(Release), installs to /Applications, relaunches. Flags: `--debug`,
+`--restart-safari`. This is the normal way to ship changes to yourself;
+use Xcode ⌘R only when you need the debugger.
+
 ## Dev loop without Xcode
 
 - Learning engine: `swift test`

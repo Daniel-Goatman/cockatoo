@@ -5,3 +5,4 @@ extension/dist-resources/
 dist/
 .DS_Store
 xcuserdata/
+build/
