@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cockatoo Quiz + Progression Mockup</title>
+  <style>
+    :root {
+      --paper: #f7f1e4;
+      --paper-2: #fffaf0;
+      --paper-3: #ebe1ca;
+      --ink: #1f1a14;
+      --muted: #665a48;
+      --faint: #9a8d75;
+      --rule: #d7ccb3;
+      --tobacco: #8a4a26;
+      --moss: #5d6b3e;
+      --indigo: #33496d;
+      --plum: #65405d;
+      --oxblood: #762f2d;
+      --ok: #4d713c;
+      --warn: #b98633;
+      --shadow: 0 24px 70px rgba(31, 26, 20, .14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(93, 107, 62, .13), transparent 28%),
+        radial-gradient(circle at 82% 20%, rgba(51, 73, 109, .12), transparent 30%),
+        linear-gradient(135deg, #f3ecd9 0%, #fbf6eb 48%, #e9dfc9 100%);
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, ui-serif, serif;
+      letter-spacing: 0;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    .page {
+      padding: 28px;
+    }
+
+    .app {
+      width: min(1380px, calc(100vw - 56px));
+      min-height: 850px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 218px minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid rgba(93, 82, 61, .28);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 22px 14px 18px;
+      background: linear-gradient(180deg, #e7ddc7, #f1e8d6);
+      border-right: 1px solid var(--rule);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 6px 22px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 14px;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 31px;
+      height: 31px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 21px;
+      font-style: italic;
+    }
+
+    .brand strong {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      border: 0;
+      border-radius: 7px;
+      padding: 9px 10px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav button.active {
+      background: var(--paper-2);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px rgba(168, 153, 122, .55);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .active .dot { background: var(--tobacco); }
+
+    .sidebar-footer {
+      margin-top: 430px;
+      padding: 15px 8px 0;
+      border-top: 1px solid var(--rule);
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.7;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 38px 1fr;
+      min-width: 0;
+    }
+
+    .titlebar {
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid var(--rule);
+      background: linear-gradient(180deg, #f6efdf, #eadfc8);
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .canvas {
+      padding: 34px 38px 42px;
+      overflow: auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 8px 0 10px;
+      max-width: 700px;
+      font-size: 43px;
+      line-height: 1.02;
+      font-weight: 500;
+    }
+
+    h1 em {
+      color: var(--tobacco);
+      font-style: italic;
+    }
+
+    .subhead {
+      max-width: 680px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      font-style: italic;
+      line-height: 1.45;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      background: var(--paper-2);
+      overflow: hidden;
+    }
+
+    .summary div {
+      padding: 15px 16px;
+      border-right: 1px solid var(--rule);
+    }
+
+    .summary div:last-child { border-right: 0; }
+
+    .summary strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    .summary span {
+      display: block;
+      margin-top: 5px;
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .action-strip {
+      display: flex;
+      gap: 9px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .primary, .secondary, .ghost {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 0 9px 18px rgba(31, 26, 20, .20);
+    }
+
+    .secondary {
+      background: var(--tobacco);
+      color: #fff3e0;
+      box-shadow: 0 9px 18px rgba(138, 74, 38, .22);
+    }
+
+    .ghost {
+      background: var(--paper-2);
+      color: var(--ink);
+      border: 1px solid var(--rule);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(250px, .95fr) minmax(360px, 1.45fr) minmax(230px, .85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(255, 250, 240, .72);
+      box-shadow: 0 1px 0 rgba(255,255,255,.72) inset;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 19px 14px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 550;
+    }
+
+    .panel-body {
+      padding: 18px 19px 20px;
+    }
+
+    .readiness-ring {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 154px;
+      height: 154px;
+      margin: 3px auto 18px;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--moss) 0 82%, rgba(93,107,62,.15) 82% 100%);
+    }
+
+    .readiness-ring::after {
+      content: "";
+      position: absolute;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: var(--paper-2);
+      box-shadow: inset 0 0 0 1px var(--rule);
+    }
+
+    .ring-label {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .ring-label strong {
+      display: block;
+      font-size: 38px;
+      line-height: .9;
+      font-weight: 600;
+      color: var(--moss);
+    }
+
+    .ring-label span {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .tier-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .tier-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 64px;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(215, 204, 179, .7);
+    }
+
+    .tier-row:last-child { border-bottom: 0; }
+
+    .tier-row strong {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--paper-3);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--tobacco);
+    }
+
+    .tier-row:nth-child(2) .bar > span { background: var(--moss); }
+    .tier-row:nth-child(3) .bar > span { background: var(--indigo); }
+    .tier-row small {
+      color: var(--faint);
+      font-style: italic;
+      text-align: right;
+    }
+
+    .quiz-card {
+      padding: 0;
+      background: linear-gradient(180deg, rgba(255,250,240,.95), rgba(242,236,219,.84));
+    }
+
+    .quiz-stage {
+      padding: 22px 24px 24px;
+    }
+
+    .progress-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .steps {
+      display: flex;
+      gap: 5px;
+    }
+
+    .step {
+      height: 6px;
+      flex: 1;
+      min-width: 16px;
+      border-radius: 999px;
+      background: var(--paper-3);
+    }
+
+    .step.done { background: var(--moss); }
+    .step.current { background: var(--tobacco); }
+
+    .score-chip {
+      padding: 6px 10px;
+      border: 1px solid rgba(93,107,62,.35);
+      border-radius: 999px;
+      color: var(--moss);
+      background: rgba(93,107,62,.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .prompt-label {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .question {
+      margin: 9px 0 18px;
+      font-size: 44px;
+      line-height: 1.05;
+      font-weight: 550;
+      color: var(--ink);
+    }
+
+    .sentence {
+      margin: 0 0 18px;
+      padding: 17px 18px;
+      border-left: 3px solid var(--indigo);
+      border-radius: 9px;
+      background: rgba(51,73,109,.08);
+      color: var(--ink);
+      font-size: 23px;
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 54px;
+      padding: 13px 14px;
+      border: 1px solid var(--rule);
+      border-radius: 9px;
+      background: var(--paper-2);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .choice.selected {
+      border-color: rgba(93,107,62,.52);
+      background: rgba(93,107,62,.10);
+      color: var(--moss);
+    }
+
+    .choice.wrong {
+      border-color: rgba(118,47,45,.45);
+      background: rgba(118,47,45,.10);
+      color: var(--oxblood);
+    }
+
+    .choice b {
+      display: grid;
+      place-items: center;
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      background: rgba(31,26,20,.07);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+    }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--rule);
+      border-radius: 9px;
+      background: var(--paper-2);
+      color: var(--ink);
+      padding: 13px 14px;
+      outline: 0;
+      font-size: 18px;
+    }
+
+    .feedback {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 13px 14px;
+      border-radius: 10px;
+      background: rgba(77,113,60,.10);
+      border: 1px solid rgba(77,113,60,.22);
+    }
+
+    .feedback.bad {
+      background: rgba(118,47,45,.10);
+      border-color: rgba(118,47,45,.23);
+    }
+
+    .feedback-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--ok);
+      color: white;
+      font-weight: 700;
+    }
+
+    .feedback.bad .feedback-icon {
+      background: var(--oxblood);
+    }
+
+    .feedback h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .feedback p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .queue {
+      display: grid;
+      gap: 10px;
+    }
+
+    .queue-row {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid rgba(215, 204, 179, .78);
+      border-radius: 10px;
+      background: rgba(255,250,240,.65);
+    }
+
+    .badge {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .queue-row h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 550;
+    }
+
+    .queue-row p {
+      margin: 2px 0 0;
+      color: var(--faint);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .queue-row small {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .result-hero {
+      padding: 20px;
+      border-radius: 12px;
+      color: #fff7e8;
+      background:
+        linear-gradient(145deg, rgba(31,26,20,.12), rgba(31,26,20,0)),
+        var(--moss);
+      margin-bottom: 14px;
+    }
+
+    .result-hero h2 {
+      margin: 0 0 8px;
+      font-size: 31px;
+      font-weight: 550;
+    }
+
+    .result-hero p {
+      margin: 0;
+      max-width: 260px;
+      color: rgba(255,247,232,.85);
+      font-size: 15px;
+      line-height: 1.35;
+      font-style: italic;
+    }
+
+    .metric-stack {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .metric-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(215,204,179,.72);
+      color: var(--muted);
+    }
+
+    .metric-line strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .state-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 24px 0 0;
+      padding: 15px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(235,225,202,.54);
+    }
+
+    .state-switcher button {
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: var(--paper-2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .state-switcher button.active-state {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .mock-state {
+      display: none;
+    }
+
+    .mock-state.active {
+      display: block;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .hero, .layout { grid-template-columns: 1fr; }
+      .layout { gap: 14px; }
+      .choices { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main class="app" aria-label="Cockatoo quiz progression mockup">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="mark">ö</div>
+          <strong>Cockatoo</strong>
+        </div>
+        <nav class="nav" aria-label="Sections">
+          <button><span class="dot"></span>Overview</button>
+          <button><span class="dot"></span>Learn</button>
+          <button class="active"><span class="dot"></span>Progress</button>
+          <button><span class="dot"></span>Vocabulary</button>
+          <button><span class="dot"></span>Tutor</button>
+          <button><span class="dot"></span>Sites</button>
+          <button><span class="dot"></span>Settings</button>
+        </nav>
+        <div class="sidebar-footer">
+          Safari active<br>
+          Spanish · standard pace<br>
+          4 reviews due
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="titlebar">03 Progress</div>
+        <div class="canvas">
+          <header class="hero">
+            <div>
+              <div class="eyebrow">Tier 2 readiness</div>
+              <h1>Turn reading exposure into <em>retrieval progress.</em></h1>
+              <p class="subhead">A single Progress screen owns readiness, short reviews, tier quizzes, and the unlock moment. It should feel like a learning cockpit, not a placeholder quiz card.</p>
+            </div>
+            <div>
+              <div class="summary" aria-label="Progress summary">
+                <div><strong>82%</strong><span>ready</span></div>
+                <div><strong>4</strong><span>due</span></div>
+                <div><strong>12/15</strong><span>pass</span></div>
+              </div>
+              <div class="action-strip" style="margin-top: 12px;">
+                <button class="ghost">Review first</button>
+                <button class="secondary">Start quiz</button>
+              </div>
+            </div>
+          </header>
+
+          <section class="layout">
+            <article class="panel">
+              <div class="panel-head">
+                <h2>Readiness</h2>
+                <span class="eyebrow">Current tier</span>
+              </div>
+              <div class="panel-body">
+                <div class="readiness-ring" aria-label="82 percent ready">
+                  <div class="ring-label"><strong>82</strong><span>percent ready</span></div>
+                </div>
+                <div class="tier-list">
+                  <div class="tier-row">
+                    <strong>Tier 1</strong>
+                    <div class="bar"><span style="width: 100%;"></span></div>
+                    <small>unlocked</small>
+                  </div>
+                  <div class="tier-row">
+                    <strong>Tier 2</strong>
+                    <div class="bar"><span style="width: 82%;"></span></div>
+                    <small>quiz ready</small>
+                  </div>
+                  <div class="tier-row">
+                    <strong>Tier 3</strong>
+                    <div class="bar"><span style="width: 0%;"></span></div>
+                    <small>next</small>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel quiz-card">
+              <div class="panel-head">
+                <h2>Tier quiz</h2>
+                <span class="eyebrow">Recognition · recall · cloze</span>
+              </div>
+              <div class="quiz-stage">
+                <div class="mock-state active" data-state="active">
+                  <div class="progress-top">
+                    <div class="steps" aria-label="Question progress">
+                      <span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step current"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+                    </div>
+                    <span class="score-chip">3 / 4 correct</span>
+                  </div>
+                  <div class="prompt-label">Question 4 of 15 · Pick the translation</div>
+                  <div class="question">however</div>
+                  <div class="choices">
+                    <button class="choice"><span>pero</span><b>A</b></button>
+                    <button class="choice selected"><span>sin embargo</span><b>B</b></button>
+                    <button class="choice"><span>tambien</span><b>C</b></button>
+                    <button class="choice"><span>porque</span><b>D</b></button>
+                  </div>
+                  <div class="action-strip">
+                    <button class="ghost">Not sure</button>
+                    <button class="primary">Submit answer</button>
+                  </div>
+                </div>
+
+                <div class="mock-state" data-state="recall">
+                  <div class="progress-top">
+                    <div class="steps" aria-label="Question progress">
+                      <span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step current"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+                    </div>
+                    <span class="score-chip">5 / 6 correct</span>
+                  </div>
+                  <div class="prompt-label">Question 6 of 15 · Type the translation</div>
+                  <div class="question">because</div>
+                  <div class="answer-row">
+                    <input value="porque" aria-label="Typed answer">
+                    <button class="primary">Check</button>
+                  </div>
+                  <div class="feedback">
+                    <div class="feedback-icon">✓</div>
+                    <div>
+                      <h3>Locked in.</h3>
+                      <p><strong>porque</strong> moves this item into recall strength and schedules the next review later.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mock-state" data-state="cloze">
+                  <div class="progress-top">
+                    <div class="steps" aria-label="Question progress">
+                      <span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step done"></span><span class="step current"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+                    </div>
+                    <span class="score-chip">7 / 9 correct</span>
+                  </div>
+                  <div class="prompt-label">Question 9 of 15 · Fill the sentence</div>
+                  <p class="sentence">I saved it ___ I wanted to read it later.</p>
+                  <div class="answer-row">
+                    <input value="porque" aria-label="Fill the blank">
+                    <button class="primary">Check</button>
+                  </div>
+                  <div class="feedback bad">
+                    <div class="feedback-icon">!</div>
+                    <div>
+                      <h3>Close, but not this sentence.</h3>
+                      <p>Expected <strong>because</strong> in this captured context. Show the original before moving on.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mock-state" data-state="locked">
+                  <div class="prompt-label">Tier 2 quiz locked</div>
+                  <div class="question" style="font-size: 38px;">Three items need more contact.</div>
+                  <p class="sentence" style="border-left-color: var(--warn); background: rgba(185,134,51,.10);">Read a little more in Safari or clear the four due reviews. The start button should never just be disabled without saying why.</p>
+                  <div class="queue" style="margin-bottom: 18px;">
+                    <div class="queue-row"><div class="badge">1</div><div><h3>although</h3><p>seen twice · recognition not due yet</p></div><small>needs 1</small></div>
+                    <div class="queue-row"><div class="badge">2</div><div><h3>of course</h3><p>phrase · no review attempt</p></div><small>due now</small></div>
+                  </div>
+                  <div class="action-strip">
+                    <button class="ghost">Open Learn</button>
+                    <button class="secondary">Keep reading</button>
+                  </div>
+                </div>
+
+                <div class="mock-state" data-state="result">
+                  <div class="result-hero">
+                    <div class="eyebrow" style="color: rgba(255,247,232,.78);">Passed · Tier 3 unlocked</div>
+                    <h2>Ready for the next layer.</h2>
+                    <p>Quiz outcomes update item strength and the new tier becomes available without making the result feel like a dead end.</p>
+                  </div>
+                  <div class="metric-stack">
+                    <div class="metric-line"><span>Final score</span><strong>13 / 15</strong></div>
+                    <div class="metric-line"><span>New strong items</span><strong>8</strong></div>
+                    <div class="metric-line"><span>Needs review</span><strong>2</strong></div>
+                  </div>
+                  <div class="queue" style="margin-bottom: 18px;">
+                    <div class="queue-row"><div class="badge">R</div><div><h3>sin embargo</h3><p>missed once · recall tomorrow</p></div><small>review</small></div>
+                    <div class="queue-row"><div class="badge">T3</div><div><h3>while</h3><p>new ambient item now eligible</p></div><small>next</small></div>
+                  </div>
+                  <div class="action-strip">
+                    <button class="ghost">Review misses</button>
+                    <button class="primary">Done</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <h2>Due queue</h2>
+                <span class="eyebrow">Now</span>
+              </div>
+              <div class="panel-body">
+                <div class="queue">
+                  <div class="queue-row">
+                    <div class="badge">R</div>
+                    <div>
+                      <h3>there is</h3>
+                      <p>chunk · recognition due</p>
+                    </div>
+                    <small>2 min</small>
+                  </div>
+                  <div class="queue-row">
+                    <div class="badge">C</div>
+                    <div>
+                      <h3>because</h3>
+                      <p>word · cloze available</p>
+                    </div>
+                    <small>now</small>
+                  </div>
+                  <div class="queue-row">
+                    <div class="badge">P</div>
+                    <div>
+                      <h3>however</h3>
+                      <p>word · weak recall</p>
+                    </div>
+                    <small>now</small>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <div class="state-switcher" role="group" aria-label="Mockup states">
+            <button class="active-state" data-show="active">Active recognition</button>
+            <button data-show="recall">Recall feedback</button>
+            <button data-show="cloze">Cloze miss</button>
+            <button data-show="locked">Locked readiness</button>
+            <button data-show="result">Passed result</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-show]");
+    const states = document.querySelectorAll(".mock-state");
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        buttons.forEach((item) => item.classList.remove("active-state"));
+        states.forEach((state) => state.classList.remove("active"));
+        button.classList.add("active-state");
+        document.querySelector(`[data-state="${button.dataset.show}"]`).classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>

@@ -45,7 +45,7 @@ swift run learnerctl --db /tmp/dev.sqlite simulate --days 30
 swift run learnerctl --db /tmp/dev.sqlite overview
 ```
 
-Run the app UI (dev, no extension): `swift run Cockatoo`.
+Run the app UI (dev, no extension): `swift run CockatooDev`.
 
 ## Safari packaging
 

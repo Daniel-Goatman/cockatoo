@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cockatoo Puzzle Mix</title>
+  <style>
+    :root {
+      --paper: #f7f1e4;
+      --paper-2: #fffaf0;
+      --paper-3: #eadfc8;
+      --ink: #1f1a14;
+      --muted: #655844;
+      --faint: #97886f;
+      --rule: #d8ccb3;
+      --tobacco: #8a4a26;
+      --moss: #5d6b3e;
+      --indigo: #33496d;
+      --plum: #65405d;
+      --ok: #4d713c;
+      --warn: #b98633;
+      --shadow: 0 24px 70px rgba(31, 26, 20, .14);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(93,107,62,.13), transparent 30%),
+        radial-gradient(circle at 80% 8%, rgba(51,73,109,.12), transparent 31%),
+        linear-gradient(135deg, #f2ead8 0%, #fbf6eb 50%, #e8ddc7 100%);
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, ui-serif, serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    .page { padding: 28px; }
+    .frame {
+      width: min(1440px, calc(100vw - 56px));
+      margin: 0 auto;
+      min-height: 850px;
+      border: 1px solid rgba(93, 82, 61, .28);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid var(--rule);
+      background: linear-gradient(180deg, #f6efdf, #eadfc8);
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .content { padding: 32px 38px 38px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 430px;
+      gap: 32px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 8px 0 10px;
+      font-size: 42px;
+      line-height: 1.03;
+      font-weight: 500;
+    }
+
+    h1 em { color: var(--tobacco); font-style: italic; }
+
+    .subhead {
+      max-width: 770px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      font-style: italic;
+      line-height: 1.42;
+    }
+
+    .locked {
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(255,250,240,.78);
+    }
+
+    .locked strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 22px;
+      font-weight: 560;
+    }
+
+    .locked p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.34;
+      font-style: italic;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      background: rgba(255,250,240,.78);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.05;
+      font-weight: 560;
+    }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .mode {
+      position: relative;
+      min-height: 214px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,250,240,.98), rgba(238,228,206,.70));
+      overflow: hidden;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .mode:hover {
+      transform: translateY(-3px);
+      border-color: rgba(138,74,38,.48);
+      box-shadow: 0 14px 30px rgba(31,26,20,.10);
+    }
+
+    .mode-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(216,204,179,.70);
+    }
+
+    .mode-title {
+      font-size: 18px;
+      font-weight: 560;
+      line-height: 1;
+    }
+
+    .mode-kind {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .mode-body { padding: 12px; }
+
+    .bigword {
+      margin: 3px 0 12px;
+      font-size: 33px;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .choice {
+      min-height: 34px;
+      padding: 7px 8px;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      background: rgba(255,250,240,.85);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .choice.ok {
+      color: var(--moss);
+      background: rgba(93,107,62,.10);
+      border-color: rgba(93,107,62,.42);
+    }
+
+    .type-line {
+      height: 36px;
+      padding: 8px 10px;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      background: rgba(255,250,240,.86);
+      color: var(--moss);
+      font-size: 15px;
+    }
+
+    .sentence {
+      margin: 0 0 11px;
+      padding: 11px 12px;
+      border-left: 3px solid var(--indigo);
+      border-radius: 9px;
+      background: rgba(51,73,109,.08);
+      font-size: 16px;
+      font-style: italic;
+      line-height: 1.28;
+    }
+
+    .tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .token {
+      padding: 7px 9px;
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      background: var(--paper-2);
+      color: var(--muted);
+      font-size: 13px;
+      box-shadow: 0 6px 14px rgba(31,26,20,.07);
+      animation: float 2.4s ease infinite;
+    }
+
+    .token:nth-child(2) { animation-delay: .16s; }
+    .token:nth-child(3) { animation-delay: .32s; }
+    .token:nth-child(4) { animation-delay: .48s; }
+
+    @keyframes float {
+      50% { transform: translateY(-4px); }
+    }
+
+    .mode-foot {
+      padding: 10px 12px 12px;
+      border-top: 1px solid rgba(216,204,179,.70);
+      color: var(--faint);
+      font-size: 13px;
+      font-style: italic;
+      line-height: 1.25;
+    }
+
+    .session {
+      padding: 18px;
+    }
+
+    .arc {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .beat {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 11px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--rule);
+      border-radius: 11px;
+      background: rgba(255,250,240,.68);
+    }
+
+    .beat.active {
+      border-color: rgba(138,74,38,.48);
+      background: rgba(138,74,38,.08);
+    }
+
+    .beat-num {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+    }
+
+    .beat h3 {
+      margin: 0 0 2px;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .beat p {
+      margin: 0;
+      color: var(--faint);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .beat small {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .question {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 17px 19px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(235,225,202,.55);
+    }
+
+    .question p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 9px;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 12px 16px;
+      cursor: pointer;
+      box-shadow: 0 9px 18px rgba(31,26,20,.20);
+    }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .option {
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(255,250,240,.78);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .option:hover {
+      transform: translateY(-2px);
+      border-color: rgba(138,74,38,.45);
+      box-shadow: 0 12px 28px rgba(31,26,20,.09);
+    }
+
+    .option.selected {
+      border-color: var(--tobacco);
+      box-shadow: 0 0 0 3px rgba(138,74,38,.12);
+    }
+
+    .option strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .option span {
+      color: var(--muted);
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.28;
+    }
+
+    @media (max-width: 1120px) {
+      .hero, .layout, .option-row { grid-template-columns: 1fr; }
+      .deck-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .page { padding: 12px; }
+      .frame { width: calc(100vw - 24px); min-height: 0; border-radius: 14px; }
+      .content { padding: 18px 18px 24px; }
+      .hero { gap: 12px; margin-bottom: 14px; }
+      h1 { font-size: 30px; line-height: 1.02; margin-bottom: 8px; }
+      .subhead { font-size: 14px; line-height: 1.32; }
+      .locked { padding: 11px 12px; }
+      .locked strong { font-size: 17px; }
+      .locked p { font-size: 13px; }
+      .panel-head { padding: 12px 13px 10px; }
+      h2 { font-size: 21px; }
+      .deck-grid { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
+      .mode { min-height: 0; }
+      .bigword { font-size: 28px; }
+      .mode-foot { font-size: 12px; }
+      .session { padding: 12px; }
+      .question { grid-template-columns: 1fr; gap: 10px; padding: 12px 13px; }
+      .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main class="frame">
+      <div class="topbar">Puzzle Mix For Unified Practice</div>
+      <section class="content">
+        <header class="hero">
+          <div>
+            <div class="eyebrow">Question 3</div>
+            <h1>Which puzzle set gives enough variety without making practice feel <em>busy?</em></h1>
+            <p class="subhead">A+B means a paced session and animated living cards. Now we need to lock the actual card modes that rotate through that arc.</p>
+          </div>
+          <div class="locked">
+            <strong>Locked in: Session Arc + Living Deck</strong>
+            <p>Cards should slide, flip, stack, and collapse into progress. The session should move through warmup, mixed practice, tier challenge, and cool-down.</p>
+          </div>
+        </header>
+
+        <section class="option-row" aria-label="Puzzle set options">
+          <article class="option" data-choice="core-five" onclick="selectOption(this)">
+            <strong>Core Five</strong>
+            <span>Recognize, recall, cloze, sentence rebuild, quick self-grade.</span>
+          </article>
+          <article class="option" data-choice="core-plus" onclick="selectOption(this)">
+            <strong>Core Plus Tutor</strong>
+            <span>Core Five plus tutor-check production for occasional harder cards.</span>
+          </article>
+          <article class="option" data-choice="lightweight" onclick="selectOption(this)">
+            <strong>Lightweight Four</strong>
+            <span>Recognize, recall, cloze, rebuild. No production in v1.</span>
+          </article>
+        </section>
+
+        <section class="layout">
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Living deck modes</h2>
+              <span class="eyebrow">Recommended: Core Five</span>
+            </div>
+            <div class="deck-grid">
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Recognize</span><span class="mode-kind">warmup</span></div>
+                <div class="mode-body">
+                  <div class="bigword">however</div>
+                  <div class="choice-grid">
+                    <div class="choice">pero</div><div class="choice ok">sin embargo</div><div class="choice">porque</div><div class="choice">tambien</div>
+                  </div>
+                </div>
+                <div class="mode-foot">Lowest friction. Used early or after a miss.</div>
+              </div>
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Recall</span><span class="mode-kind">mixed</span></div>
+                <div class="mode-body">
+                  <div class="bigword">because</div>
+                  <div class="type-line">porque</div>
+                </div>
+                <div class="mode-foot">Typed answer with forgiving accent/article matching.</div>
+              </div>
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Cloze</span><span class="mode-kind">context</span></div>
+                <div class="mode-body">
+                  <p class="sentence">I saved it ___ I wanted to read it later.</p>
+                  <div class="type-line">because</div>
+                </div>
+                <div class="mode-foot">Uses captured sentences when available.</div>
+              </div>
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Rebuild</span><span class="mode-kind">challenge</span></div>
+                <div class="mode-body">
+                  <p class="sentence">Build: I stayed because it rained.</p>
+                  <div class="tokens"><span class="token">me quede</span><span class="token">porque</span><span class="token">llovia</span></div>
+                </div>
+                <div class="mode-foot">Drag/token reorder. More tactile than another text field.</div>
+              </div>
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Self-grade</span><span class="mode-kind">release</span></div>
+                <div class="mode-body">
+                  <p class="sentence">Say or think one tiny sentence with <b>porque</b>.</p>
+                  <div class="choice-grid">
+                    <div class="choice ok">Got it</div><div class="choice">Shaky</div>
+                  </div>
+                </div>
+                <div class="mode-foot">Fast production without pretending the app can grade everything.</div>
+              </div>
+              <div class="mode">
+                <div class="mode-top"><span class="mode-title">Tier Check</span><span class="mode-kind">gate</span></div>
+                <div class="mode-body">
+                  <p class="sentence">3-card burst from weak tier items.</p>
+                  <div class="choice-grid">
+                    <div class="choice ok">Pass</div><div class="choice">Review miss</div>
+                  </div>
+                </div>
+                <div class="mode-foot">Quiz becomes a special beat, not a separate chore.</div>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel">
+            <div class="panel-head">
+              <h2>Session arc</h2>
+              <span class="eyebrow">Example</span>
+            </div>
+            <div class="session">
+              <div class="arc">
+                <div class="beat">
+                  <div class="beat-num">01</div>
+                  <div><h3>Warmup</h3><p>Recognition and one easy recall.</p></div>
+                  <small>2 cards</small>
+                </div>
+                <div class="beat active">
+                  <div class="beat-num">02</div>
+                  <div><h3>Mix</h3><p>Recall, cloze, rebuild, adaptive order.</p></div>
+                  <small>6 cards</small>
+                </div>
+                <div class="beat">
+                  <div class="beat-num">03</div>
+                  <div><h3>Tier check</h3><p>Only appears when readiness is high.</p></div>
+                  <small>3 cards</small>
+                </div>
+                <div class="beat">
+                  <div class="beat-num">04</div>
+                  <div><h3>Release</h3><p>Self-grade or quick win, then done.</p></div>
+                  <small>1 card</small>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="question">
+          <div>
+            <div class="eyebrow">Pick the v1 puzzle set</div>
+            <p>My recommendation is Core Five: enough variety to avoid dull repetition, without making the app depend on LLM grading for every session.</p>
+          </div>
+          <button class="button" onclick="recordChoice()">Use selected puzzle set</button>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let currentChoice = null;
+    function selectOption(element) {
+      document.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
+      element.classList.add("selected");
+      currentChoice = element.dataset.choice;
+    }
+    function recordChoice() {
+      if (!currentChoice) return;
+      const labels = {
+        "core-five": "Core Five",
+        "core-plus": "Core Plus Tutor",
+        lightweight: "Lightweight Four"
+      };
+      if (window.brainstorm) {
+        window.brainstorm.choice(currentChoice, { choice: currentChoice, text: labels[currentChoice] });
+      }
+    }
+  </script>
+</body>
+</html>

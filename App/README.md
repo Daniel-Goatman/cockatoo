@@ -55,7 +55,7 @@ container — see docs/plan/03-data-model-and-storage.md §R2.
 
 - Learning engine: `swift test`
 - Full loop simulation: `learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.07.json && learnerctl --db /tmp/dev.sqlite simulate --days 30`
-- App UI (no appex): `swift run Cockatoo` — the XPC listener registration
+- App UI (no appex): `swift run CockatooDev` — the XPC listener registration
   fails harmlessly outside a bundle; everything else works, including
   onboarding, pack import, practice, and settings.
 - Extension logic: `cd extension && npm test`
