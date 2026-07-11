@@ -7,17 +7,61 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65D68DE33002037B00482FA2 /* CockatooExtension Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		65DA8BC33001F7410015016B /* LearnerCore in Frameworks */ = {isa = PBXBuildFile; productRef = 65DA8BC23001F7410015016B /* LearnerCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		65D68DE43002037B00482FA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 65189E1B3001F327005C1F20 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 65D68DE13002037B00482FA2;
+			remoteInfo = "CockatooExtension Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		65D68DFD3002037B00482FA2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				65D68DE33002037B00482FA2 /* CockatooExtension Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		65189E233001F327005C1F20 /* Cockatoo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cockatoo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "CockatooExtension Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		65D68E003002037B00482FA2 /* Exceptions for "CockatooExtension Extension" folder in "CockatooExtension Extension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 65D68DE13002037B00482FA2 /* CockatooExtension Extension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		65189E253001F327005C1F20 /* Cockatoo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Cockatoo;
+			sourceTree = "<group>";
+		};
+		65D68DE63002037B00482FA2 /* CockatooExtension Extension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				65D68E003002037B00482FA2 /* Exceptions for "CockatooExtension Extension" folder in "CockatooExtension Extension" target */,
+			);
+			path = "CockatooExtension Extension";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +75,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65D68DDF3002037B00482FA2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -38,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				65189E253001F327005C1F20 /* Cockatoo */,
+				65D68DE63002037B00482FA2 /* CockatooExtension Extension */,
 				65189E243001F327005C1F20 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				65189E233001F327005C1F20 /* Cockatoo.app */,
+				65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,10 +113,12 @@
 				65189E1F3001F327005C1F20 /* Sources */,
 				65189E203001F327005C1F20 /* Frameworks */,
 				65189E213001F327005C1F20 /* Resources */,
+				65D68DFD3002037B00482FA2 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				65D68DE53002037B00482FA2 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				65189E253001F327005C1F20 /* Cockatoo */,
@@ -76,6 +131,29 @@
 			productReference = 65189E233001F327005C1F20 /* Cockatoo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		65D68DE13002037B00482FA2 /* CockatooExtension Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 65D68E013002037B00482FA2 /* Build configuration list for PBXNativeTarget "CockatooExtension Extension" */;
+			buildPhases = (
+				65D68DDE3002037B00482FA2 /* Sources */,
+				65D68DDF3002037B00482FA2 /* Frameworks */,
+				65D68DE03002037B00482FA2 /* Resources */,
+				65C0FFEE0000000000000001 /* Copy WebExtension Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				65D68DE63002037B00482FA2 /* CockatooExtension Extension */,
+			);
+			name = "CockatooExtension Extension";
+			packageProductDependencies = (
+			);
+			productName = "CockatooExtension Extension";
+			productReference = 65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -87,6 +165,9 @@
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					65189E223001F327005C1F20 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					65D68DE13002037B00482FA2 = {
 						CreatedOnToolsVersion = 26.3;
 					};
 				};
@@ -109,6 +190,7 @@
 			projectRoot = "";
 			targets = (
 				65189E223001F327005C1F20 /* Cockatoo */,
+				65D68DE13002037B00482FA2 /* CockatooExtension Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -121,7 +203,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65D68DE03002037B00482FA2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		65C0FFEE0000000000000001 /* Copy WebExtension Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy WebExtension Resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# WebExtension resources come from the esbuild output so `npm run build`\n# flows into the appex without re-adding files in Xcode.\nSRC=\"$SRCROOT/../../extension/dist-resources\"\nif [ ! -f \"$SRC/manifest.json\" ]; then\n  echo \"error: $SRC/manifest.json missing — run 'npm run build' in extension/ first\" >&2\n  exit 1\nfi\nrsync -a --exclude .DS_Store \"$SRC/\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		65189E1F3001F327005C1F20 /* Sources */ = {
@@ -131,7 +242,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65D68DDE3002037B00482FA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		65D68DE53002037B00482FA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 65D68DE13002037B00482FA2 /* CockatooExtension Extension */;
+			targetProxy = 65D68DE43002037B00482FA2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		65189E2C3001F329005C1F20 /* Debug */ = {
@@ -320,6 +446,80 @@
 			};
 			name = Release;
 		};
+		65D68DFE3002037B00482FA2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../CockatooExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 635WSP868V;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CockatooExtension Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Cockatoo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		65D68DFF3002037B00482FA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../CockatooExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 635WSP868V;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CockatooExtension Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Cockatoo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -337,6 +537,15 @@
 			buildConfigurations = (
 				65189E2F3001F329005C1F20 /* Debug */,
 				65189E303001F329005C1F20 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		65D68E013002037B00482FA2 /* Build configuration list for PBXNativeTarget "CockatooExtension Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65D68DFE3002037B00482FA2 /* Debug */,
+				65D68DFF3002037B00482FA2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
