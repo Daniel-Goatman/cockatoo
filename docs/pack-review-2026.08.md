@@ -4,6 +4,9 @@ Model-authored expansion (claude-fable-5) pending review per docs/plan/07
 stage 4 and the roadmap P2 bar (spot-review must find ≥ 48 of 50 correct;
 this lists **all** 158 new items — tick as you verify). Check per item:
 
+> **Reviewed and accepted by Daniel, 2026-07-11** — bands confirmed good.
+> Pack 2026.08 is human-approved per docs/plan/07 stage 4.
+
 1. Translation correct and the *dominant* sense of the English word.
 2. Gender and plural right (nouns).
 3. Example sentence is natural German and contains the target.

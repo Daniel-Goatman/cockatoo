@@ -80,8 +80,8 @@ says so honestly in its popup.
 
 - **P1 LearnerCore** — done, all exit-criteria tests green
 - **P2 pack** — 212 items across bands 1–10 (2026.08): hand-curated seed +
-  model-authored expansion, validator-green, human spot-review checklist in
-  [docs/pack-review-2026.08.md](docs/pack-review-2026.08.md); pack updates
+  model-authored expansion, validator-green and human-review accepted
+  ([docs/pack-review-2026.08.md](docs/pack-review-2026.08.md)); pack updates
   auto-import on app launch (progress preserved via stable IDs). The full
   ~1000-item FrequencyWords + `packtool author` run is still pending
 - **P3 extension core** — done, tests green
