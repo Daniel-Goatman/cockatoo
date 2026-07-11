@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cockatoo — Architecture & Beta Scope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2EBDF;
+    --paper-2: #EFE6D6;
+    --surface: #FBF6EC;
+    --ink: #1C1714;
+    --ink-soft: #3A312B;
+    --muted: #847568;
+    --line: #C9B89E;
+    --line-soft: #E2D5BD;
+    --crest: #E36B3F;       /* coral — cockatoo crest */
+    --crest-soft: #F5A07C;
+    --sage: #4F6E5F;
+    --sage-soft: #97B0A1;
+    --sulfur: #D7A82B;
+    --sulfur-soft: #ECCE6C;
+    --plum: #5A3B5A;
+    --shadow: 0 1px 0 rgba(28,23,20,0.04), 0 8px 24px -12px rgba(28,23,20,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Geist', -apple-system, system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 15% 0%, rgba(227,107,63,0.08), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 85% 15%, rgba(215,168,43,0.07), transparent 60%),
+      radial-gradient(ellipse 90% 70% at 50% 100%, rgba(79,110,95,0.06), transparent 70%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.11 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.035 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    background-attachment: fixed;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 64px 56px 120px;
+  }
+
+  /* ── Typography ───────────────────────────────────────────────── */
+  .display {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 120, "SOFT" 30, "WONK" 0;
+    font-weight: 480;
+    letter-spacing: -0.025em;
+    line-height: 0.96;
+    color: var(--ink);
+  }
+  .italic-serif {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+  }
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.84em;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--crest);
+  }
+  .h2 {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 60, "SOFT" 50;
+    font-weight: 460;
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+    letter-spacing: -0.022em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.32rem;
+    letter-spacing: -0.012em;
+    line-height: 1.15;
+  }
+  .lede {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+  }
+  p { color: var(--ink-soft); }
+  .small { font-size: 0.85rem; color: var(--muted); }
+
+  /* ── Hero ─────────────────────────────────────────────────────── */
+  .hero {
+    padding: 60px 0 80px;
+    border-bottom: 1px solid var(--line-soft);
+    position: relative;
+  }
+  .hero-marks {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .crest-mark {
+    width: 36px; height: 36px;
+  }
+  .hero-title {
+    font-size: clamp(3.4rem, 7vw, 5.8rem);
+    margin-bottom: 28px;
+  }
+  .hero-title em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--crest);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .hero-meta div { display: flex; flex-direction: column; gap: 4px; }
+  .hero-meta strong { color: var(--ink); font-weight: 500; }
+
+  /* ── Sections ─────────────────────────────────────────────────── */
+  section { padding: 96px 0; border-bottom: 1px solid var(--line-soft); }
+  section:last-of-type { border-bottom: 0; }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 48px;
+    margin-bottom: 56px;
+    align-items: end;
+  }
+  .section-head .num {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-weight: 300;
+    font-size: 6rem;
+    color: var(--crest);
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+  }
+  .section-head .body { padding-bottom: 8px; }
+  .section-head .body p { margin-top: 16px; max-width: 60ch; }
+
+  /* ── Principle pull-quote ─────────────────────────────────────── */
+  .principle {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 40px 48px;
+    margin: 24px 0;
+    position: relative;
+    box-shadow: var(--shadow);
+  }
+  .principle::before {
+    content: "“";
+    font-family: 'Instrument Serif', serif;
+    font-size: 8rem;
+    line-height: 0.7;
+    position: absolute;
+    top: 12px; left: 18px;
+    color: var(--crest-soft);
+    opacity: 0.5;
+  }
+  .principle p {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(1.4rem, 2.3vw, 1.9rem);
+    line-height: 1.3;
+    color: var(--ink);
+    position: relative;
+    z-index: 1;
+  }
+  .principle .attr {
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Four-domain north star ───────────────────────────────────── */
+  .domains {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .domain {
+    background: var(--surface);
+    padding: 36px 32px;
+    position: relative;
+    min-height: 220px;
+  }
+  .domain-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+  .domain h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.7rem;
+    margin: 12px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .domain p { font-size: 0.95rem; max-width: 38ch; }
+  .domain .ico {
+    position: absolute;
+    top: 28px; right: 28px;
+    width: 44px; height: 44px;
+    opacity: 0.85;
+  }
+  .domain.c-curr h3 { color: var(--sage); }
+  .domain.c-state h3 { color: var(--crest); }
+  .domain.c-gen h3 { color: var(--sulfur); }
+  .domain.c-surf h3 { color: var(--plum); }
+
+  /* ── Loop diagram ─────────────────────────────────────────────── */
+  .loop-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .loop-diagram {
+    aspect-ratio: 1/1;
+    position: relative;
+  }
+  .loop-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--line-soft);
+  }
+  .loop-step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+  .loop-step .n {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 1.3rem;
+    color: var(--crest);
+    font-variation-settings: "opsz" 60;
+  }
+  .loop-step .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-right: 14px;
+  }
+  .loop-step .desc { color: var(--ink-soft); font-size: 0.92rem; }
+
+  /* ── Item types ───────────────────────────────────────────────── */
+  .types-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .type-card {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .type-card .swatch {
+    height: 4px;
+    width: 40px;
+    margin-bottom: 24px;
+  }
+  .type-card[data-c="word"] .swatch { background: var(--sage); }
+  .type-card[data-c="chunk"] .swatch { background: var(--crest); }
+  .type-card[data-c="pattern"] .swatch { background: var(--sulfur); }
+  .type-card[data-c="frame"] .swatch { background: var(--plum); }
+  .type-card h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+  }
+  .type-card .safety {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .type-card p { font-size: 0.88rem; margin-bottom: 14px; }
+  .type-card .ex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    background: var(--paper-2);
+    border-left: 2px solid var(--line);
+    padding: 8px 10px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+  /* ── Replacement-safety bar ───────────────────────────────────── */
+  .safety-bar {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    align-items: center;
+    gap: 24px;
+    margin-top: 36px;
+    padding: 18px 24px;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+  }
+  .safety-bar .end {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+  .safety-bar .end.right { text-align: right; }
+  .gradient-bar {
+    height: 8px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--sage) 0%, var(--crest) 40%, var(--sulfur) 75%, var(--plum) 100%);
+    position: relative;
+  }
+  .gradient-bar::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    border-radius: 8px;
+  }
+
+  /* ── Data model split ─────────────────────────────────────────── */
+  .data-split {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .data-col {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    padding: 28px 24px;
+    border-radius: 3px;
+  }
+  .data-col h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+  }
+  .data-col .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+  .data-col.curr .tag { background: rgba(79,110,95,0.15); color: var(--sage); }
+  .data-col.state .tag { background: rgba(227,107,63,0.15); color: var(--crest); }
+  .data-col p { font-size: 0.9rem; margin-bottom: 16px; }
+  .data-col pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    background: var(--paper-2);
+    padding: 14px 16px;
+    border-radius: 3px;
+    overflow-x: auto;
+    line-height: 1.65;
+    color: var(--ink);
+    border-left: 2px solid var(--line);
+  }
+  .data-col pre .k { color: var(--plum); font-weight: 600; }
+  .data-col pre .t { color: var(--crest); }
+  .data-col pre .c { color: var(--muted); font-style: italic; }
+  .arrows-mid {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── LLM points ───────────────────────────────────────────────── */
+  .llm-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .llm-card {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    padding: 22px 18px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 320px;
+  }
+  .llm-card .num {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 120, "SOFT" 80;
+    font-weight: 300;
+    font-size: 2.4rem;
+    line-height: 0.9;
+    color: var(--crest);
+  }
+  .llm-card h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    line-height: 1.15;
+  }
+  .llm-card .purpose { font-size: 0.83rem; color: var(--ink-soft); }
+  .llm-card .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .llm-card .field label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .llm-card .field.risk label { color: var(--crest); }
+  .llm-card .field.mit label { color: var(--sage); }
+  .llm-card .field span { font-size: 0.78rem; color: var(--ink); line-height: 1.4; }
+
+  /* ── Safari do/dont ───────────────────────────────────────────── */
+  .safari-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .safari-col { padding: 28px; border-radius: 3px; }
+  .safari-col.do {
+    background: rgba(79,110,95,0.07);
+    border: 1px solid rgba(79,110,95,0.3);
+  }
+  .safari-col.dont {
+    background: rgba(227,107,63,0.07);
+    border: 1px solid rgba(227,107,63,0.3);
+  }
+  .safari-col h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .safari-col.do h4 { color: var(--sage); }
+  .safari-col.dont h4 { color: var(--crest); }
+  .safari-col ul { list-style: none; }
+  .safari-col li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .safari-col li::before {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .safari-col.do li::before { content: "✓"; color: var(--sage); }
+  .safari-col.dont li::before { content: "✕"; color: var(--crest); }
+  .safari-col li:last-child { border-bottom: 0; }
+
+  /* ── Beta scope columns ───────────────────────────────────────── */
+  .scope-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .scope-col {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .scope-col .head {
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .scope-col[data-c="keep"] .head { background: rgba(79,110,95,0.1); }
+  .scope-col[data-c="add"] .head { background: rgba(215,168,43,0.13); }
+  .scope-col[data-c="cut"] .head { background: rgba(227,107,63,0.12); }
+  .scope-col .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+  .scope-col h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.5rem;
+    margin-top: 4px;
+  }
+  .scope-col ul { list-style: none; padding: 14px 22px 22px; }
+  .scope-col li {
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .scope-col li:last-child { border-bottom: 0; }
+  .scope-col[data-c="cut"] li { text-decoration: line-through; text-decoration-color: var(--crest-soft); text-decoration-thickness: 1px; color: var(--muted); }
+
+  /* ── Timeline ─────────────────────────────────────────────────── */
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 2px solid var(--ink);
+    margin-top: 24px;
+  }
+  .tl-week {
+    padding: 20px 18px 24px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .tl-week:last-child { border-right: 0; }
+  .tl-week::before {
+    content: "";
+    width: 14px; height: 14px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    position: absolute;
+    top: -8px; left: 18px;
+  }
+  .tl-week:nth-child(1)::before { background: var(--crest); border-color: var(--crest); }
+  .tl-week:nth-child(2)::before { background: var(--sulfur); border-color: var(--sulfur); }
+  .tl-week:nth-child(3)::before { background: var(--sage); border-color: var(--sage); }
+  .tl-week:nth-child(4)::before { background: var(--plum); border-color: var(--plum); }
+  .tl-week .w {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .tl-week h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+  .tl-week ul { list-style: none; }
+  .tl-week li {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    padding: 4px 0;
+    line-height: 1.4;
+    position: relative;
+    padding-left: 14px;
+  }
+  .tl-week li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--line);
+  }
+
+  /* ── Market positioning ───────────────────────────────────────── */
+  .market {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .compete-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line-soft);
+    border: 1px solid var(--line-soft);
+  }
+  .comp-row {
+    background: var(--surface);
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 130px 1fr 80px;
+    gap: 18px;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+  .comp-row.us { background: rgba(227,107,63,0.08); }
+  .comp-row .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+  }
+  .comp-row.us .name { color: var(--crest); }
+  .comp-row .pitch { color: var(--ink-soft); }
+  .comp-row .price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    padding: 28px;
+    border-radius: 3px;
+  }
+  .pricing-card h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin-bottom: 18px;
+  }
+  .price-tier {
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .price-tier:last-child { border-bottom: 0; }
+  .price-tier .t {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+  }
+  .price-tier .label-line {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+  .price-tier .amt {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: var(--ink);
+  }
+
+  /* ── Risk register ─────────────────────────────────────────────── */
+  .risks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .risk {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-left: 3px solid var(--crest);
+    padding: 18px 22px;
+  }
+  .risk .r-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--crest);
+    margin-bottom: 4px;
+  }
+  .risk .r-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+  .risk .r-mit {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    border-top: 1px dashed var(--line-soft);
+    padding-top: 10px;
+  }
+  .risk .r-mit::before {
+    content: "Mitigation — ";
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sage);
+  }
+
+  /* ── Migration steps ──────────────────────────────────────────── */
+  .migration {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    position: relative;
+  }
+  .mig-step {
+    background: var(--surface);
+    padding: 18px 16px;
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    position: relative;
+  }
+  .mig-step .n {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 120;
+    font-weight: 300;
+    font-size: 2rem;
+    color: var(--crest);
+    line-height: 1;
+  }
+  .mig-step h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 0.98rem;
+    margin: 8px 0 6px;
+    line-height: 1.2;
+  }
+  .mig-step p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Languages ────────────────────────────────────────────────── */
+  .langs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .lang {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    padding: 22px 18px;
+    text-align: center;
+    border-radius: 3px;
+    position: relative;
+  }
+  .lang .flag {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-weight: 300;
+    font-size: 2.4rem;
+    color: var(--crest);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .lang .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin-top: 12px;
+  }
+  .lang .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Footer ───────────────────────────────────────────────────── */
+  .footer {
+    padding-top: 60px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line-soft);
+    text-align: center;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── Reveal animation ─────────────────────────────────────────── */
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  section, .hero { animation: reveal 0.7s ease both; }
+  section { animation-delay: 0.05s; }
+  .hero-marks { animation: reveal 0.6s ease both; animation-delay: 0.05s; }
+  .hero-title { animation: reveal 0.7s ease both; animation-delay: 0.15s; }
+  .hero .lede { animation: reveal 0.7s ease both; animation-delay: 0.3s; }
+  .hero-meta { animation: reveal 0.7s ease both; animation-delay: 0.45s; }
+
+  @media (max-width: 920px) {
+    .page { padding: 32px 24px 80px; }
+    .section-head, .loop-wrap, .data-split, .market { grid-template-columns: 1fr; }
+    .domains, .types-grid, .llm-grid, .scope-grid, .timeline, .migration, .langs, .safari-grid, .risks {
+      grid-template-columns: 1fr 1fr;
+    }
+    .types-grid, .llm-grid, .timeline, .migration, .langs { grid-template-columns: 1fr 1fr; }
+    .arrows-mid { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- ═════════════════════════════════════ HERO ═════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-marks">
+    <!-- Hand-drawn cockatoo crest mark -->
+    <svg class="crest-mark" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 50 C 18 50, 12 38, 14 28 C 16 18, 22 14, 30 14 C 38 14, 44 18, 46 28 C 48 38, 42 50, 30 50 Z"
+            fill="#FBF6EC" stroke="#1C1714" stroke-width="1.5"/>
+      <path d="M22 14 C 20 8, 24 4, 28 6 M30 14 C 30 6, 34 4, 36 8 M38 14 C 40 8, 44 8, 44 12"
+            stroke="#E36B3F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <circle cx="36" cy="28" r="1.6" fill="#1C1714"/>
+      <path d="M43 30 C 47 30, 49 33, 47 35 C 45 36, 43 34, 43 32" fill="#D7A82B" stroke="#1C1714" stroke-width="1"/>
+    </svg>
+    <span class="eyebrow">Cockatoo · Architecture & Beta Scope</span>
+  </div>
+
+  <h1 class="display hero-title">
+    A small adaptive<br/>
+    learning system —<br/>
+    <em>not a word replacer.</em>
+  </h1>
+
+  <p class="lede" style="max-width: 60ch;">
+    Five languages, one active at a time, woven into the Safari pages a learner
+    already reads. The app owns the curriculum. The model proposes, explains,
+    and generates practice — but never silently mutates the truth.
+  </p>
+
+  <div class="hero-meta">
+    <div><span>Date</span><strong>2026-05-28</strong></div>
+    <div><span>Product</span><strong>Cockatoo</strong></div>
+    <div><span>Scope</span><strong>ES · FR · DE · IT · PT</strong></div>
+    <div><span>Target</span><strong>Paid beta · 2–4 weeks</strong></div>
+    <div><span>Surface</span><strong>Mac · Safari extension</strong></div>
+  </div>
+</header>
+
+<!-- ═════════════════════════════════════ 01 NORTH STAR ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">01</div>
+    <div class="body">
+      <div class="eyebrow">North Star</div>
+      <h2 class="h2">Four domains, cleanly separated.</h2>
+      <p>The architecture splits into four explicit layers. Each one has different rules
+        about who can write to it, who can read from it, and how mistakes are recovered.
+        Mixing them is how language-learning products start lying to their users.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>The app owns truth. The model proposes, explains, and generates practice.</p>
+    <div class="attr">— Architectural Principle</div>
+  </div>
+
+  <div class="domains">
+    <div class="domain c-curr">
+      <span class="domain-num">01 / TRUSTED</span>
+      <h3>Curriculum</h3>
+      <p>Versioned language packs and the item graph: words, chunks, patterns, sentence frames.
+        Bundled, signed, schema-validated. Never silently mutated by the model.</p>
+      <svg class="ico" viewBox="0 0 40 40" fill="none">
+        <rect x="6" y="8" width="22" height="28" rx="1" fill="#FBF6EC" stroke="#4F6E5F" stroke-width="1.5"/>
+        <rect x="12" y="4" width="22" height="28" rx="1" fill="#FBF6EC" stroke="#4F6E5F" stroke-width="1.5"/>
+        <line x1="16" y1="11" x2="30" y2="11" stroke="#4F6E5F" stroke-width="1"/>
+        <line x1="16" y1="16" x2="28" y2="16" stroke="#4F6E5F" stroke-width="1"/>
+        <line x1="16" y1="21" x2="29" y2="21" stroke="#4F6E5F" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="domain c-state">
+      <span class="domain-num">02 / PERSONAL</span>
+      <h3>Learner State</h3>
+      <p>Per-language progress, review outcomes, scheduler state.
+        Exposure unlocks review eligibility; review performance drives mastery — not the other way around.</p>
+      <svg class="ico" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="14" fill="none" stroke="#E36B3F" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="9" fill="none" stroke="#E36B3F" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <circle cx="20" cy="20" r="3" fill="#E36B3F"/>
+      </svg>
+    </div>
+    <div class="domain c-gen">
+      <span class="domain-num">03 / UNTRUSTED</span>
+      <h3>Generation</h3>
+      <p>LLM-generated artifacts — cloze cards, distractors, examples, tutor replies.
+        Strict structured output. Validated against schema and item rules. Cached, retired when wrong.</p>
+      <svg class="ico" viewBox="0 0 40 40" fill="none">
+        <path d="M8 28 L 16 12 L 24 22 L 32 8" stroke="#D7A82B" stroke-width="1.5" fill="none"/>
+        <circle cx="8" cy="28" r="2" fill="#D7A82B"/>
+        <circle cx="16" cy="12" r="2" fill="#D7A82B"/>
+        <circle cx="24" cy="22" r="2" fill="#D7A82B"/>
+        <circle cx="32" cy="8" r="2" fill="#D7A82B"/>
+      </svg>
+    </div>
+    <div class="domain c-surf">
+      <span class="domain-num">04 / CONTACT</span>
+      <h3>Surfaces</h3>
+      <p>Safari encounter, Learn review, Library inspection, Tutor explanation.
+        Every surface writes back to the same item-state record — no dead ends.</p>
+      <svg class="ico" viewBox="0 0 40 40" fill="none">
+        <rect x="6" y="10" width="28" height="20" rx="2" fill="none" stroke="#5A3B5A" stroke-width="1.5"/>
+        <line x1="6" y1="16" x2="34" y2="16" stroke="#5A3B5A" stroke-width="1"/>
+        <circle cx="10" cy="13" r="0.8" fill="#5A3B5A"/>
+        <circle cx="13" cy="13" r="0.8" fill="#5A3B5A"/>
+        <rect x="11" y="20" width="6" height="2" fill="#5A3B5A" opacity="0.4"/>
+        <rect x="19" y="20" width="10" height="2" fill="#E36B3F"/>
+        <rect x="11" y="24" width="14" height="2" fill="#5A3B5A" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 02 LOOP ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">02</div>
+    <div class="body">
+      <div class="eyebrow">The Closed Learning Loop</div>
+      <h2 class="h2">Every feature feeds the same circle.</h2>
+      <p>Hover cards, reviews, tutor chats, and ambient page replacements all write
+        to one place: the per-item learning record. That single rule keeps the system
+        honest. No dead ends, no shadow state.</p>
+    </div>
+  </div>
+
+  <div class="loop-wrap">
+    <!-- Loop SVG -->
+    <div class="loop-diagram">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#E36B3F"/>
+          </marker>
+        </defs>
+
+        <!-- outer rotating dashed ring -->
+        <circle cx="200" cy="200" r="170" fill="none" stroke="#C9B89E" stroke-width="0.8" stroke-dasharray="2 4"/>
+
+        <!-- main loop -->
+        <circle cx="200" cy="200" r="140" fill="none" stroke="#E36B3F" stroke-width="1.6" stroke-dasharray="6 8" marker-end="url(#arrow)"/>
+
+        <!-- 8 nodes at 45° intervals -->
+        <g font-family="JetBrains Mono, monospace" font-size="10" fill="#1C1714">
+          <!-- top -->
+          <circle cx="200" cy="60" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="200" y="64" text-anchor="middle" font-weight="600">Select</text>
+
+          <!-- top-right -->
+          <circle cx="299" cy="101" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="299" y="105" text-anchor="middle" font-weight="600">Encounter</text>
+
+          <!-- right -->
+          <circle cx="340" cy="200" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="340" y="204" text-anchor="middle" font-weight="600">Notice</text>
+
+          <!-- bottom-right -->
+          <circle cx="299" cy="299" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="299" y="303" text-anchor="middle" font-weight="600">Review</text>
+
+          <!-- bottom -->
+          <circle cx="200" cy="340" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="200" y="344" text-anchor="middle" font-weight="600">Generate</text>
+
+          <!-- bottom-left -->
+          <circle cx="101" cy="299" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="101" y="303" text-anchor="middle" font-weight="600">Validate</text>
+
+          <!-- left -->
+          <circle cx="60" cy="200" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="60" y="204" text-anchor="middle" font-weight="600">Promote</text>
+
+          <!-- top-left -->
+          <circle cx="101" cy="101" r="22" fill="#FBF6EC" stroke="#1C1714" stroke-width="1.2"/>
+          <text x="101" y="105" text-anchor="middle" font-weight="600">Adapt</text>
+        </g>
+
+        <!-- center mark -->
+        <g>
+          <circle cx="200" cy="200" r="42" fill="#E36B3F" opacity="0.06"/>
+          <circle cx="200" cy="200" r="32" fill="none" stroke="#E36B3F" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="200" y="195" text-anchor="middle" font-family="Fraunces, serif" font-size="11" font-style="italic" fill="#1C1714">item state</text>
+          <text x="200" y="210" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#847568">single source</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="loop-steps">
+      <div class="loop-step"><span class="n">01</span><div><span class="name">Select</span><span class="desc">Scheduler picks eligible items by level, dependencies, due status, site policy, density.</span></div></div>
+      <div class="loop-step"><span class="n">02</span><div><span class="name">Encounter</span><span class="desc">Safari replaces safe words/chunks in eligible blocks. Records exposure by item ID only.</span></div></div>
+      <div class="loop-step"><span class="n">03</span><div><span class="name">Notice</span><span class="desc">Hover/focus cards show source, target, explanation. No raw page text leaves the page.</span></div></div>
+      <div class="loop-step"><span class="n">04</span><div><span class="name">Review</span><span class="desc">Dashboard surfaces short retrieval tasks. Recognition, recall, cloze, production stats update.</span></div></div>
+      <div class="loop-step"><span class="n">05</span><div><span class="name">Generate</span><span class="desc">LLM produces examples, distractors, tutor feedback from bounded item context only.</span></div></div>
+      <div class="loop-step"><span class="n">06</span><div><span class="name">Validate</span><span class="desc">Structured output is parsed, schema-checked, cached, or rejected. Model is untrusted input.</span></div></div>
+      <div class="loop-step"><span class="n">07</span><div><span class="name">Promote</span><span class="desc">Items move along the status ladder. Safari replacement priority updates accordingly.</span></div></div>
+      <div class="loop-step"><span class="n">08</span><div><span class="name">Adapt</span><span class="desc">Next page batch prefers due, useful, safe items. Avoids what caused confusion before.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 03 ITEM TYPES ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">03</div>
+    <div class="body">
+      <div class="eyebrow">Curriculum Item Taxonomy</div>
+      <h2 class="h2">From flat word list to typed item graph.</h2>
+      <p>The current <span class="mono">CurriculumWord</span> assumes one source, one target,
+        one language, one tier. It cannot stretch to chunks, patterns, or sentence frames —
+        which is what serious learners need. The new model handles all four with the same
+        infrastructure, but treats each one differently for replacement safety.</p>
+    </div>
+  </div>
+
+  <div class="types-grid">
+    <div class="type-card" data-c="word">
+      <div class="swatch"></div>
+      <h4>Word</h4>
+      <div class="safety">Ambient · usually safe</div>
+      <p>Single lexical item with a stable mapping. High-frequency function words and adverbs
+        are usually safe to replace inline.</p>
+      <div class="ex">and → und<br/>but → pero<br/>today → hoy</div>
+    </div>
+    <div class="type-card" data-c="chunk">
+      <div class="swatch"></div>
+      <h4>Chunk</h4>
+      <div class="safety">Ambient · review-first</div>
+      <p>Multi-word phrase with stable meaning. Lives in review and tutor first; ambient
+        replacement only when phrase match is exact and low-ambiguity.</p>
+      <div class="ex">of course → por supuesto<br/>I think → je pense<br/>there is → es gibt</div>
+    </div>
+    <div class="type-card" data-c="pattern">
+      <div class="swatch"></div>
+      <h4>Pattern</h4>
+      <div class="safety">Review-only · never inline</div>
+      <p>Grammar construction. Never replaced as raw text. Powers cloze, contrast,
+        recomposition, and tutor explanations instead.</p>
+      <div class="ex">DE: weil + V-final<br/>ES: tener que + inf<br/>FR: partitive</div>
+    </div>
+    <div class="type-card" data-c="frame">
+      <div class="swatch"></div>
+      <h4>Sentence Frame</h4>
+      <div class="safety">Production · roleplay</div>
+      <p>Reusable sentence skeleton for production practice. Dangerous as automatic
+        replacement because it usually requires grammar changes.</p>
+      <div class="ex">I would like …<br/>I am going to …<br/>Can you …?</div>
+    </div>
+  </div>
+
+  <div class="safety-bar">
+    <div class="end">safe → inline</div>
+    <div class="gradient-bar"></div>
+    <div class="end right">review only</div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 04 DATA MODEL ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">04</div>
+    <div class="body">
+      <div class="eyebrow">Data Model</div>
+      <h2 class="h2">Curriculum truth lives apart from learner progress.</h2>
+      <p>The single most important separation: trusted items on one side, per-learner state on
+        the other. Exposure no longer <em>means</em> progress — exposure <em>unlocks</em>
+        review eligibility. Review performance is what drives mastery and replacement priority.</p>
+    </div>
+  </div>
+
+  <div class="data-split">
+    <div class="data-col curr">
+      <div class="tag">trusted · versioned</div>
+      <h4>CurriculumItem</h4>
+      <p>What the item <em>is</em>. Identical for every learner. Validated, signed, bundled with the app.</p>
+<pre><span class="k">struct</span> <span class="t">CurriculumItem</span> {
+  <span class="k">var</span> id: <span class="t">String</span>          <span class="c">// "de.word.and.und"</span>
+  <span class="k">var</span> language: <span class="t">Supported</span>
+  <span class="k">var</span> kind: <span class="t">ItemKind</span>      <span class="c">// word|chunk|...</span>
+  <span class="k">var</span> source: <span class="t">SourceExpr</span>
+  <span class="k">var</span> target: <span class="t">TargetExpr</span>
+  <span class="k">var</span> level: <span class="t">Level</span>         <span class="c">// CEFR</span>
+  <span class="k">var</span> frequencyBand: <span class="t">Int</span>
+  <span class="k">var</span> replacementPolicy
+  <span class="k">var</span> dependencies: [<span class="t">ID</span>]
+  <span class="k">var</span> explanations
+  <span class="k">var</span> examples
+}</pre>
+    </div>
+
+    <div class="arrows-mid">
+      <div>writes to →</div>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <path d="M4 12 L 36 12" stroke="#847568" stroke-width="1"/>
+        <path d="M30 7 L 36 12 L 30 17" stroke="#847568" stroke-width="1" fill="none"/>
+        <path d="M36 28 L 4 28" stroke="#847568" stroke-width="1"/>
+        <path d="M10 23 L 4 28 L 10 33" stroke="#847568" stroke-width="1" fill="none"/>
+      </svg>
+      <div>← reads</div>
+    </div>
+
+    <div class="data-col state">
+      <div class="tag">personal · per-learner</div>
+      <h4>ItemLearningState</h4>
+      <p>What this <em>learner</em> has done with this item. Status, streaks, history, schedule.</p>
+<pre><span class="k">struct</span> <span class="t">ItemLearningState</span> {
+  <span class="k">var</span> status: <span class="t">Status</span>
+  <span class="k">var</span> firstSeenAt: <span class="t">Date?</span>
+  <span class="k">var</span> lastSeenAt: <span class="t">Date?</span>
+  <span class="k">var</span> exposureCount: <span class="t">Int</span>
+  <span class="k">var</span> recognition: <span class="t">Stats</span>
+  <span class="k">var</span> recall: <span class="t">Stats</span>
+  <span class="k">var</span> cloze: <span class="t">Stats</span>
+  <span class="k">var</span> production: <span class="t">ProdStats</span>
+  <span class="k">var</span> nextReviewAt: <span class="t">Date?</span>
+  <span class="k">var</span> difficulty: <span class="t">Double</span>
+  <span class="k">var</span> blockedContexts
+}</pre>
+    </div>
+  </div>
+
+  <p class="small" style="margin-top: 28px; text-align: center; max-width: 70ch; margin-left: auto; margin-right: auto;">
+    <em class="italic-serif">The status ladder per item</em>
+    &nbsp;&nbsp;<span class="mono">locked → available → seen → recognition → recall → cloze → production → strong</span>
+  </p>
+</section>
+
+<!-- ═════════════════════════════════════ 05 LANGUAGES ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">05</div>
+    <div class="body">
+      <div class="eyebrow">Beta Languages</div>
+      <h2 class="h2">Five Latin-script Romance/Germanic packs.</h2>
+      <p>These five share enough curriculum structure that one architecture serves them all.
+        No right-to-left layout, no non-segmented writing, no script-learning concerns.
+        German needs extra care around word order and capitalisation; the four Romance languages
+        need gender/number/clitic caution. About 175 items per language at launch.</p>
+    </div>
+  </div>
+
+  <div class="langs">
+    <div class="lang"><div class="flag">Es</div><div class="name">Spanish</div><div class="code">es · ~175 items</div></div>
+    <div class="lang"><div class="flag">Fr</div><div class="name">French</div><div class="code">fr · ~175 items</div></div>
+    <div class="lang"><div class="flag">De</div><div class="name">German</div><div class="code">de · ~175 items</div></div>
+    <div class="lang"><div class="flag">It</div><div class="name">Italian</div><div class="code">it · ~175 items</div></div>
+    <div class="lang"><div class="flag">Pt</div><div class="name">Portuguese</div><div class="code">pt · ~175 items</div></div>
+  </div>
+
+  <p class="small" style="margin-top: 28px; text-align: center;">
+    Total canonical items across all five packs: <strong style="color: var(--ink); font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 500;">~875</strong>
+    &nbsp;·&nbsp; One active language at a time.
+  </p>
+</section>
+
+<!-- ═════════════════════════════════════ 06 LLM POINTS ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">06</div>
+    <div class="body">
+      <div class="eyebrow">LLM Integration Points</div>
+      <h2 class="h2">Five places the model touches the app — each with a clear contract.</h2>
+      <p>The model never writes to canonical curriculum directly, never sees page text by default,
+        and never alone decides that an item has been mastered. Every output gets schema-validated,
+        cached with prompt/model version, and recorded as untrusted until proven safe.</p>
+    </div>
+  </div>
+
+  <div class="llm-grid">
+    <div class="llm-card">
+      <div class="num">1</div>
+      <h4>Pack Builder</h4>
+      <div class="purpose">Generates candidate curriculum items <em>offline</em>. Developer tool, not app UI.</div>
+      <div class="field risk"><label>Risk</label><span>Bad translations become product truth.</span></div>
+      <div class="field mit"><label>Mitigation</label><span>Schema validation, second-pass critique, manual spot-check, versioned packs.</span></div>
+    </div>
+    <div class="llm-card">
+      <div class="num">2</div>
+      <h4>Exercise Generator</h4>
+      <div class="purpose">Creates review cards (cloze, distractors, recomposition) from trusted items.</div>
+      <div class="field risk"><label>Risk</label><span>Exercise has wrong answer or introduces unseen grammar.</span></div>
+      <div class="field mit"><label>Mitigation</label><span>Require source item IDs, known answer, allowed vocab level. Cache only validated artifacts.</span></div>
+    </div>
+    <div class="llm-card">
+      <div class="num">3</div>
+      <h4>Tutor</h4>
+      <div class="purpose">Answers learner questions with bounded feedback on the selected item.</div>
+      <div class="field risk"><label>Risk</label><span>Overexplaining, wrong correction, accidental page-data upload.</span></div>
+      <div class="field mit"><label>Mitigation</label><span>Bounded prompt, no automatic page text, short responses, one correction at a time.</span></div>
+    </div>
+    <div class="llm-card">
+      <div class="num">4</div>
+      <h4>Production Feedback</h4>
+      <div class="purpose">Evaluates short learner-written sentences against a rubric.</div>
+      <div class="field risk"><label>Risk</label><span>Inconsistent grading; over-claims mastery.</span></div>
+      <div class="field mit"><label>Mitigation</label><span>Rubric-based structured output. Combine with repeated successes before marking strong.</span></div>
+    </div>
+    <div class="llm-card">
+      <div class="num">5</div>
+      <h4>Candidate Expansion</h4>
+      <div class="purpose">Suggests what the learner should see next, in the background.</div>
+      <div class="field risk"><label>Risk</label><span>Curriculum drift — model adds things the app didn't sanction.</span></div>
+      <div class="field mit"><label>Mitigation</label><span>Existing pack IDs allowed immediately. New generated items quarantined until validated.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 07 SAFARI ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">07</div>
+    <div class="body">
+      <div class="eyebrow">Safari Extension Strategy</div>
+      <h2 class="h2">Stay conservative. The extension is the trust surface.</h2>
+      <p>The content script is where the privacy boundary lives. The rule for beta is:
+        words and a few exact chunks only, one replacement per block, no model calls
+        from inside the page, and only item IDs reported back to the app.</p>
+    </div>
+  </div>
+
+  <div class="safari-grid">
+    <div class="safari-col do">
+      <h4>For beta</h4>
+      <ul>
+        <li>Replace only words and a small set of exact chunks.</li>
+        <li>Keep one replacement per block by default.</li>
+        <li>Keep sensitive form exclusions.</li>
+        <li>Keep page text inside the content script.</li>
+        <li>Report only item ID, host policy, and exposure increment.</li>
+        <li>Match in order: exact chunks → priority due words → new words → reinforcement.</li>
+      </ul>
+    </div>
+    <div class="safari-col dont">
+      <h4>Not for beta</h4>
+      <ul>
+        <li>Model calls from the content script.</li>
+        <li>Automatic sentence rewriting.</li>
+        <li>Live grammar transformation.</li>
+        <li>Hidden upload of page context.</li>
+        <li>Matching substrings inside managed tokens, editable text, code, or controls.</li>
+        <li>Phrase replacement before false-positive testing.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 08 SCOPE ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">08</div>
+    <div class="body">
+      <div class="eyebrow">Paid Beta Scope</div>
+      <h2 class="h2">Keep · Add · Cut.</h2>
+      <p>The smallest defensible shape to charge for. The biggest single change before beta
+        is adding a real review state — exposure counts are useful telemetry but they are
+        not learning. Everything that expands platform, model, or media scope gets cut.</p>
+    </div>
+  </div>
+
+  <div class="scope-grid">
+    <div class="scope-col" data-c="keep">
+      <div class="head">
+        <div class="label">Already works</div>
+        <h4>Keep</h4>
+      </div>
+      <ul>
+        <li>Safari inline word replacement</li>
+        <li>One active language at a time</li>
+        <li>Native dashboard surface</li>
+        <li>Popup pause / site controls</li>
+        <li>Vocabulary library</li>
+        <li>Tutor (bounded to selected token)</li>
+        <li>Privacy boundary</li>
+        <li>Sensitive-form exclusions</li>
+      </ul>
+    </div>
+    <div class="scope-col" data-c="add">
+      <div class="head">
+        <div class="label">New for beta</div>
+        <h4>Add</h4>
+      </div>
+      <ul>
+        <li><strong style="color:var(--ink);">OpenAI provider</strong> · Keychain key, model setting</li>
+        <li><strong style="color:var(--ink);">Real review state</strong> · lastSeenAt, attempts, nextReviewAt</li>
+        <li><strong style="color:var(--ink);">Learn screen</strong> · recognition multiple-choice</li>
+        <li>Honest vocabulary screen — drop fake recall %</li>
+        <li>Onboarding checklist + test tutor button</li>
+        <li>5-language starter packs (~175 items each)</li>
+        <li>Signed/notarized beta build + feedback link</li>
+        <li>Cloze review + simple interval scheduler (wk 3-4)</li>
+      </ul>
+    </div>
+    <div class="scope-col" data-c="cut">
+      <div class="head">
+        <div class="label">Not in beta</div>
+        <h4>Cut</h4>
+      </div>
+      <ul>
+        <li>Ollama from the main user path</li>
+        <li>Local model settings UI</li>
+        <li>Multi-language simultaneous</li>
+        <li>Live sentence rewriting</li>
+        <li>Native-app replacement outside Safari</li>
+        <li>Voice / pronunciation scoring</li>
+        <li>Imported content library, Anki export</li>
+        <li>Streaks, gamification, complex SRS</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 09 MIGRATION ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">09</div>
+    <div class="body">
+      <div class="eyebrow">Engineering Migration Path</div>
+      <h2 class="h2">Eight steps from one-language word list to five-language item graph.</h2>
+      <p>The migration is staged so old behaviour stays unbroken at every commit. The German
+        starter pack moves into the new model first, with tests proving nothing changes for
+        existing users. The remaining four languages and the review scheduler arrive after.</p>
+    </div>
+  </div>
+
+  <div class="migration">
+    <div class="mig-step"><div class="n">01</div><h5>Generic curriculum types</h5><p>Add <span class="mono">SupportedLanguage</span>, <span class="mono">CurriculumItem</span>, <span class="mono">LanguagePack</span> alongside legacy.</p></div>
+    <div class="mig-step"><div class="n">02</div><h5>German pack from existing data</h5><p>Map the current 12 words into the new model. Tests prove old behaviour unchanged.</p></div>
+    <div class="mig-step"><div class="n">03</div><h5>Update learning state</h5><p>Move from <span class="mono">exposureCounts</span> dict to <span class="mono">itemStates</span> map. One-way migration.</p></div>
+    <div class="mig-step"><div class="n">04</div><h5>Update extension payload</h5><p>Send unlocked <span class="mono">CurriculumItem</span> records instead of hard-coded starter words.</p></div>
+    <div class="mig-step"><div class="n">05</div><h5>Add review scheduler</h5><p>Create due queues, record attempts. Vocabulary stops deriving recall from exposure count.</p></div>
+    <div class="mig-step"><div class="n">06</div><h5>Five language packs</h5><p>Ship small consistent starters: ~80 words, ~30 chunks, ~15 patterns, ~20 frames each.</p></div>
+    <div class="mig-step"><div class="n">07</div><h5>OpenAI exercise generation</h5><p>Cloze and contrast review cards from trusted items. Cache with prompt/model metadata.</p></div>
+    <div class="mig-step"><div class="n">08</div><h5>Production feedback</h5><p>Short writing checks after recognition/cloze are stable. Rubric-based grading.</p></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 10 TIMELINE ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">10</div>
+    <div class="body">
+      <div class="eyebrow">Four-Week Build Plan</div>
+      <h2 class="h2">Two weeks is the smallest scope worth charging for.</h2>
+      <p>Two weeks gets the OpenAI provider, real review state, the Learn screen, and packaged
+        beta build. Two more weeks adds cloze, phrase entries, selected-sentence tutor opt-in,
+        and the polish that decides whether the first paying users come back.</p>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-week">
+      <div class="w">Week 01 · Plumb the cloud</div>
+      <h4>OpenAI in, Ollama out</h4>
+      <ul>
+        <li>Add OpenAI tutor provider</li>
+        <li>Keychain API-key storage</li>
+        <li>Remove Ollama from onboarding/settings</li>
+        <li>First-run setup checklist</li>
+        <li>Add review state to LearningState</li>
+        <li>Vocabulary shows real review fields</li>
+        <li>Starter packs: ES, FR, DE, IT, PT</li>
+      </ul>
+    </div>
+    <div class="tl-week">
+      <div class="w">Week 02 · Ship a charge-worthy build</div>
+      <h4>Learn screen + packaging</h4>
+      <ul>
+        <li>Build Learn recognition review</li>
+        <li>Wire due counts into Overview/popup</li>
+        <li>Privacy copy + API-key test button</li>
+        <li>Package signed/notarized beta build</li>
+        <li>Landing page + payment + invite flow</li>
+        <li>Safari manual QA on article pages</li>
+      </ul>
+    </div>
+    <div class="tl-week">
+      <div class="w">Week 03 · Make retention plausible</div>
+      <h4>Cloze + phrases + diagnostics</h4>
+      <ul>
+        <li>Add cloze review mode</li>
+        <li>Simple phrase entries in review only</li>
+        <li>Diagnostics/feedback export bundle</li>
+        <li>Improve onboarding from tester input</li>
+        <li>Hosted proxy only if not BYO-key</li>
+      </ul>
+    </div>
+    <div class="tl-week">
+      <div class="w">Week 04 · Polish for cohort</div>
+      <h4>Stabilise + selected-text tutor</h4>
+      <ul>
+        <li>Fix setup friction, polish copy</li>
+        <li>Selected-sentence tutor opt-in</li>
+        <li>Prepare paid beta cohort</li>
+        <li>Support docs + feedback channel</li>
+        <li>Acceptance: 1 week sustained use</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 11 MARKET ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">11</div>
+    <div class="body">
+      <div class="eyebrow">Market Position & Pricing</div>
+      <h2 class="h2">Underserved corner of a validated market.</h2>
+      <p>Toucan owns the ambient-replacement mechanic on Chrome/Edge. Readlang, LingQ,
+        Language Reactor, and Migaku all validate authentic-content learning, vocabulary
+        tracking, and AI tutoring at various price points. None of them ship a tasteful
+        Mac-and-Safari-native experience. That's the wedge.</p>
+    </div>
+  </div>
+
+  <div class="market">
+    <div class="compete-list">
+      <div class="comp-row">
+        <div class="name">Toucan</div>
+        <div class="pitch">Ambient word swap · Chrome/Edge · free, Babbel-owned</div>
+        <div class="price">free</div>
+      </div>
+      <div class="comp-row">
+        <div class="name">Readlang</div>
+        <div class="pitch">Click-to-translate reader · AI explanations · flashcards</div>
+        <div class="price">$6 – $15 /mo</div>
+      </div>
+      <div class="comp-row">
+        <div class="name">LingQ</div>
+        <div class="pitch">Authentic-content library · phrases · stats · AI tiers</div>
+        <div class="price">$9 – $30 /mo</div>
+      </div>
+      <div class="comp-row">
+        <div class="name">Language Reactor</div>
+        <div class="pitch">YouTube/Netflix subtitle learning · Pro saves phrases</div>
+        <div class="price">~$5 /mo</div>
+      </div>
+      <div class="comp-row">
+        <div class="name">Migaku</div>
+        <div class="pitch">Power immersion · subtitles, OCR, SRS, AI breakdowns</div>
+        <div class="price">premium</div>
+      </div>
+      <div class="comp-row us">
+        <div class="name">Cockatoo</div>
+        <div class="pitch">Ambient Safari + review + bounded tutor · Mac-native · 5 langs</div>
+        <div class="price">early access</div>
+      </div>
+    </div>
+
+    <div class="pricing-card">
+      <h4>Recommended beta pricing</h4>
+      <div class="price-tier">
+        <div>
+          <div class="t">BYO key</div>
+          <div class="label-line">User brings own OpenAI key</div>
+        </div>
+        <div class="amt">$19–29 once · or $5 /mo</div>
+      </div>
+      <div class="price-tier">
+        <div>
+          <div class="t">Hosted</div>
+          <div class="label-line">OpenAI usage included, fair-use caps</div>
+        </div>
+        <div class="amt">$8–12 /mo</div>
+      </div>
+      <div class="price-tier">
+        <div>
+          <div class="t">Avoid</div>
+          <div class="label-line">Lifetime pricing before retention is known</div>
+        </div>
+        <div class="amt">—</div>
+      </div>
+      <p class="small" style="margin-top: 16px; font-size: 0.78rem;">
+        Position as <em class="italic-serif">early access</em>, not a finished course.
+        The app must feel polished and reliable even if scope is small.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ 12 RISKS ═════════════════════════════════════ -->
+<section>
+  <div class="section-head">
+    <div class="num">12</div>
+    <div class="body">
+      <div class="eyebrow">Risk Register</div>
+      <h2 class="h2">Known failure modes, planned mitigations.</h2>
+      <p>The product is honest about what it doesn't yet do. Each risk below has a structural
+        mitigation already in the architecture — not a "we'll handle it in support" mitigation.</p>
+    </div>
+  </div>
+
+  <div class="risks">
+    <div class="risk">
+      <div class="r-label">Risk · pedagogical</div>
+      <div class="r-title">Feels too small to charge for</div>
+      <div class="r-mit">Charge for early access, not a finished course. Make the beta promise clear. The app must feel polished even with small scope.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · competitive</div>
+      <div class="r-title">Users compare it to free Toucan</div>
+      <div class="r-mit">Position on Safari-native Mac experience, privacy, review state, and tutor. Don't sell word replacement as the whole value.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · operational</div>
+      <div class="r-title">OpenAI costs or abuse</div>
+      <div class="r-mit">BYO-key for earliest beta, or hosted proxy with strict daily caps. Cheap models for routine work, better model only when needed.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · pedagogical</div>
+      <div class="r-title">Calling exposure "recall"</div>
+      <div class="r-mit">Track exposure, recognition, recall, production separately. For beta, implement recognition only and name it honestly.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · onboarding</div>
+      <div class="r-title">Safari extension setup friction</div>
+      <div class="r-mit">Onboarding must be excellent. Setup over a few minutes = churn before value. Test Tutor button confirms key + provider live.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · compatibility</div>
+      <div class="r-title">Page replacement breaks sites</div>
+      <div class="r-mit">Guarantee article/document pages only. Keep web apps experimental. Make disable-site obvious and reversible.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · quality</div>
+      <div class="r-title">Bad translation in canonical pack</div>
+      <div class="r-mit">Packs are versioned. Generated artifacts separate from canonical items. User report. Remote disable in future manifest.</div>
+    </div>
+    <div class="risk">
+      <div class="r-label">Risk · privacy</div>
+      <div class="r-title">Page text leaks to OpenAI</div>
+      <div class="r-mit">No page text in default extension messages. Selected-text tutor must show what will be sent. Reviews use curriculum items only.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════ FOOTER ═════════════════════════════════════ -->
+<div class="footer">
+  Cockatoo · Multilingual Learning Architecture & Paid-Beta Scope · 2026-05-28
+</div>
+
+</div>
+</body>
+</html>

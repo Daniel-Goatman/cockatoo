@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cockatoo Tutor Integration</title>
+  <style>
+    :root {
+      --paper: #f7f1e4;
+      --paper-2: #fffaf0;
+      --paper-3: #eadfc8;
+      --ink: #1f1a14;
+      --muted: #655844;
+      --faint: #97886f;
+      --rule: #d8ccb3;
+      --tobacco: #8a4a26;
+      --moss: #5d6b3e;
+      --indigo: #33496d;
+      --plum: #65405d;
+      --ok: #4d713c;
+      --warn: #b98633;
+      --shadow: 0 24px 70px rgba(31, 26, 20, .14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(93,107,62,.13), transparent 30%),
+        radial-gradient(circle at 82% 10%, rgba(101,64,93,.13), transparent 32%),
+        linear-gradient(135deg, #f2ead8 0%, #fbf6eb 50%, #e8ddc7 100%);
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, ui-serif, serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    .page { padding: 28px; }
+
+    .frame {
+      width: min(1440px, calc(100vw - 56px));
+      min-height: 850px;
+      margin: 0 auto;
+      border: 1px solid rgba(93,82,61,.28);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid var(--rule);
+      background: linear-gradient(180deg, #f6efdf, #eadfc8);
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .content { padding: 32px 38px 38px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 430px;
+      gap: 32px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 8px 0 10px;
+      font-size: 42px;
+      line-height: 1.03;
+      font-weight: 500;
+    }
+
+    h1 em {
+      color: var(--tobacco);
+      font-style: italic;
+    }
+
+    .subhead {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      font-style: italic;
+      line-height: 1.42;
+    }
+
+    .locked {
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(255,250,240,.78);
+    }
+
+    .locked strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 22px;
+      font-weight: 560;
+    }
+
+    .locked p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.34;
+      font-style: italic;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 535px;
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      background: rgba(255,250,240,.80);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .option:hover {
+      transform: translateY(-3px);
+      border-color: rgba(138,74,38,.48);
+      box-shadow: 0 18px 44px rgba(31,26,20,.12);
+    }
+
+    .option.selected {
+      border-color: var(--tobacco);
+      box-shadow: 0 0 0 3px rgba(138,74,38,.13), 0 18px 44px rgba(31,26,20,.14);
+    }
+
+    .option-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 19px 14px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.05;
+      font-weight: 560;
+    }
+
+    .option-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      font-style: italic;
+      line-height: 1.3;
+    }
+
+    .letter {
+      display: grid;
+      place-items: center;
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      flex: 0 0 auto;
+    }
+
+    .mock { padding: 17px 19px; }
+
+    .mini {
+      position: relative;
+      min-height: 334px;
+      border: 1px solid var(--rule);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,250,240,.98), rgba(238,228,206,.72));
+      overflow: hidden;
+    }
+
+    .mini-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rule);
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .mini-body { padding: 15px; }
+
+    .progress {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+
+    .progress span {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--paper-3);
+    }
+
+    .progress .done { background: var(--moss); }
+    .progress .now { background: var(--tobacco); }
+
+    .prompt {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .word {
+      margin: 0 0 12px;
+      font-size: 35px;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    .answer {
+      min-height: 42px;
+      border: 1px solid var(--rule);
+      border-radius: 9px;
+      background: rgba(255,250,240,.86);
+      padding: 10px 11px;
+      color: var(--moss);
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .feedback {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(93,107,62,.24);
+      background: rgba(93,107,62,.09);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.26;
+    }
+
+    .feedback b { color: var(--ink); }
+
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--moss);
+      color: white;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+    }
+
+    .drawer {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      left: 72px;
+      padding: 12px 13px;
+      border: 1px solid rgba(93,107,62,.30);
+      border-radius: 12px;
+      background: rgba(255,250,240,.96);
+      box-shadow: 0 16px 34px rgba(31,26,20,.14);
+      animation: drawer 3.4s ease infinite;
+    }
+
+    @keyframes drawer {
+      0%, 100% { transform: translateX(18px); opacity: .72; }
+      45%, 70% { transform: translateX(0); opacity: 1; }
+    }
+
+    .drawer strong, .coach strong, .bubble strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .drawer p, .coach p, .bubble p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.28;
+      font-style: italic;
+    }
+
+    .production {
+      border: 1px solid var(--rule);
+      border-radius: 11px;
+      background: rgba(255,250,240,.72);
+      padding: 13px;
+      margin-bottom: 12px;
+    }
+
+    .production p {
+      margin: 0 0 9px;
+      font-size: 18px;
+      font-style: italic;
+      line-height: 1.25;
+    }
+
+    .typed {
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: var(--paper-2);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .coach {
+      border: 1px solid rgba(101,64,93,.28);
+      border-radius: 12px;
+      background: rgba(101,64,93,.08);
+      padding: 12px 13px;
+      animation: glow 2.8s ease infinite;
+    }
+
+    @keyframes glow {
+      50% { box-shadow: 0 0 0 4px rgba(101,64,93,.08); }
+    }
+
+    .inline-card {
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: var(--paper-2);
+      padding: 15px;
+      box-shadow: 0 12px 26px rgba(31,26,20,.08);
+      animation: flip 3.6s ease infinite;
+      transform-origin: center;
+    }
+
+    @keyframes flip {
+      0%, 100% { transform: rotateX(0deg); }
+      45% { transform: rotateX(5deg) translateY(-5px); }
+    }
+
+    .bubble {
+      margin-top: 12px;
+      border: 1px solid rgba(51,73,109,.28);
+      border-radius: 12px;
+      background: rgba(51,73,109,.08);
+      padding: 11px 12px;
+    }
+
+    .foot {
+      padding: 14px 19px 16px;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.34;
+    }
+
+    .foot b { color: var(--ink); }
+
+    .question {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 17px 19px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: rgba(235,225,202,.55);
+    }
+
+    .question p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 9px;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 12px 16px;
+      cursor: pointer;
+      box-shadow: 0 9px 18px rgba(31,26,20,.20);
+    }
+
+    @media (max-width: 1120px) {
+      .hero, .options { grid-template-columns: 1fr; }
+      .option { min-height: auto; }
+    }
+
+    @media (max-width: 720px) {
+      .page { padding: 12px; }
+      .frame { width: calc(100vw - 24px); min-height: 0; border-radius: 14px; }
+      .content { padding: 18px 18px 24px; }
+      .hero { gap: 12px; margin-bottom: 14px; }
+      h1 { font-size: 30px; line-height: 1.02; margin-bottom: 8px; }
+      .subhead { font-size: 14px; line-height: 1.32; }
+      .locked { padding: 11px 12px; }
+      .locked strong { font-size: 17px; }
+      .locked p { font-size: 13px; }
+      .options { gap: 10px; margin-bottom: 12px; }
+      .option-head { padding: 12px 13px 10px; }
+      h2 { font-size: 20px; }
+      .option-head p { font-size: 13px; }
+      .letter { width: 28px; height: 28px; font-size: 11px; }
+      .mock { padding: 10px 12px; }
+      .mini { min-height: 0; }
+      .mini-body { padding: 10px; }
+      .word { font-size: 28px; }
+      .drawer { position: static; margin-top: 10px; animation: none; }
+      .foot { padding: 10px 13px 12px; font-size: 13px; }
+      .question { grid-template-columns: 1fr; gap: 10px; padding: 12px 13px; }
+      .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main class="frame">
+      <div class="topbar">Tutor Layer In Core Plus</div>
+      <section class="content">
+        <header class="hero">
+          <div>
+            <div class="eyebrow">Question 4</div>
+            <h1>Where should tutor help appear so it feels <em>special, not slow?</em></h1>
+            <p class="subhead">Core Plus Tutor gives us production and smarter feedback, but the loop still needs to stay quick. The tutor should enter at moments where it adds confidence, not after every answer.</p>
+          </div>
+          <div class="locked">
+            <strong>Locked in: Core Plus Tutor</strong>
+            <p>V1 puzzle set includes recognition, recall, cloze, sentence rebuild, quick self-grade, and occasional tutor-checked production.</p>
+          </div>
+        </header>
+
+        <section class="options" aria-label="Tutor integration options">
+          <article class="option" data-choice="coach-drawer" onclick="selectOption(this)">
+            <div class="option-head">
+              <div>
+                <h2>Coach Drawer</h2>
+                <p>Tutor slides in only after a miss, hesitation, or user request.</p>
+              </div>
+              <div class="letter">A</div>
+            </div>
+            <div class="mock">
+              <div class="mini">
+                <div class="mini-head"><span>Recall card</span><span>fast loop</span></div>
+                <div class="mini-body">
+                  <div class="progress"><span class="done"></span><span class="done"></span><span class="now"></span><span></span><span></span></div>
+                  <div class="prompt">Type the translation</div>
+                  <div class="word">although</div>
+                  <div class="answer">aunque</div>
+                  <div class="feedback"><div class="icon">✓</div><div><b>Correct.</b> This card collapses into progress unless the learner asks why.</div></div>
+                  <div class="drawer">
+                    <strong>Ask tutor</strong>
+                    <p>“Show me one contrast with pero vs aunque.”</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="foot"><b>Best for speed:</b> keeps most cards deterministic and fast, with tutor as a helpful sidecar.</div>
+          </article>
+
+          <article class="option" data-choice="checkpoint" onclick="selectOption(this)">
+            <div class="option-head">
+              <div>
+                <h2>Tutor Checkpoint</h2>
+                <p>The session arc includes one explicit production card near the end.</p>
+              </div>
+              <div class="letter">B</div>
+            </div>
+            <div class="mock">
+              <div class="mini">
+                <div class="mini-head"><span>Release beat</span><span>tutor check</span></div>
+                <div class="mini-body">
+                  <div class="production">
+                    <div class="prompt">Use one item</div>
+                    <p>Write a tiny sentence with <b>porque</b>.</p>
+                    <div class="typed">Me quede en casa porque llovia.</div>
+                  </div>
+                  <div class="coach">
+                    <strong>Tutor check</strong>
+                    <p>Good. Add accents later; the word order is clear.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="foot"><b>Best for value:</b> makes tutor feel premium and memorable, but only once or twice per session.</div>
+          </article>
+
+          <article class="option" data-choice="inline" onclick="selectOption(this)">
+            <div class="option-head">
+              <div>
+                <h2>Inline Tutor</h2>
+                <p>Tutor responses unfold inside the same card after answer feedback.</p>
+              </div>
+              <div class="letter">C</div>
+            </div>
+            <div class="mock">
+              <div class="mini">
+                <div class="mini-head"><span>Cloze card</span><span>expanded</span></div>
+                <div class="mini-body">
+                  <div class="inline-card">
+                    <div class="prompt">Fill the sentence</div>
+                    <p style="margin:0 0 11px;font-size:18px;font-style:italic;">I stayed home ___ it was raining.</p>
+                    <div class="answer">because</div>
+                    <div class="bubble">
+                      <strong>Tutor note</strong>
+                      <p>Use porque for cause. Aunque means although.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="foot"><b>Best for depth:</b> rich and clear, but risks making every card feel like reading feedback.</div>
+          </article>
+        </section>
+
+        <section class="question">
+          <div>
+            <div class="eyebrow">Pick tutor behavior</div>
+            <p>My recommendation is A + B: a coach drawer for optional help, plus one tutor checkpoint in the session arc when production is useful. Avoid inline tutor text on every card.</p>
+          </div>
+          <button class="button" onclick="recordChoice()">Use selected tutor behavior</button>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let currentChoice = null;
+    function selectOption(element) {
+      document.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
+      element.classList.add("selected");
+      currentChoice = element.dataset.choice;
+    }
+    function recordChoice() {
+      if (!currentChoice) return;
+      const labels = {
+        "coach-drawer": "Coach Drawer",
+        checkpoint: "Tutor Checkpoint",
+        inline: "Inline Tutor"
+      };
+      if (window.brainstorm) {
+        window.brainstorm.choice(currentChoice, { choice: currentChoice, text: labels[currentChoice] });
+      }
+    }
+  </script>
+</body>
+</html>
