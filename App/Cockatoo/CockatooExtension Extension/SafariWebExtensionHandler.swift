@@ -30,8 +30,12 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             return
         }
 
+        // Launch-on-miss ONLY for explicit user intent (openDashboard).
+        // Background sync must respect an explicit quit: it degrades to the
+        // cached snapshot + queued events instead of resurrecting the app.
+        let method = (message as? [String: Any])?["method"] as? String
         let boxedContext = UncheckedSendable(value: context)
-        Self.forward(envelope, attemptLaunch: true) { responseData in
+        Self.forward(envelope, attemptLaunch: method == "openDashboard") { responseData in
             if let responseData,
                let json = try? JSONSerialization.jsonObject(with: responseData) {
                 Self.respond(boxedContext.value, json)

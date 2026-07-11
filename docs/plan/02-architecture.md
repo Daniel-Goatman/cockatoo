@@ -41,7 +41,7 @@
 
 **The app is the server.** It runs as a menu bar app registered as a login item (`SMAppService`), owns the SQLite database exclusively, and vends an XPC API. The appex holds no state and never touches the database — it translates native messages into XPC calls and back. Data flows one way per concern: **vocab flows down** (DB → snapshot → XPC → background cache → content script), **events flow up** (content script → background queue → native message → XPC → DB), and **UI reads the DB in-process** (GRDB `ValueObservation` gives the SwiftUI dashboard live queries — no cross-process signaling needed).
 
-**When the app isn't running** (rare, given the login item): the appex first attempts to launch it (`NSWorkspace`); if still unreachable it returns a structured `appUnavailable` error. The extension then degrades gracefully — replacement and hover continue from the cached snapshot, events keep queuing in `storage.local` (at-least-once, drained on reconnect), and the popup shows "Cockatoo isn't running — progress is being saved locally." Progress is delayed, never lost.
+**When the app isn't running** (rare, given the login item): background sync returns a structured `appUnavailable` error immediately — an explicit quit is respected, never overridden by a background call. Only `openDashboard` (explicit user intent) launches the app via `NSWorkspace`. The extension then degrades gracefully — replacement and hover continue from the cached snapshot, events keep queuing in `storage.local` (at-least-once, drained on reconnect), and the popup shows "Cockatoo isn't running — progress is being saved locally." Progress is delayed, never lost.
 
 ## Repo layout (new repo)
 

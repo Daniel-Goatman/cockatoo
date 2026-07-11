@@ -101,15 +101,24 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       void transport.call("openDashboard", { itemId: msg.itemId }).then(() => sendResponse({ ok: true }));
       return true;
     case "status":
-      void Promise.all([queue.pending(), snapshots.cached()]).then(([pending, snapshot]) =>
+      // Active probe: a popup open is rare and user-initiated, so spend one
+      // native round-trip to report the truth of THIS moment — not the last
+      // remembered flag.
+      void (async () => {
+        if ((await queue.pending()) > 0) {
+          await queue.flush();
+        } else {
+          await snapshots.refreshIfStale();
+        }
+        const [pending, snapshot] = await Promise.all([queue.pending(), snapshots.cached()]);
         sendResponse({
           appUnavailable,
           lastSyncError,
           pendingEvents: pending,
           snapshotVersion: snapshot?.version ?? null,
           activeWords: snapshot?.items.length ?? 0,
-        }),
-      );
+        });
+      })();
       return true;
   }
 });
