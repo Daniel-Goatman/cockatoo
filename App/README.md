@@ -9,9 +9,9 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
 | Piece | Where | Status |
 |---|---|---|
 | App code (SwiftUI, menu bar, XPC listener) | `Sources/Cockatoo/` | builds via SwiftPM |
-| Appex forwarder | `App/CockatooExtension/SafariWebExtensionHandler.swift` | source ready |
+| Appex forwarder | `App/SafariWebExtensionHandler.swift` | source ready |
 | Extension resources | `extension/dist-resources/` (after `npm run build`) | built |
-| Entitlements | `App/*/*.entitlements` | ready |
+| Entitlements | `App/*.entitlements` | ready |
 
 ## One-time Xcode setup
 
@@ -21,11 +21,11 @@ This is the P0/P4 manual step from [docs/plan/08-roadmap.md](../docs/plan/08-roa
    (repo root) so the target links `LearnerCore`.
 2. **Add target** → Safari Extension (macOS), name `CockatooExtension`,
    bundle id `dev.cockatoo.app.Extension`. Replace the template handler with
-   `App/CockatooExtension/SafariWebExtensionHandler.swift`. Point the
+   `App/SafariWebExtensionHandler.swift`. Point the
    extension's Resources at `extension/dist-resources/` (folder reference so
    `npm run build` output flows in).
-3. **Entitlements**: assign `App/Cockatoo/Cockatoo.entitlements` to the app and
-   `App/CockatooExtension/CockatooExtension.entitlements` to the appex. Both
+3. **Entitlements**: assign `App/Cockatoo.entitlements` to the app and
+   `App/CockatooExtension.entitlements` to the appex. Both
    carry App Group `group.dev.cockatoo.shared` — this is also what authorizes
    the appex to look up the XPC mach service `group.dev.cockatoo.shared.api`
    (decision D9).
