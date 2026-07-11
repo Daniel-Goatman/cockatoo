@@ -195,6 +195,9 @@ public struct LearnerEngine: Sendable {
         public var tierCheckReady: Bool
         /// Earliest upcoming review among scheduled items (nil when none).
         public var nextDueAt: Date?
+        /// When the last exposure event arrived from the extension (ever,
+        /// not just this launch) — the sync-liveness signal.
+        public var lastEventAt: Date?
 
         /// Whether starting a practice session right now yields questions.
         public var practiceAvailable: Bool {
@@ -274,7 +277,8 @@ public struct LearnerEngine: Sendable {
             almostReady: Array(almostReady.prefix(3)),
             tierProgress: tierProgress,
             tierCheckReady: tierCheckReady,
-            nextDueAt: nextDueAt
+            nextDueAt: nextDueAt,
+            lastEventAt: try store.lastEventProcessedAt()
         )
     }
 }

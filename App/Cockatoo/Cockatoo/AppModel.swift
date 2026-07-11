@@ -18,6 +18,9 @@ final class AppModel: ObservableObject {
     @Published var lastError: String?
     /// Last time the Safari extension reached us over IPC (this launch).
     @Published var lastExtensionContact: Date?
+    /// Bumped on every database change — views whose data isn't covered by
+    /// Overview equality (e.g. Library's per-item seen counts) reload on it.
+    @Published var dbGeneration = 0
 
     /// Practice session state — owned here so it survives section switches.
     lazy var practice = PracticeSessionModel(engine: engine)
@@ -53,7 +56,10 @@ final class AppModel: ObservableObject {
                 Task { @MainActor in self?.lastError = "\(error)" }
             },
             onChange: { [weak self] _ in
-                Task { @MainActor in self?.refresh() }
+                Task { @MainActor in
+                    self?.refresh()
+                    self?.dbGeneration += 1
+                }
             }
         )
     }

@@ -160,15 +160,29 @@ struct DashboardView: View {
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    // Honest connectivity: has the Safari extension talked to us this launch?
+    // Honest connectivity, two signals: IPC contact this launch (is the
+    // pipe up?) and the last ingested exposure event ever (is data moving?).
     var extensionStatusCard: some View {
-        HStack(spacing: 8) {
-            if let last = model.lastExtensionContact {
+        let formatter = RelativeDateTimeFormatter()
+        return HStack(spacing: 8) {
+            if let contact = model.lastExtensionContact {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                Text("Safari extension connected — last synced \(RelativeDateTimeFormatter().localizedString(for: last, relativeTo: Date())).")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Safari extension connected — last synced \(formatter.localizedString(for: contact, relativeTo: Date())).")
+                    if let event = model.overview?.lastEventAt {
+                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())). Sightings credit up to 3 per word per day, hovers 2 — spacing beats cramming.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             } else {
                 Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
-                Text("The Safari extension hasn't connected since Cockatoo launched. Enable it in Safari → Settings → Extensions, then browse any page.")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("The Safari extension hasn't connected since Cockatoo launched. Enable it in Safari → Settings → Extensions, then browse any page.")
+                    if let event = model.overview?.lastEventAt {
+                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())).")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }
         }
         .font(.callout)
@@ -258,7 +272,9 @@ struct LibraryView: View {
         }
         .listStyle(.inset)
         .onAppear(perform: reload)
-        .onChange(of: model.overview?.countsByStage) { reload() }
+        // dbGeneration, not countsByStage: seen/engaged counts change
+        // without any stage changing, and they must update live too.
+        .onChange(of: model.dbGeneration) { reload() }
         .navigationTitle("Library")
     }
 
@@ -326,10 +342,10 @@ struct LibraryView: View {
                     Image(systemName: "cursorarrow.rays")
                         .font(.caption2)
                         .foregroundStyle(.blue)
-                        .help("Hovered — 3 sightings are enough")
                 }
             }
             .foregroundStyle(.secondary)
+            .help("Sightings credit up to 3 per word per day (hovers 2) — spaced encounters beat cramming. A hover halves the sightings needed.")
         case .ready:
             Text("practice now")
                 .font(.caption.weight(.medium))

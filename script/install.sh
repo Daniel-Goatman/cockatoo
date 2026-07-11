@@ -37,6 +37,20 @@ pkill -f "Cockatoo.app/Contents/MacOS/Cockatoo" 2>/dev/null || true
 rm -rf /Applications/Cockatoo.app
 ditto "$BUILT" /Applications/Cockatoo.app
 
+# Safari loads the appex through pluginkit's registry. Stale registrations
+# (DerivedData debug builds, backup copies of the app) silently win over the
+# fresh install and the extension stops syncing — pin the /Applications copy
+# and drop every other registration for this bundle id.
+echo "▸ registering Safari extension (pluginkit)"
+APPEX="/Applications/Cockatoo.app/Contents/PlugIns/CockatooExtension Extension.appex"
+pluginkit -a "$APPEX" 2>/dev/null || true
+pluginkit -m -v -i dev.cockatoo.app.Extension 2>/dev/null | awk -F'\t' '$NF ~ /^\// {print $NF}' | while read -r path; do
+  [ "$path" = "$APPEX" ] && continue
+  echo "  removing stale registration: $path"
+  pluginkit -r "$path" 2>/dev/null || true
+done
+pkill -f "CockatooExtension Extension" 2>/dev/null || true
+
 echo "▸ launching"
 open /Applications/Cockatoo.app
 

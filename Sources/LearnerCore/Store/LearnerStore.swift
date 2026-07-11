@@ -114,6 +114,16 @@ public struct LearnerStore: Sendable {
         }
     }
 
+    // MARK: - Diagnostics
+
+    /// When the last exposure event was ingested — the honest answer to
+    /// "is the extension actually syncing?".
+    public func lastEventProcessedAt() throws -> Date? {
+        try db.writer.read { dbc in
+            try Date.fetchOne(dbc, sql: "SELECT MAX(processedAt) FROM exposure_event")
+        }
+    }
+
     // MARK: - Maintenance
 
     /// Prune processed events older than the retention window and enforce
