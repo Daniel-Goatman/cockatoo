@@ -1,5 +1,6 @@
 import SwiftUI
 import ServiceManagement
+import UniformTypeIdentifiers
 import LearnerCore
 
 // MARK: - Settings (provider config, privacy, How swapping works)
@@ -28,6 +29,10 @@ struct SettingsView: View {
                 Recommended: the Safari extension reads its vocabulary from the app, \
                 so keeping Cockatoo running means swaps and progress sync are always live.
                 """).font(.caption).foregroundStyle(.secondary)
+
+                Button("Import language pack…", action: pickPack)
+                Text("Re-importing a newer pack version keeps all your progress — items match by stable ID.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("Language model (OpenAI-compatible)") {
@@ -71,6 +76,15 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .onAppear(perform: load)
         .navigationTitle("Settings")
+    }
+
+    func pickPack() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.message = "Choose a Cockatoo language pack (e.g. de-2026.07.json)"
+        if panel.runModal() == .OK, let url = panel.url {
+            model.importPack(from: url)
+        }
     }
 
     func load() {

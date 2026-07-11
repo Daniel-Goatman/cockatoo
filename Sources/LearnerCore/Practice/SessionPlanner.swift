@@ -18,12 +18,22 @@ public struct SessionPlanner: Sendable {
         public var question: Question
         /// True if this entry is a repair re-ask of a missed question.
         public var isRepair: Bool
+        /// True if this question introduces an ambient item the learner has
+        /// never practiced (cold-start path c'). The UI shows the word first.
+        public var isIntro: Bool
+
+        public init(question: Question, isRepair: Bool, isIntro: Bool = false) {
+            self.question = question
+            self.isRepair = isRepair
+            self.isIntro = isIntro
+        }
     }
 
     /// Selection mix (docs/plan/04-learning-engine.md):
     /// 1. due learning/known items (≤ sessionDueLimit)
     /// 2. ready items awaiting first question (≤ sessionReadyLimit)
-    /// 3. ≤ sessionMasteredLimit sampled mastered item
+    /// 3. ambient introductions filling leftover room (≤ sessionIntroLimit)
+    /// 4. ≤ sessionMasteredLimit sampled mastered item
     public func selectItems(
         items: [VocabItem],
         progress: [String: ItemProgress],
@@ -50,12 +60,24 @@ public struct SessionPlanner: Sendable {
             .sorted()
             .prefix(config.sessionReadyLimit)
 
+        // Introductions: ambient items in admission order (band, then id),
+        // only when due + ready leave room — reviews always come first.
+        let introRoom = min(
+            config.sessionIntroLimit,
+            max(0, config.sessionQuestionTarget - due.count - ready.count)
+        )
+        let intro = items
+            .filter { progress[$0.id]?.stage == .ambient }
+            .sorted { ($0.frequencyBand, $0.id) < ($1.frequencyBand, $1.id) }
+            .map(\.id)
+            .prefix(introRoom)
+
         let mastered = sortedByDue(progress.values
             .filter { $0.stage == .mastered && scheduler.isDue($0, now: now) }
             .map(\.itemId))
             .prefix(config.sessionMasteredLimit)
 
-        return (Array(due) + Array(ready) + Array(mastered))
+        return (Array(due) + Array(ready) + Array(intro) + Array(mastered))
             .prefix(config.sessionQuestionTarget)
             .compactMap { byId[$0] }
     }
@@ -73,7 +95,13 @@ public struct SessionPlanner: Sendable {
         for item in selected {
             guard let p = progress[item.id] else { continue }
             let itemSentences = try sentences(item.id)
-            let modes = factory.offerableModes(progress: p, hasSentence: !itemSentences.isEmpty)
+            // Ambient items are introductions: always recognition, marked so
+            // the UI presents the word before asking (exposure rules stay
+            // untouched — the first graded answer is what advances anything).
+            let isIntro = p.stage == .ambient
+            let modes = isIntro
+                ? [PracticeMode.recognition]
+                : factory.offerableModes(progress: p, hasSentence: !itemSentences.isEmpty)
             guard let mode = modes.randomElement(using: &rng) else { continue }
             if let q = factory.question(
                 item: item,
@@ -82,7 +110,7 @@ public struct SessionPlanner: Sendable {
                 sentence: itemSentences.first,
                 rng: &rng
             ) {
-                planned.append(PlannedQuestion(question: q, isRepair: false))
+                planned.append(PlannedQuestion(question: q, isRepair: false, isIntro: isIntro))
             }
         }
         return planned

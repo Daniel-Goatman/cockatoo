@@ -99,6 +99,40 @@ final class GraderTests: XCTestCase {
         XCTAssertEqual(updated.srsBox, 4)
     }
 
+    // MARK: - Near-miss grading (wrong-but-gentle, docs/plan/04 §Recall)
+
+    func testNearMissHoldsBoxWithoutLapse() {
+        var p = learningProgress(box: 4, stage: .known, recog: 3, recall: 3)
+        p.correctStreak = 5
+        let result = PracticeResult(itemId: p.itemId, mode: .recall, correct: false, nearMiss: true, answeredAt: now)
+        let updated = grader.apply(result: result, progress: p, now: now)
+        XCTAssertEqual(updated.srsBox, 4, "near-miss holds the box")
+        XCTAssertEqual(updated.lapses, 0, "near-miss is not a lapse")
+        XCTAssertEqual(updated.stage, .known, "no stage fall on a near-miss")
+        XCTAssertEqual(updated.correctStreak, 0, "but the streak still resets")
+        XCTAssertEqual(updated.recallCorrect, 3, "and it never counts as correct")
+        XCTAssertNotNil(updated.dueAt)
+        XCTAssertEqual(updated.validateInvariants(), [])
+    }
+
+    func testNearMissOnFirstAnswerStillEntersLearning() {
+        var p = ItemProgress(itemId: "de.word.haus", now: now)
+        p.stage = .ready
+        let result = PracticeResult(itemId: p.itemId, mode: .recall, correct: false, nearMiss: true, answeredAt: now)
+        let updated = grader.apply(result: result, progress: p, now: now)
+        XCTAssertEqual(updated.stage, .learning)
+        XCTAssertEqual(updated.lapses, 0)
+        XCTAssertEqual(updated.validateInvariants(), [])
+    }
+
+    func testNearMissFlagIgnoredWhenCorrect() {
+        let p = learningProgress(box: 2, stage: .learning, recog: 1, recall: 1)
+        let result = PracticeResult(itemId: p.itemId, mode: .recall, correct: true, nearMiss: true, answeredAt: now)
+        let updated = grader.apply(result: result, progress: p, now: now)
+        XCTAssertEqual(updated.srsBox, 3)
+        XCTAssertEqual(updated.recallCorrect, 2)
+    }
+
     func testInvariantsHoldUnderRandomResultSequences() {
         var rng = SplitMix64(seed: 42)
         var p = learningProgress(box: 0, stage: .ready)

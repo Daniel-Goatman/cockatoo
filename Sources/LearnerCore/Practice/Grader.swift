@@ -84,7 +84,10 @@ public struct Grader: Sendable {
     /// docs/plan/04-learning-engine.md.
     public func apply(result: PracticeResult, progress: ItemProgress, now: Date) -> ItemProgress {
         var p = progress
-        let (box, dueAt) = scheduler.next(after: result.correct, progress: p, now: now)
+        let nearMiss = result.nearMiss && !result.correct
+        let (box, dueAt) = nearMiss
+            ? scheduler.hold(progress: p, now: now)
+            : scheduler.next(after: result.correct, progress: p, now: now)
         p.srsBox = box
         p.dueAt = dueAt
         p.lastResultAt = now
@@ -99,11 +102,14 @@ public struct Grader: Sendable {
             }
         } else {
             p.correctStreak = 0
-            p.lapses += 1
+            // Near-miss is wrong-but-gentle: no lapse count, no box drop.
+            if !nearMiss { p.lapses += 1 }
         }
 
         // Transition c: first answer (right or wrong) enters learning.
-        if p.stage == .ready {
+        // Ambient items reach here through introduction questions (c'), so a
+        // fresh install can start practicing before exposure accrues.
+        if p.stage == .ready || p.stage == .ambient {
             p.stage = .learning
         }
 
@@ -121,7 +127,7 @@ public struct Grader: Sendable {
                p.srsBox >= config.masteredMinBox {
                 p.stage = .mastered
             }
-        } else {
+        } else if !nearMiss {
             // Edge f: lapse. mastered falls to known; known falls to learning.
             if p.stage == .mastered {
                 p.stage = .known

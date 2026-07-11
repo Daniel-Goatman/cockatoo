@@ -1,61 +1,99 @@
 import SwiftUI
 import LearnerCore
 
-/// The one review engine's UI: recognition, recall, cloze — with the real
-/// in-session repair lane (a missed question re-enters repairOffset later).
+/// The one review engine's UI: recognition, recall, cloze — plus
+/// introduction cards for new words (cold start) and the in-session repair
+/// lane. Session state lives in PracticeSessionModel so leaving the tab
+/// mid-session doesn't discard it.
 struct PracticeView: View {
     @EnvironmentObject var model: AppModel
 
-    @State private var queue: [SessionPlanner.PlannedQuestion] = []
-    @State private var index = 0
-    @State private var answered = 0
-    @State private var correct = 0
-    @State private var typed = ""
-    @State private var feedback: Feedback?
-    @State private var sessionDone = false
-
-    enum Feedback: Equatable {
-        case correct
-        case nearMiss(String)
-        case wrong(String)
+    var body: some View {
+        PracticeSessionView(session: model.practice)
     }
+}
+
+struct PracticeSessionView: View {
+    @EnvironmentObject var model: AppModel
+    @ObservedObject var session: PracticeSessionModel
 
     var body: some View {
         VStack(spacing: 20) {
-            if queue.isEmpty && !sessionDone {
-                ContentUnavailableView(
-                    "Nothing due right now",
-                    systemImage: "checkmark.circle",
-                    description: Text("Browse with the Safari extension to meet new words, then come back.")
-                )
-                Button("Check again") { startSession() }
-            } else if sessionDone {
-                VStack(spacing: 8) {
-                    Text("Session complete").font(.title2.bold())
-                    Text("\(correct) of \(answered) correct")
-                    Button("Start another") { startSession() }
-                        .buttonStyle(.borderedProminent)
+            if let planned = session.currentQuestion {
+                if session.showingIntro, let item = session.introItem {
+                    introCard(item)
+                } else {
+                    questionCard(planned)
                 }
-            } else if index < queue.count {
-                let planned = queue[index]
-                VStack(spacing: 6) {
-                    // Honest progress: answered / current total (repairs grow it).
-                    Text("\(min(index + 1, queue.count)) of \(queue.count)\(planned.isRepair ? " · repair" : "")")
-                        .font(.caption).foregroundStyle(.secondary)
-                    questionView(planned.question)
-                }
-                if let feedback {
-                    feedbackView(feedback)
-                    Button(index + 1 >= queue.count ? "Finish" : "Next") { advance() }
-                        .buttonStyle(.borderedProminent)
-                        .keyboardShortcut(.return, modifiers: [])
-                }
+            } else if !session.ledger.isEmpty {
+                summaryView
+            } else {
+                emptyState
             }
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear { startSession() }
+        .onAppear { session.ensureSession() }
         .navigationTitle("Practice")
+    }
+
+    // MARK: - Introduction card (cold-start path c')
+
+    @ViewBuilder
+    func introCard(_ item: VocabItem) -> some View {
+        VStack(spacing: 10) {
+            Text("New word")
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(Color.blue.opacity(0.14), in: Capsule())
+                .foregroundStyle(.blue)
+            Text(item.displayTarget)
+                .font(.system(size: 38, weight: .semibold, design: .serif))
+            if let source = item.bareSourceForm {
+                Text(source).font(.title3).foregroundStyle(.secondary)
+            }
+            if let example = item.examples.first {
+                VStack(spacing: 2) {
+                    Text(example.target).font(.callout.italic())
+                    Text(example.source).font(.callout).foregroundStyle(.secondary)
+                }
+                .padding(.top, 6)
+            }
+            Text("You'll see it swapped into pages you read — the first real test comes back in about an hour.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: 380)
+                .multilineTextAlignment(.center)
+            Button("Got it — quiz me") { session.revealIntroQuestion() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: [])
+                .padding(.top, 4)
+        }
+    }
+
+    // MARK: - Question card
+
+    @ViewBuilder
+    func questionCard(_ planned: SessionPlanner.PlannedQuestion) -> some View {
+        VStack(spacing: 6) {
+            // Honest progress: current position / current total (repairs grow it).
+            Text(progressLabel(planned))
+                .font(.caption).foregroundStyle(.secondary)
+            questionView(planned.question)
+        }
+        if let feedback = session.feedback {
+            feedbackView(feedback)
+            Button(session.index + 1 >= session.queue.count ? "Finish" : "Next") { session.advance() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: [])
+        }
+    }
+
+    func progressLabel(_ planned: SessionPlanner.PlannedQuestion) -> String {
+        var label = "\(min(session.index + 1, session.queue.count)) of \(session.queue.count)"
+        if planned.isRepair { label += " · repair" }
+        if planned.isIntro { label += " · new word" }
+        return label
     }
 
     @ViewBuilder
@@ -67,13 +105,16 @@ struct PracticeView: View {
             VStack(spacing: 8) {
                 ForEach(Array(options.enumerated()), id: \.offset) { i, option in
                     Button {
-                        answerChoice(i)
+                        session.answerChoice(i)
                     } label: {
                         Text(option).frame(maxWidth: 320).padding(.vertical, 6)
                     }
-                    .disabled(feedback != nil)
+                    .disabled(session.feedback != nil)
+                    .keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: [])
                 }
             }
+            Text("Press 1–\(options.count) to answer")
+                .font(.caption2).foregroundStyle(.tertiary)
         case .recall(_, let prompt, _):
             Text(prompt).font(.system(size: 34, weight: .semibold, design: .serif))
             Text("Type the German").foregroundStyle(.secondary)
@@ -86,15 +127,15 @@ struct PracticeView: View {
     }
 
     var answerField: some View {
-        TextField("answer", text: $typed)
+        TextField("answer", text: $session.typed)
             .textFieldStyle(.roundedBorder)
             .frame(maxWidth: 320)
-            .onSubmit { answerTyped() }
-            .disabled(feedback != nil)
+            .onSubmit { session.answerTyped() }
+            .disabled(session.feedback != nil)
     }
 
     @ViewBuilder
-    func feedbackView(_ feedback: Feedback) -> some View {
+    func feedbackView(_ feedback: PracticeSessionModel.Feedback) -> some View {
         switch feedback {
         case .correct:
             Label("Correct", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -105,72 +146,109 @@ struct PracticeView: View {
         }
     }
 
-    func startSession() {
-        let session = try? model.engine.planSession(now: Date(), seed: UInt64.random(in: 0..<UInt64.max))
-        queue = session?.queue ?? []
-        index = 0
-        answered = 0
-        correct = 0
-        typed = ""
-        feedback = nil
-        sessionDone = false
-    }
+    // MARK: - Session summary (what actually changed)
 
-    func answerChoice(_ selected: Int) {
-        guard case .recognition(_, _, _, let correctIndex) = queue[index].question else { return }
-        finishAnswer(isCorrect: selected == correctIndex, expected: nil)
-    }
-
-    func answerTyped() {
-        guard feedback == nil else { return }
-        let grading = (try? model.engine.importer.gradingConfig(language: "de", store: model.engine.store)) ?? GradingConfig(articles: [])
-        let grader = Grader(grading: grading)
-        switch grader.checkTyped(question: queue[index].question, answer: typed) {
-        case .correct:
-            finishAnswer(isCorrect: true, expected: nil)
-        case .nearMiss(let expected):
-            feedback = .nearMiss(expected)
-            record(correct: false)
-        case .wrong(let expected):
-            finishAnswer(isCorrect: false, expected: expected)
+    var summaryView: some View {
+        VStack(spacing: 14) {
+            Text("Session complete").font(.title2.bold())
+            Text("\(session.correctCount) of \(session.answeredCount) correct")
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(session.ledger) { entry in
+                    HStack(spacing: 8) {
+                        ledgerIcon(entry.outcome)
+                        Text(entry.display).font(.callout.weight(.medium))
+                        Text(ledgerText(entry))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(14)
+            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
+            Button("Start another") { session.startSession() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: [])
         }
     }
 
-    func finishAnswer(isCorrect: Bool, expected: String?) {
-        feedback = isCorrect ? .correct : .wrong(expected ?? expectedText(queue[index].question))
-        record(correct: isCorrect)
-    }
-
-    func record(correct isCorrect: Bool) {
-        let planned = queue[index]
-        answered += 1
-        if isCorrect { correct += 1 }
-        _ = try? model.engine.grade(result: PracticeResult(
-            itemId: planned.question.itemId,
-            mode: planned.question.mode,
-            correct: isCorrect,
-            answeredAt: Date()
-        ), now: Date())
-        if !isCorrect {
-            model.engine.planner.requeueMissed(planned.question, into: &queue, afterIndex: index)
+    @ViewBuilder
+    func ledgerIcon(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> some View {
+        switch outcome {
+        case .introduced: Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
+        case .strengthened: Image(systemName: "arrow.up.circle.fill").foregroundStyle(.green)
+        case .repaired: Image(systemName: "arrow.uturn.up.circle.fill").foregroundStyle(.green)
+        case .almost: Image(systemName: "circle.bottomhalf.filled").foregroundStyle(.orange)
+        case .missed: Image(systemName: "arrow.down.circle.fill").foregroundStyle(.red)
         }
     }
 
-    func advance() {
-        typed = ""
-        feedback = nil
-        if index + 1 >= queue.count {
-            sessionDone = true
-        } else {
-            index += 1
+    func ledgerText(_ entry: PracticeSessionModel.LedgerEntry) -> String {
+        let when = entry.dueAt.map {
+            RelativeDateTimeFormatter().localizedString(for: $0, relativeTo: Date())
+        }
+        switch entry.outcome {
+        case .introduced: return "new word started" + reviewSuffix(when)
+        case .strengthened: return "strengthened" + reviewSuffix(when)
+        case .repaired: return "repaired" + reviewSuffix(when)
+        case .almost: return "almost — spelling corrected" + reviewSuffix(when)
+        case .missed: return "missed" + reviewSuffix(when)
         }
     }
 
-    func expectedText(_ question: Question) -> String {
-        switch question {
-        case .recognition(_, _, let options, let i): return options[i]
-        case .recall(_, _, let expected): return expected
-        case .cloze(_, _, let expected): return expected
+    func reviewSuffix(_ when: String?) -> String {
+        when.map { " · review \($0)" } ?? ""
+    }
+
+    // MARK: - Empty state (always says why, and what would change it)
+
+    var emptyState: some View {
+        VStack(spacing: 16) {
+            ContentUnavailableView(
+                "All caught up",
+                systemImage: "checkmark.circle",
+                description: Text(emptyReason)
+            )
+            if let almost = model.overview?.almostReady, !almost.isEmpty {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Almost ready").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    ForEach(almost, id: \.itemId) { need in
+                        Text("\(need.target) — \(ExposureHint.text(for: need))")
+                            .font(.callout)
+                    }
+                }
+                .padding(12)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+            }
+            Button("Check again") { session.startSession() }
         }
+    }
+
+    var emptyReason: String {
+        guard let o = model.overview else {
+            return "Browse with the Safari extension to meet new words, then come back."
+        }
+        if let nextDue = o.nextDueAt {
+            let when = RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())
+            return "Nothing is due right now — your next review is \(when)."
+        }
+        return "Nothing is due right now. Keep reading with the Safari extension to meet new words."
+    }
+}
+
+/// Turns an ExposureNeed into the one-line human hint used by Practice and
+/// the dashboard: what would make this word practicable.
+enum ExposureHint {
+    static func text(for need: LearnerEngine.ExposureNeed) -> String {
+        let seenRemaining = max(0, need.seenForReady - need.seenCount)
+        let fastRemaining = max(0, need.seenForFastReady - need.seenCount)
+        let hasEngagement = need.engagedCount >= need.engagedForFastReady
+        if hasEngagement, fastRemaining > 0 {
+            return "\(fastRemaining) more sighting\(fastRemaining == 1 ? "" : "s") on pages"
+        }
+        if fastRemaining == 0 {
+            return "hover it once on a page — or \(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s")"
+        }
+        return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s") — hovering speeds this up"
     }
 }

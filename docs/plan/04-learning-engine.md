@@ -8,15 +8,16 @@ Every item has exactly one `ItemProgress.stage`:
 
 ```
 locked ──a──▶ ambient ──b──▶ ready ──c──▶ learning ──d──▶ known ──e──▶ mastered
-                                             ▲   │
-                                             └─f─┘ (lapse loop within learning)
+                 │                          ▲  ▲ │
+                 └────────────c'────────────┘  └f┘ (lapse loop within learning)
 ```
 
 | # | Transition | Trigger | Who fires it |
 |---|---|---|---|
 | a | `locked → ambient` | ActivationEngine admits the item: its tier is unlocked, its `dependencies` are all ≥ `known`, and the ambient set has room | ActivationEngine (on ingestion/practice commits) |
-| b | `ambient → ready` | Exposure threshold met: `seenCount ≥ 6` **and** `engagedCount ≥ 2` (defaults; tunable constants) | EventIngestor |
+| b | `ambient → ready` | Exposure threshold met: `seenCount ≥ 6`, **or** the engagement fast path `seenCount ≥ 3 && engagedCount ≥ 1` (defaults; tunable). Seen alone always suffices — engagement accelerates, it never gates | EventIngestor |
 | c | `ready → learning` | First practice question about the item is answered (right or wrong) | Grader |
+| c′ | `ambient → learning` | An **introduction question** is answered. Sessions introduce up to `sessionIntroLimit` (3) ambient items when due + ready leave room, so a fresh import can practice immediately (the cold-start path). The UI presents the word before asking; the question is recognition | SessionPlanner offers; Grader fires |
 | d | `learning → known` | `srsBox ≥ 4` with at least one correct **recall** and one correct **recognition** answer | Grader |
 | e | `known → mastered` | Two correct **cloze** answers at box ≥ 5 intervals | Grader |
 | f | lapse | Wrong answer in `learning`/`known`: box drops by 2 (floor 1), `lapses += 1`; stage falls back to `learning` if it was `known` | Grader |
@@ -69,7 +70,8 @@ A session is short by design (~2 minutes, P7 spirit): **default 10 questions, mi
 Mix per session, in priority order:
 1. All due `learning`/`known` items (up to 7).
 2. `ready` items awaiting their first question (up to 3).
-3. At most 1 sampled `mastered` item.
+3. `ambient` introductions, admission-ordered, filling leftover room (up to 3) — reviews always come first.
+4. At most 1 sampled `mastered` item.
 
 **Missed-question repair is real**: a wrongly answered item re-enters the same session's queue at position +3 (once). This implements what the prototype's "repair lane" faked.
 
@@ -87,7 +89,7 @@ Mode selection per item stage:
 Three modes. **A mode may only be offered if it is generatable for every item that can reach it** — the generative test below makes the prototype's "unreachable mastery" bug class impossible.
 
 - **Recognition** (target → source): show the German form; 4 options = correct source + 3 distractors. Distractors drawn from same-language items, preferring same `kind` and adjacent `frequencyBand`, never sharing the correct answer's text. **Options are shuffled with a seeded RNG; a unit test asserts the correct index is uniformly distributed across ≥ 100 generations** (this test would have caught the prototype's always-first-button bug and is a named requirement).
-- **Recall** (source → target): show the English; free-text answer. Grading: case-insensitive, accent-insensitive, article-optional (`das Haus` == `Haus`), trimmed; near-miss (edit distance 1 on words ≥ 5 chars) shows the correction and counts as wrong-but-gentle (no double lapse penalty).
+- **Recall** (source → target): show the English; free-text answer. Grading: case-insensitive, accent-insensitive, article-optional (`das Haus` == `Haus`), trimmed; near-miss (edit distance 1 on words ≥ 5 chars) shows the correction and counts as wrong-but-gentle: the box **holds** (scheduler `hold`, no drop, no `lapses` increment, no stage fall) but the streak resets and the item re-enters the repair lane.
 - **Cloze**: a `captured_sentence` for the item with the token blanked; free-text answer graded as recall, expected answer = the *surface form that appeared in that sentence* (from `sourceForms`). Falls back to recall when no sentence exists — and the UI labels it as recall (P4: no silent degradation presented as cloze).
 
 `Grader` applies results: writes `PracticeResult`, calls the scheduler, updates `ItemProgress`, commits in one transaction, bumps the snapshot version.

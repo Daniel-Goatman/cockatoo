@@ -107,3 +107,23 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
         self.examples = examples
     }
 }
+
+public extension VocabItem {
+    /// The bare (non-determiner) source form for display: "book", not
+    /// "the book" — determiner variants exist for the matcher, not lists.
+    var bareSourceForm: String? {
+        let bare = sourceForms.first { form in
+            let lowered = form.form.lowercased()
+            return !lowered.hasPrefix("the ") && !lowered.hasPrefix("a ") && !lowered.hasPrefix("an ")
+        }
+        return (bare ?? sourceForms.first)?.form
+    }
+
+    /// Target with citation-form article where authored, e.g. "das Haus".
+    var displayTarget: String {
+        if let gender = targetMeta?.gender, !gender.isEmpty {
+            return "\(gender) \(target)"
+        }
+        return target
+    }
+}

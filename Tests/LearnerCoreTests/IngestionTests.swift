@@ -86,8 +86,48 @@ final class IngestionTests: XCTestCase {
         let p = try Fixtures.progress(engine, itemId)
         XCTAssertEqual(p.seenCount, 6)
         XCTAssertEqual(p.engagedCount, 2)
-        XCTAssertEqual(p.stage, .ready, "transition b at seen≥6 && engaged≥2")
+        XCTAssertEqual(p.stage, .ready, "transition b well past both thresholds")
         XCTAssertEqual(p.validateInvariants(), [])
+    }
+
+    /// Transition b, seen-only path: a reader who never hovers still gets
+    /// practice once seenCount reaches readySeenThreshold.
+    func testSeenAloneReachesReadyWithoutEngagement() throws {
+        let itemId = try ambientItemId()
+        var clock = t0
+        for day in 0..<2 {
+            let events = (0..<3).map { i in
+                seenEvent(itemId, at: clock.addingTimeInterval(Double(i) * 600), id: "d\(day)s\(i)")
+            }
+            try engine.postEvents(events, now: clock.addingTimeInterval(3600))
+            clock = clock.addingTimeInterval(24 * 3600)
+        }
+        let p = try Fixtures.progress(engine, itemId)
+        XCTAssertEqual(p.seenCount, 6)
+        XCTAssertEqual(p.engagedCount, 0)
+        XCTAssertEqual(p.stage, .ready, "engagement must be an accelerant, not a gate")
+    }
+
+    /// Transition b, fast path: engagement halves the seen requirement.
+    func testEngagementFastPathToReady() throws {
+        let itemId = try ambientItemId()
+        let events = (0..<3).map { i in
+            seenEvent(itemId, at: t0.addingTimeInterval(Double(i) * 600), id: "f\(i)")
+        } + [ExposureEvent(id: "fg", itemId: itemId, type: .engaged, occurredAt: t0.addingTimeInterval(1800))]
+        try engine.postEvents(events, now: t0.addingTimeInterval(3600))
+        let p = try Fixtures.progress(engine, itemId)
+        XCTAssertEqual(p.seenCount, 3)
+        XCTAssertEqual(p.engagedCount, 1)
+        XCTAssertEqual(p.stage, .ready, "seen≥3 && engaged≥1 is the fast path")
+    }
+
+    func testSeenBelowFastThresholdStaysAmbientDespiteEngagement() throws {
+        let itemId = try ambientItemId()
+        try engine.postEvents([
+            seenEvent(itemId, at: t0, id: "u1"),
+            ExposureEvent(id: "u2", itemId: itemId, type: .engaged, occurredAt: t0.addingTimeInterval(60)),
+        ], now: t0.addingTimeInterval(120))
+        XCTAssertEqual(try Fixtures.progress(engine, itemId).stage, .ambient)
     }
 
     func testExposureNeverTouchesSrsBox() throws {

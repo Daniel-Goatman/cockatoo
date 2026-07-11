@@ -94,10 +94,13 @@ public struct EventIngestor: Sendable {
             return false
         }
 
-        // Transition b: ambient → ready on exposure thresholds.
+        // Transition b: ambient → ready. Seen alone suffices; engagement is
+        // a fast path, never a gate (a reader who never hovers still gets
+        // practice — the cold-start fix).
         if p.stage == .ambient,
-           p.seenCount >= config.readySeenThreshold,
-           p.engagedCount >= config.readyEngagedThreshold {
+           p.seenCount >= config.readySeenThreshold
+               || (p.seenCount >= config.readySeenWithEngagementThreshold
+                   && p.engagedCount >= config.readyEngagedThreshold) {
             p.stage = .ready
         }
         p.updatedAt = now

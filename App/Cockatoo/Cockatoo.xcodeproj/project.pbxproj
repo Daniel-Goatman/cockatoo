@@ -182,7 +182,7 @@
 			mainGroup = 65189E1A3001F327005C1F20;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../../../Cockatoo" */,
+				65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../.." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 65189E243001F327005C1F20 /* Products */;
@@ -553,9 +553,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../../../Cockatoo" */ = {
+		65DA8BC13001F7410015016B /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../Cockatoo;
+			relativePath = "../..";
 		};
 /* End XCLocalSwiftPackageReference section */
 

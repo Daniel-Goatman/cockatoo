@@ -6,9 +6,13 @@ public struct EngineConfig: Sendable {
     // Exposure crediting
     public var seenCreditDailyCap: Int = 3
     public var engagedCreditDailyCap: Int = 2
-    // ambient → ready thresholds (transition b)
+    // ambient → ready (transition b): seen alone is enough; engagement is an
+    // accelerant, never a gate — a reader who never hovers still progresses.
     public var readySeenThreshold: Int = 6
-    public var readyEngagedThreshold: Int = 2
+    /// Fast path: this many seen credits suffice when the learner has also
+    /// engaged (hover/pin) at least readyEngagedThreshold times.
+    public var readySeenWithEngagementThreshold: Int = 3
+    public var readyEngagedThreshold: Int = 1
 
     // ActivationEngine
     public var ambientSetMin: Int = 8
@@ -32,6 +36,9 @@ public struct EngineConfig: Sendable {
     public var sessionQuestionTarget: Int = 10
     public var sessionDueLimit: Int = 7
     public var sessionReadyLimit: Int = 3
+    /// Ambient items introduced per session when due+ready leave room, so a
+    /// fresh install can practice immediately (cold start, transition c').
+    public var sessionIntroLimit: Int = 3
     public var sessionMasteredLimit: Int = 1
     /// A missed question re-enters the same session this many positions later.
     public var repairOffset: Int = 3

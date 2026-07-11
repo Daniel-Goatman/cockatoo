@@ -7,6 +7,9 @@ public protocol ReviewScheduler: Sendable {
     /// correct while due → box+1; correct while not due → unchanged
     /// (early review doesn't advance); wrong → lapse drop.
     func next(after correct: Bool, progress: ItemProgress, now: Date) -> (box: Int, dueAt: Date)
+    /// Near-miss: hold the current box (no advance, no lapse) and reschedule
+    /// its interval from now.
+    func hold(progress: ItemProgress, now: Date) -> (box: Int, dueAt: Date)
     func isDue(_ progress: ItemProgress, now: Date) -> Bool
 }
 
@@ -39,6 +42,10 @@ public struct LeitnerScheduler: ReviewScheduler {
             box = max(config.lapseBoxFloor, progress.srsBox - config.lapseBoxDrop)
         }
         return (box, dueDate(box: box, itemId: progress.itemId, from: now))
+    }
+
+    public func hold(progress: ItemProgress, now: Date) -> (box: Int, dueAt: Date) {
+        (progress.srsBox, dueDate(box: progress.srsBox, itemId: progress.itemId, from: now))
     }
 
     func dueDate(box: Int, itemId: String, from now: Date) -> Date {

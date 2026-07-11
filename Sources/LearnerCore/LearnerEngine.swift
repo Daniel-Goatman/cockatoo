@@ -111,11 +111,49 @@ public struct LearnerEngine: Sendable {
 
     // MARK: - Dashboard queries
 
+    /// An ambient item's distance from `ready`, for "almost ready" UI.
+    public struct ExposureNeed: Equatable, Sendable {
+        public var itemId: String
+        public var source: String
+        public var target: String
+        public var seenCount: Int
+        public var engagedCount: Int
+        /// Seen credits that make the item ready on their own.
+        public var seenForReady: Int
+        /// Seen credits that suffice once engagedForReady is also met.
+        public var seenForFastReady: Int
+        public var engagedForFastReady: Int
+    }
+
+    /// Progress toward unlocking the next tier, when one exists in the pack.
+    public struct TierProgress: Equatable, Sendable {
+        public var currentTier: Int
+        public var nextTier: Int
+        public var knownInCurrentTier: Int
+        public var neededInCurrentTier: Int
+        public var currentTierTotal: Int
+    }
+
     public struct Overview: Equatable, Sendable {
         public var unlockedTier: Int
         public var countsByStage: [Stage: Int]
         public var dueNow: Int
         public var totalItems: Int
+        /// Items awaiting their first question.
+        public var readyCount: Int
+        /// Ambient items an introduction question could bring into practice.
+        public var introAvailable: Int
+        /// The closest ambient items to becoming ready, nearest first.
+        public var almostReady: [ExposureNeed]
+        /// nil when the pack has no tier above the unlocked one.
+        public var tierProgress: TierProgress?
+        /// Earliest upcoming review among scheduled items (nil when none).
+        public var nextDueAt: Date?
+
+        /// Whether starting a practice session right now yields questions.
+        public var practiceAvailable: Bool {
+            dueNow + readyCount + introAvailable > 0
+        }
     }
 
     public func overview(now: Date) throws -> Overview {
@@ -133,11 +171,59 @@ public struct LearnerEngine: Sendable {
             ($0.stage == .learning || $0.stage == .known) && scheduler.isDue($0, now: now)
         }.count
 
+        let ambientItems = items.filter { progress[$0.id]?.stage == .ambient }
+        let almostReady = ambientItems
+            .compactMap { item -> ExposureNeed? in
+                guard let p = progress[item.id] else { return nil }
+                return ExposureNeed(
+                    itemId: item.id,
+                    source: item.bareSourceForm ?? item.id,
+                    target: item.displayTarget,
+                    seenCount: p.seenCount,
+                    engagedCount: p.engagedCount,
+                    seenForReady: config.readySeenThreshold,
+                    seenForFastReady: config.readySeenWithEngagementThreshold,
+                    engagedForFastReady: config.readyEngagedThreshold
+                )
+            }
+            .sorted { a, b in
+                let ra = max(0, a.seenForReady - a.seenCount)
+                let rb = max(0, b.seenForReady - b.seenCount)
+                return ra == rb ? a.itemId < b.itemId : ra < rb
+            }
+
+        let unlockedTier = Int(try store.setting(SettingsKey.unlockedTier) ?? "1") ?? 1
+        var tierProgress: TierProgress?
+        let currentTierItems = items.filter { $0.frequencyBand == unlockedTier }
+        if !currentTierItems.isEmpty,
+           items.contains(where: { $0.frequencyBand == unlockedTier + 1 }) {
+            let known = currentTierItems.filter { (progress[$0.id]?.stage ?? .locked) >= .known }.count
+            let needed = Int((Double(currentTierItems.count) * config.tierUnlockFraction).rounded(.up))
+            tierProgress = TierProgress(
+                currentTier: unlockedTier,
+                nextTier: unlockedTier + 1,
+                knownInCurrentTier: known,
+                neededInCurrentTier: needed,
+                currentTierTotal: currentTierItems.count
+            )
+        }
+
+        let nextDueAt = progress.values
+            .filter { $0.stage >= .learning }
+            .compactMap(\.dueAt)
+            .filter { $0 > now }
+            .min()
+
         return Overview(
-            unlockedTier: Int(try store.setting(SettingsKey.unlockedTier) ?? "1") ?? 1,
+            unlockedTier: unlockedTier,
             countsByStage: counts,
             dueNow: dueNow,
-            totalItems: items.count
+            totalItems: items.count,
+            readyCount: counts[.ready] ?? 0,
+            introAvailable: min(counts[.ambient] ?? 0, config.sessionIntroLimit),
+            almostReady: Array(almostReady.prefix(3)),
+            tierProgress: tierProgress,
+            nextDueAt: nextDueAt
         )
     }
 }

@@ -1,0 +1,1893 @@
+{
+  "schema": 1,
+  "language": "de",
+  "version": "2026.07",
+  "provenance": {
+    "corpus": "hand-curated seed (full pipeline: FrequencyWords/OpenSubtitles pending)",
+    "license": "project-original content",
+    "packtool": "seed-generator-1.0",
+    "authoringModel": null,
+    "generatedAt": "2026-07-11"
+  },
+  "grading": {
+    "articles": [
+      "der",
+      "die",
+      "das",
+      "ein",
+      "eine"
+    ]
+  },
+  "items": [
+    {
+      "id": "de.word.und",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "and",
+          "target": "und"
+        }
+      ],
+      "target": "und",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "conjunction",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "und means and — the most common German word.",
+      "examples": [
+        {
+          "source": "Bread and butter.",
+          "target": "Brot und Butter."
+        }
+      ]
+    },
+    {
+      "id": "de.word.aber",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "but",
+          "target": "aber"
+        }
+      ],
+      "target": "aber",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "conjunction",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "aber means but.",
+      "examples": [
+        {
+          "source": "I am coming, but later.",
+          "target": "Ich komme, aber später."
+        }
+      ]
+    },
+    {
+      "id": "de.word.oder",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "or",
+          "target": "oder"
+        }
+      ],
+      "target": "oder",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "conjunction",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "oder means or.",
+      "examples": [
+        {
+          "source": "Coffee or tea?",
+          "target": "Kaffee oder Tee?"
+        }
+      ]
+    },
+    {
+      "id": "de.word.auch",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "also",
+          "target": "auch"
+        }
+      ],
+      "target": "auch",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "auch means also / too.",
+      "examples": [
+        {
+          "source": "Me too.",
+          "target": "Ich auch."
+        }
+      ]
+    },
+    {
+      "id": "de.word.nicht",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "not",
+          "target": "nicht"
+        }
+      ],
+      "target": "nicht",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "nicht negates a statement: not.",
+      "examples": [
+        {
+          "source": "That is not good.",
+          "target": "Das ist nicht gut."
+        }
+      ]
+    },
+    {
+      "id": "de.word.hier",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "here",
+          "target": "hier"
+        }
+      ],
+      "target": "hier",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "hier means here.",
+      "examples": [
+        {
+          "source": "We are here.",
+          "target": "Wir sind hier."
+        }
+      ]
+    },
+    {
+      "id": "de.word.jetzt",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "now",
+          "target": "jetzt"
+        }
+      ],
+      "target": "jetzt",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "jetzt means now.",
+      "examples": [
+        {
+          "source": "We are going now.",
+          "target": "Wir gehen jetzt."
+        }
+      ]
+    },
+    {
+      "id": "de.word.heute",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "today",
+          "target": "heute"
+        }
+      ],
+      "target": "heute",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "heute means today.",
+      "examples": [
+        {
+          "source": "Today is Monday.",
+          "target": "Heute ist Montag."
+        }
+      ]
+    },
+    {
+      "id": "de.word.haus",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the house",
+          "target": "das Haus"
+        },
+        {
+          "form": "a house",
+          "target": "ein Haus"
+        },
+        {
+          "form": "house",
+          "target": "Haus"
+        },
+        {
+          "form": "houses",
+          "target": "Häuser"
+        },
+        {
+          "form": "the houses",
+          "target": "die Häuser"
+        }
+      ],
+      "target": "Haus",
+      "targetMeta": {
+        "gender": "das",
+        "plural": "Häuser",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "das Haus (neuter) — house; plural Häuser.",
+      "examples": [
+        {
+          "source": "The house is old.",
+          "target": "Das Haus ist alt."
+        }
+      ]
+    },
+    {
+      "id": "de.word.hund",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the dog",
+          "target": "der Hund"
+        },
+        {
+          "form": "a dog",
+          "target": "ein Hund"
+        },
+        {
+          "form": "dog",
+          "target": "Hund"
+        },
+        {
+          "form": "dogs",
+          "target": "Hunde"
+        },
+        {
+          "form": "the dogs",
+          "target": "die Hunde"
+        }
+      ],
+      "target": "Hund",
+      "targetMeta": {
+        "gender": "der",
+        "plural": "Hunde",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "der Hund (masculine) — dog; plural Hunde.",
+      "examples": [
+        {
+          "source": "The dog is sleeping.",
+          "target": "Der Hund schläft."
+        }
+      ]
+    },
+    {
+      "id": "de.word.wasser",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the water",
+          "target": "das Wasser"
+        },
+        {
+          "form": "a water",
+          "target": "ein Wasser"
+        },
+        {
+          "form": "water",
+          "target": "Wasser"
+        }
+      ],
+      "target": "Wasser",
+      "targetMeta": {
+        "gender": "das",
+        "plural": null,
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "das Wasser (neuter) — water.",
+      "examples": [
+        {
+          "source": "The water is cold.",
+          "target": "Das Wasser ist kalt."
+        }
+      ]
+    },
+    {
+      "id": "de.word.buch",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the book",
+          "target": "das Buch"
+        },
+        {
+          "form": "a book",
+          "target": "ein Buch"
+        },
+        {
+          "form": "book",
+          "target": "Buch"
+        },
+        {
+          "form": "books",
+          "target": "Bücher"
+        },
+        {
+          "form": "the books",
+          "target": "die Bücher"
+        }
+      ],
+      "target": "Buch",
+      "targetMeta": {
+        "gender": "das",
+        "plural": "Bücher",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 1,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "das Buch (neuter) — book; plural Bücher.",
+      "examples": [
+        {
+          "source": "The book is good.",
+          "target": "Das Buch ist gut."
+        }
+      ]
+    },
+    {
+      "id": "de.word.immer",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "always",
+          "target": "immer"
+        }
+      ],
+      "target": "immer",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "immer means always.",
+      "examples": [
+        {
+          "source": "It is always like that.",
+          "target": "Es ist immer so."
+        }
+      ]
+    },
+    {
+      "id": "de.word.oft",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "often",
+          "target": "oft"
+        }
+      ],
+      "target": "oft",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "oft means often.",
+      "examples": [
+        {
+          "source": "We see that often.",
+          "target": "Wir sehen das oft."
+        }
+      ]
+    },
+    {
+      "id": "de.word.nie",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "never",
+          "target": "nie"
+        }
+      ],
+      "target": "nie",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "nie means never.",
+      "examples": [
+        {
+          "source": "That never happens.",
+          "target": "Das passiert nie."
+        }
+      ]
+    },
+    {
+      "id": "de.word.wieder",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "again",
+          "target": "wieder"
+        }
+      ],
+      "target": "wieder",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "wieder means again.",
+      "examples": [
+        {
+          "source": "We will see each other again.",
+          "target": "Wir sehen uns wieder."
+        }
+      ]
+    },
+    {
+      "id": "de.word.sehr",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "very",
+          "target": "sehr"
+        }
+      ],
+      "target": "sehr",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "sehr means very.",
+      "examples": [
+        {
+          "source": "Thank you very much.",
+          "target": "Danke sehr."
+        }
+      ]
+    },
+    {
+      "id": "de.word.vielleicht",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "maybe",
+          "target": "vielleicht"
+        }
+      ],
+      "target": "vielleicht",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "vielleicht means maybe / perhaps.",
+      "examples": [
+        {
+          "source": "Maybe tomorrow.",
+          "target": "Vielleicht morgen."
+        }
+      ]
+    },
+    {
+      "id": "de.word.morgen",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "tomorrow",
+          "target": "morgen"
+        }
+      ],
+      "target": "morgen",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "morgen means tomorrow.",
+      "examples": [
+        {
+          "source": "See you tomorrow!",
+          "target": "Bis morgen!"
+        }
+      ]
+    },
+    {
+      "id": "de.word.gestern",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "yesterday",
+          "target": "gestern"
+        }
+      ],
+      "target": "gestern",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "gestern means yesterday.",
+      "examples": [
+        {
+          "source": "Yesterday was Sunday.",
+          "target": "Gestern war Sonntag."
+        }
+      ]
+    },
+    {
+      "id": "de.word.stadt",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the city",
+          "target": "die Stadt"
+        },
+        {
+          "form": "a city",
+          "target": "eine Stadt"
+        },
+        {
+          "form": "city",
+          "target": "Stadt"
+        },
+        {
+          "form": "cities",
+          "target": "Städte"
+        },
+        {
+          "form": "the cities",
+          "target": "die Städte"
+        }
+      ],
+      "target": "Stadt",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Städte",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Stadt (feminine) — city; plural Städte.",
+      "examples": [
+        {
+          "source": "The city is big.",
+          "target": "Die Stadt ist groß."
+        }
+      ]
+    },
+    {
+      "id": "de.word.kind",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the child",
+          "target": "das Kind"
+        },
+        {
+          "form": "a child",
+          "target": "ein Kind"
+        },
+        {
+          "form": "child",
+          "target": "Kind"
+        },
+        {
+          "form": "children",
+          "target": "Kinder"
+        },
+        {
+          "form": "the children",
+          "target": "die Kinder"
+        }
+      ],
+      "target": "Kind",
+      "targetMeta": {
+        "gender": "das",
+        "plural": "Kinder",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "das Kind (neuter) — child; plural Kinder.",
+      "examples": [
+        {
+          "source": "The child is laughing.",
+          "target": "Das Kind lacht."
+        }
+      ]
+    },
+    {
+      "id": "de.word.freund",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the friend",
+          "target": "der Freund"
+        },
+        {
+          "form": "a friend",
+          "target": "ein Freund"
+        },
+        {
+          "form": "friend",
+          "target": "Freund"
+        },
+        {
+          "form": "friends",
+          "target": "Freunde"
+        },
+        {
+          "form": "the friends",
+          "target": "die Freunde"
+        }
+      ],
+      "target": "Freund",
+      "targetMeta": {
+        "gender": "der",
+        "plural": "Freunde",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "der Freund (masculine) — friend; plural Freunde.",
+      "examples": [
+        {
+          "source": "My friend lives here.",
+          "target": "Mein Freund wohnt hier."
+        }
+      ]
+    },
+    {
+      "id": "de.word.jahr",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the year",
+          "target": "das Jahr"
+        },
+        {
+          "form": "a year",
+          "target": "ein Jahr"
+        },
+        {
+          "form": "year",
+          "target": "Jahr"
+        },
+        {
+          "form": "years",
+          "target": "Jahre"
+        },
+        {
+          "form": "the years",
+          "target": "die Jahre"
+        }
+      ],
+      "target": "Jahr",
+      "targetMeta": {
+        "gender": "das",
+        "plural": "Jahre",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "das Jahr (neuter) — year; plural Jahre.",
+      "examples": [
+        {
+          "source": "A year has twelve months.",
+          "target": "Ein Jahr hat zwölf Monate."
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.es-gibt",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "there is",
+          "target": "es gibt"
+        }
+      ],
+      "target": "es gibt",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "es gibt is the fixed phrase for 'there is / there are'.",
+      "examples": [
+        {
+          "source": "There is a lot to see.",
+          "target": "Es gibt viel zu sehen."
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.zum-beispiel",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "for example",
+          "target": "zum Beispiel"
+        }
+      ],
+      "target": "zum Beispiel",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 2,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "zum Beispiel means for example (abbreviated z. B.).",
+      "examples": [
+        {
+          "source": "Many cities, for example Berlin.",
+          "target": "Viele Städte, zum Beispiel Berlin."
+        }
+      ]
+    },
+    {
+      "id": "de.word.trotzdem",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "nevertheless",
+          "target": "trotzdem"
+        }
+      ],
+      "target": "trotzdem",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "trotzdem means nevertheless / anyway.",
+      "examples": [
+        {
+          "source": "It is raining; we are going nevertheless.",
+          "target": "Es regnet, trotzdem gehen wir."
+        }
+      ]
+    },
+    {
+      "id": "de.word.deshalb",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "therefore",
+          "target": "deshalb"
+        }
+      ],
+      "target": "deshalb",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "deshalb means therefore / that is why.",
+      "examples": [
+        {
+          "source": "That is why I am here.",
+          "target": "Deshalb bin ich hier."
+        }
+      ]
+    },
+    {
+      "id": "de.word.fast",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "almost",
+          "target": "fast"
+        }
+      ],
+      "target": "fast",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "fast means almost.",
+      "examples": [
+        {
+          "source": "It is almost done.",
+          "target": "Es ist fast fertig."
+        }
+      ]
+    },
+    {
+      "id": "de.word.nur",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "only",
+          "target": "nur"
+        }
+      ],
+      "target": "nur",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "nur means only.",
+      "examples": [
+        {
+          "source": "Only today.",
+          "target": "Nur heute."
+        }
+      ]
+    },
+    {
+      "id": "de.word.schon",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "already",
+          "target": "schon"
+        }
+      ],
+      "target": "schon",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "schon means already.",
+      "examples": [
+        {
+          "source": "I am already there.",
+          "target": "Ich bin schon da."
+        }
+      ]
+    },
+    {
+      "id": "de.word.zusammen",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "together",
+          "target": "zusammen"
+        }
+      ],
+      "target": "zusammen",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "zusammen means together.",
+      "examples": [
+        {
+          "source": "We are here together.",
+          "target": "Wir sind zusammen hier."
+        }
+      ]
+    },
+    {
+      "id": "de.word.bald",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "soon",
+          "target": "bald"
+        }
+      ],
+      "target": "bald",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "bald means soon.",
+      "examples": [
+        {
+          "source": "See you soon!",
+          "target": "Bis bald!"
+        }
+      ]
+    },
+    {
+      "id": "de.word.leider",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "unfortunately",
+          "target": "leider"
+        }
+      ],
+      "target": "leider",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "leider means unfortunately.",
+      "examples": [
+        {
+          "source": "Unfortunately not.",
+          "target": "Leider nein."
+        }
+      ]
+    },
+    {
+      "id": "de.word.welt",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the world",
+          "target": "die Welt"
+        },
+        {
+          "form": "a world",
+          "target": "eine Welt"
+        },
+        {
+          "form": "world",
+          "target": "Welt"
+        },
+        {
+          "form": "worlds",
+          "target": "Welten"
+        },
+        {
+          "form": "the worlds",
+          "target": "die Welten"
+        }
+      ],
+      "target": "Welt",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Welten",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Welt (feminine) — world; plural Welten.",
+      "examples": [
+        {
+          "source": "The world is small.",
+          "target": "Die Welt ist klein."
+        }
+      ]
+    },
+    {
+      "id": "de.word.nacht",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the night",
+          "target": "die Nacht"
+        },
+        {
+          "form": "a night",
+          "target": "eine Nacht"
+        },
+        {
+          "form": "night",
+          "target": "Nacht"
+        },
+        {
+          "form": "nights",
+          "target": "Nächte"
+        },
+        {
+          "form": "the nights",
+          "target": "die Nächte"
+        }
+      ],
+      "target": "Nacht",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Nächte",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Nacht (feminine) — night; plural Nächte.",
+      "examples": [
+        {
+          "source": "The night was long.",
+          "target": "Die Nacht war lang."
+        }
+      ]
+    },
+    {
+      "id": "de.word.tuer",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the door",
+          "target": "die Tür"
+        },
+        {
+          "form": "a door",
+          "target": "eine Tür"
+        },
+        {
+          "form": "door",
+          "target": "Tür"
+        },
+        {
+          "form": "doors",
+          "target": "Türen"
+        },
+        {
+          "form": "the doors",
+          "target": "die Türen"
+        }
+      ],
+      "target": "Tür",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Türen",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Tür (feminine) — door; plural Türen.",
+      "examples": [
+        {
+          "source": "The door is open.",
+          "target": "Die Tür ist offen."
+        }
+      ]
+    },
+    {
+      "id": "de.word.hand",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the hand",
+          "target": "die Hand"
+        },
+        {
+          "form": "a hand",
+          "target": "eine Hand"
+        },
+        {
+          "form": "hand",
+          "target": "Hand"
+        },
+        {
+          "form": "hands",
+          "target": "Hände"
+        },
+        {
+          "form": "the hands",
+          "target": "die Hände"
+        }
+      ],
+      "target": "Hand",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Hände",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Hand (feminine) — hand; plural Hände.",
+      "examples": [
+        {
+          "source": "My hand is cold.",
+          "target": "Meine Hand ist kalt."
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.natuerlich",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "of course",
+          "target": "natürlich"
+        }
+      ],
+      "target": "natürlich",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a1",
+      "frequencyBand": 3,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "natürlich as a sentence word means of course.",
+      "examples": [
+        {
+          "source": "Of course I am coming.",
+          "target": "Natürlich komme ich."
+        }
+      ]
+    },
+    {
+      "id": "de.word.eigentlich",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "actually",
+          "target": "eigentlich"
+        }
+      ],
+      "target": "eigentlich",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "eigentlich means actually / in fact.",
+      "examples": [
+        {
+          "source": "Actually yes.",
+          "target": "Eigentlich ja."
+        }
+      ]
+    },
+    {
+      "id": "de.word.genau",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "exactly",
+          "target": "genau"
+        }
+      ],
+      "target": "genau",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "genau means exactly — also used alone as agreement.",
+      "examples": [
+        {
+          "source": "Exactly!",
+          "target": "Genau!"
+        }
+      ]
+    },
+    {
+      "id": "de.word.sofort",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "immediately",
+          "target": "sofort"
+        }
+      ],
+      "target": "sofort",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "sofort means immediately / right away.",
+      "examples": [
+        {
+          "source": "I am coming immediately.",
+          "target": "Ich komme sofort."
+        }
+      ]
+    },
+    {
+      "id": "de.word.endlich",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "finally",
+          "target": "endlich"
+        }
+      ],
+      "target": "endlich",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "endlich means finally / at last.",
+      "examples": [
+        {
+          "source": "Finally the weekend!",
+          "target": "Endlich Wochenende!"
+        }
+      ]
+    },
+    {
+      "id": "de.word.manchmal",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "sometimes",
+          "target": "manchmal"
+        }
+      ],
+      "target": "manchmal",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "manchmal means sometimes.",
+      "examples": [
+        {
+          "source": "Sometimes it rains.",
+          "target": "Manchmal regnet es."
+        }
+      ]
+    },
+    {
+      "id": "de.word.ueberall",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "everywhere",
+          "target": "überall"
+        }
+      ],
+      "target": "überall",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "überall means everywhere.",
+      "examples": [
+        {
+          "source": "Water is everywhere.",
+          "target": "Wasser ist überall."
+        }
+      ]
+    },
+    {
+      "id": "de.word.zuerst",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "at first",
+          "target": "zuerst"
+        }
+      ],
+      "target": "zuerst",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "zuerst means (at) first.",
+      "examples": [
+        {
+          "source": "Breakfast first.",
+          "target": "Zuerst das Frühstück."
+        }
+      ]
+    },
+    {
+      "id": "de.word.uebrigens",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "by the way",
+          "target": "übrigens"
+        }
+      ],
+      "target": "übrigens",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "adverb",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "übrigens means by the way.",
+      "examples": [
+        {
+          "source": "By the way, thanks.",
+          "target": "Übrigens, danke."
+        }
+      ]
+    },
+    {
+      "id": "de.word.zeit",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the time",
+          "target": "die Zeit"
+        },
+        {
+          "form": "a time",
+          "target": "eine Zeit"
+        },
+        {
+          "form": "time",
+          "target": "Zeit"
+        },
+        {
+          "form": "times",
+          "target": "Zeiten"
+        },
+        {
+          "form": "the times",
+          "target": "die Zeiten"
+        }
+      ],
+      "target": "Zeit",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Zeiten",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Zeit (feminine) — time; plural Zeiten.",
+      "examples": [
+        {
+          "source": "I have no time.",
+          "target": "Ich habe keine Zeit."
+        }
+      ]
+    },
+    {
+      "id": "de.word.tag",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the day",
+          "target": "der Tag"
+        },
+        {
+          "form": "a day",
+          "target": "ein Tag"
+        },
+        {
+          "form": "day",
+          "target": "Tag"
+        },
+        {
+          "form": "days",
+          "target": "Tage"
+        },
+        {
+          "form": "the days",
+          "target": "die Tage"
+        }
+      ],
+      "target": "Tag",
+      "targetMeta": {
+        "gender": "der",
+        "plural": "Tage",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "der Tag (masculine) — day; plural Tage.",
+      "examples": [
+        {
+          "source": "The day starts early.",
+          "target": "Der Tag beginnt früh."
+        }
+      ]
+    },
+    {
+      "id": "de.word.woche",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the week",
+          "target": "die Woche"
+        },
+        {
+          "form": "a week",
+          "target": "eine Woche"
+        },
+        {
+          "form": "week",
+          "target": "Woche"
+        },
+        {
+          "form": "weeks",
+          "target": "Wochen"
+        },
+        {
+          "form": "the weeks",
+          "target": "die Wochen"
+        }
+      ],
+      "target": "Woche",
+      "targetMeta": {
+        "gender": "die",
+        "plural": "Wochen",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "die Woche (feminine) — week; plural Wochen.",
+      "examples": [
+        {
+          "source": "The week has seven days.",
+          "target": "Die Woche hat sieben Tage."
+        }
+      ]
+    },
+    {
+      "id": "de.word.monat",
+      "language": "de",
+      "kind": "word",
+      "sourceForms": [
+        {
+          "form": "the month",
+          "target": "der Monat"
+        },
+        {
+          "form": "a month",
+          "target": "ein Monat"
+        },
+        {
+          "form": "month",
+          "target": "Monat"
+        },
+        {
+          "form": "months",
+          "target": "Monate"
+        },
+        {
+          "form": "the months",
+          "target": "die Monate"
+        }
+      ],
+      "target": "Monat",
+      "targetMeta": {
+        "gender": "der",
+        "plural": "Monate",
+        "pos": "noun",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "formMatched",
+      "dependencies": [],
+      "explanation": "der Monat (masculine) — month; plural Monate.",
+      "examples": [
+        {
+          "source": "The month is almost over.",
+          "target": "Der Monat ist fast vorbei."
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.guten-morgen",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "good morning",
+          "target": "guten Morgen"
+        }
+      ],
+      "target": "guten Morgen",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "guten Morgen is the standard morning greeting.",
+      "examples": [
+        {
+          "source": "Good morning, how are you?",
+          "target": "Guten Morgen, wie geht's?"
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.danke",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "thank you",
+          "target": "danke"
+        }
+      ],
+      "target": "danke",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [],
+      "explanation": "danke means thank you.",
+      "examples": [
+        {
+          "source": "Thank you for everything.",
+          "target": "Danke für alles."
+        }
+      ]
+    },
+    {
+      "id": "de.chunk.bis-bald",
+      "language": "de",
+      "kind": "chunk",
+      "sourceForms": [
+        {
+          "form": "see you soon",
+          "target": "bis bald"
+        }
+      ],
+      "target": "bis bald",
+      "targetMeta": {
+        "gender": null,
+        "plural": null,
+        "pos": "chunk",
+        "pronunciation": null
+      },
+      "level": "a2",
+      "frequencyBand": 4,
+      "replacementPolicy": "ambientSafe",
+      "fidelityTier": "exact",
+      "dependencies": [
+        "de.word.bald"
+      ],
+      "explanation": "bis bald means see you soon.",
+      "examples": [
+        {
+          "source": "See you soon, Anna!",
+          "target": "Bis bald, Anna!"
+        }
+      ]
+    }
+  ]
+}

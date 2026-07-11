@@ -26,7 +26,11 @@ let package = Package(
             name: "CockatooDev",
             dependencies: ["LearnerCore"],
             path: "App/Cockatoo/Cockatoo",
-            exclude: ["Assets.xcassets", "Cockatoo.entitlements"]
+            exclude: ["Assets.xcassets", "Cockatoo.entitlements"],
+            // The starter pack (a copy of packs/build/de-2026.07.json) ships
+            // in the bundle so onboarding is one click. The Xcode app target
+            // picks it up via the synchronized folder.
+            resources: [.copy("Resources")]
         ),
         .testTarget(name: "LearnerCoreTests", dependencies: ["LearnerCore"]),
     ]

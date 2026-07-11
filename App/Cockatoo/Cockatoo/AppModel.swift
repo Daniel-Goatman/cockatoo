@@ -16,6 +16,13 @@ final class AppModel: ObservableObject {
     @Published var needsOnboarding = false
     @Published var paused = false
     @Published var lastError: String?
+    /// Last time the Safari extension reached us over IPC (this launch).
+    @Published var lastExtensionContact: Date?
+
+    /// Practice session state — owned here so it survives section switches.
+    lazy var practice = PracticeSessionModel(engine: engine)
+
+    private var contactObserver: NSObjectProtocol?
 
     init() {
         do {
@@ -30,6 +37,11 @@ final class AppModel: ObservableObject {
         paused = (try? engine.store.setting(SettingsKey.enabled)) == "false"
         startObservation()
         startXPC()
+        contactObserver = NotificationCenter.default.addObserver(
+            forName: .cockatooExtensionContact, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.lastExtensionContact = Date() }
+        }
     }
 
     /// Live UI: re-run queries whenever any tracked table changes.
@@ -56,9 +68,12 @@ final class AppModel: ObservableObject {
         overview = try? engine.overview(now: Date())
     }
 
+    /// Menu bar badge: actionable reviews (due + ready). Introductions are
+    /// deliberately excluded — an always-on badge is nagging, not a signal.
     var dueBadge: String {
-        guard let due = overview?.dueNow, due > 0 else { return "" }
-        return "\(due)"
+        let actionable = (overview?.dueNow ?? 0) + (overview?.readyCount ?? 0)
+        guard actionable > 0 else { return "" }
+        return "\(actionable)"
     }
 
     func togglePaused() {
@@ -77,10 +92,31 @@ final class AppModel: ObservableObject {
             let pack = try decoder.decode(PackFile.self, from: data)
             try engine.importPack(pack, rawData: data, now: Date())
             needsOnboarding = false
+            lastError = nil
             refresh()
         } catch {
             lastError = "Import failed: \(error)"
         }
+    }
+
+    /// The starter pack ships in the app bundle so first run is one click —
+    /// no file picker, no dev workflow leaking into onboarding.
+    static func bundledPackURL() -> URL? {
+        #if SWIFT_PACKAGE
+        if let url = Bundle.module.url(forResource: "de-2026.07", withExtension: "json", subdirectory: "Resources")
+            ?? Bundle.module.url(forResource: "de-2026.07", withExtension: "json") {
+            return url
+        }
+        #endif
+        return Bundle.main.url(forResource: "de-2026.07", withExtension: "json")
+    }
+
+    func importBundledPack() {
+        guard let url = Self.bundledPackURL() else {
+            lastError = "The built-in pack is missing from this build — use Import a custom pack instead."
+            return
+        }
+        importPack(from: url)
     }
 
     // MARK: - LLM

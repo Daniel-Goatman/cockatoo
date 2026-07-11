@@ -42,8 +42,9 @@ the app's Settings (requires the /Applications copy).
 ## Verify
 
 ```sh
-swift test                      # 63 tests: scheduler properties, shuffle distribution,
-                                # generative mode coverage, idempotency, 30-day simulated
+swift test                      # 76 tests: scheduler properties, shuffle distribution,
+                                # generative mode coverage, idempotency, cold-start
+                                # introductions, near-miss grading, 30-day simulated
                                 # learner, snapshot size bound, privacy-tier gate,
                                 # protocol fixtures (incl. envelope + fractional dates)
 cd extension && npm install && npm test   # 32 tests: matcher, transformer budgets/
@@ -84,8 +85,10 @@ says so honestly in its popup.
 - **P4 Safari integration** — **done and verified on-device**: snapshot/event
   round-trip, app-down drill (cached rendering + queued events + honest
   popup), openDashboard fronting, launch-path-independent IPC
-- **P5 app UI** — done: dashboard, practice (3 modes + repair), tier-grouped
-  library, settings (provider, privacy, blocked sites, launch-at-login),
-  onboarding
+- **P5 app UI** — done: dashboard (next-action card, tier progress, extension
+  status), practice (3 modes + introductions + repair + session ledger,
+  resumable across tab switches), tier-grouped library with exposure
+  progress, settings (provider, privacy, blocked sites, launch-at-login,
+  pack import), one-click onboarding (bundled starter pack)
 - **P6 LLM layer** — built + unit-tested; not yet exercised against a live provider
 - **P7 hardening** — in progress: daily-use soak underway

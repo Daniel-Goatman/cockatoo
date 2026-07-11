@@ -189,9 +189,9 @@ shown.
    through the same `record(correct: false)` as wrong: box −2, `lapses += 1`,
    streak reset, plus repair requeue. The gentle copy hides a harsh penalty.
 2. **`ambientSetMin` and the demotion rule are documented, unimplemented.**
-3. **`tierUnlockedAt(1)` is never written at import**, so the 7-day
-   minimum interval silently doesn't apply to the first unlock (harmless —
-   in the user's favor — but drift).
+3. ~~`tierUnlockedAt(1)` is never written at import~~ — correction: it *is*
+   written by PackImporter when it first sets `unlockedTier`, so the 7-day
+   minimum interval applies from day one as designed.
 4. **Session reset on tab switch** (above).
 5. **`AppModel.init` fatalErrors** if the DB can't open — acceptable for a
    personal tool, but a corrupt DB currently means a crash loop.
@@ -238,3 +238,17 @@ The wedge (ambient acquisition inside real reading, privacy-first, calm) is
 validated by both the research and the market scan. What's missing isn't
 more machinery — it's letting the user *feel* the machinery working from
 minute one.
+
+---
+
+## Addendum (same day): Phase A implemented
+
+Everything in Phase A landed on this branch: introduction sessions
+(transition c′, `sessionIntroLimit`), the ready-gate rework (seen-only path
++ engagement fast path), the near-miss `hold` fix, the progress-visibility
+package (dashboard next-action card + tier progress + extension status,
+library exposure column, humanized stage names, practice empty-state
+reasons, session-end ledger, menu bar copy), bundled starter pack with
+one-click onboarding, resumable practice sessions, and the docs/plan/04
+updates. 76 tests green (13 new). The 30-day simulation now reaches tier 3
+by day 22 with 11 questions answered on day 1 (previously 0 possible).

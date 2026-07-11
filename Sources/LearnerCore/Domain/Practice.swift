@@ -10,12 +10,17 @@ public struct PracticeResult: Codable, Equatable, Sendable {
     public var itemId: String
     public var mode: PracticeMode
     public var correct: Bool
+    /// Typed answer within edit distance 1 (Grader.TypedVerdict.nearMiss):
+    /// counts as not-correct but is graded gently — the box holds instead of
+    /// lapsing (docs/plan/04-learning-engine.md §Recall).
+    public var nearMiss: Bool
     public var answeredAt: Date
 
-    public init(itemId: String, mode: PracticeMode, correct: Bool, answeredAt: Date) {
+    public init(itemId: String, mode: PracticeMode, correct: Bool, nearMiss: Bool = false, answeredAt: Date) {
         self.itemId = itemId
         self.mode = mode
         self.correct = correct
+        self.nearMiss = nearMiss
         self.answeredAt = answeredAt
     }
 }

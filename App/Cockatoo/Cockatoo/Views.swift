@@ -13,7 +13,8 @@ struct OnboardingView: View {
             Text("""
             Cockatoo teaches you German while you read the web. A few words on each \
             page are quietly swapped into German — hover any marked word to see the \
-            original English, always.
+            original English, always. Hovering also tells Cockatoo you're curious, \
+            which brings a word into practice sooner.
 
             **Words and genders come first; grammar comes later.** Swapped words show \
             their dictionary form with the correct article ("the house" becomes \
@@ -24,8 +25,15 @@ struct OnboardingView: View {
             """)
             .frame(maxWidth: 560, alignment: .leading)
 
-            Button("Import a language pack…") { pickPack() }
-                .buttonStyle(.borderedProminent)
+            HStack(spacing: 10) {
+                Button("Start learning German") { model.importBundledPack() }
+                    .buttonStyle(.borderedProminent)
+                Button("Import a custom pack…") { pickPack() }
+            }
+            Text("The built-in starter pack has 54 hand-checked words and phrases. You can practice your first words right away — no browsing required.")
+                .font(.caption).foregroundStyle(.secondary)
+                .frame(maxWidth: 560, alignment: .leading)
+
             if let error = model.lastError {
                 Text(error).foregroundStyle(.red)
             }
@@ -45,7 +53,7 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Dashboard (real data only — P4)
+// MARK: - Dashboard (real data only — P4; leads with the next action)
 
 struct DashboardView: View {
     @EnvironmentObject var model: AppModel
@@ -54,31 +62,132 @@ struct DashboardView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if let o = model.overview {
+                    nextActionCard(o)
                     HStack(spacing: 12) {
                         StatTile(title: "Due now", value: "\(o.dueNow)")
-                        StatTile(title: "Unlocked tier", value: "\(o.unlockedTier)")
+                        StatTile(title: "Ready to practice", value: "\(o.readyCount)")
                         StatTile(title: "Words known", value: "\((o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0))")
                         StatTile(title: "In rotation", value: "\((o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0))")
                     }
-                    Text("Progress by stage").font(.headline)
-                    ForEach(Stage.allCases, id: \.self) { stage in
-                        let count = o.countsByStage[stage] ?? 0
-                        HStack {
-                            Text(stage.rawValue).frame(width: 90, alignment: .leading).font(.callout.monospaced())
-                            GeometryReader { geo in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(stage >= .known ? Color.green.opacity(0.7) : Color.accentColor.opacity(0.5))
-                                    .frame(width: max(2, geo.size.width * CGFloat(count) / CGFloat(max(1, o.totalItems))))
-                            }
-                            .frame(height: 14)
-                            Text("\(count)").font(.callout.monospaced()).frame(width: 40, alignment: .trailing)
-                        }
+                    if let tier = o.tierProgress {
+                        tierProgressCard(tier)
                     }
+                    extensionStatusCard
+                    Text("Progress by stage").font(.headline)
+                    stageBars(o)
                 }
             }
             .padding(24)
         }
         .navigationTitle("Overview")
+    }
+
+    // The dashboard's first job: say what to do next.
+    @ViewBuilder
+    func nextActionCard(_ o: LearnerEngine.Overview) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if o.practiceAvailable {
+                HStack(spacing: 12) {
+                    Button("Practice now") { model.section = .practice }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                    Text(practiceSubtitle(o))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Label("All caught up", systemImage: "checkmark.circle")
+                    .font(.headline)
+                if let nextDue = o.nextDueAt {
+                    Text("Next review \(RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())).")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if !o.almostReady.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Almost ready — keep reading in Safari")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    ForEach(o.almostReady, id: \.itemId) { need in
+                        Text("**\(need.target)** — \(ExposureHint.text(for: need))")
+                            .font(.callout)
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    func practiceSubtitle(_ o: LearnerEngine.Overview) -> String {
+        var parts: [String] = []
+        if o.dueNow > 0 { parts.append("\(o.dueNow) due") }
+        if o.readyCount > 0 { parts.append("\(o.readyCount) ready") }
+        if o.introAvailable > 0 { parts.append("\(o.introAvailable) new word\(o.introAvailable == 1 ? "" : "s")") }
+        return parts.joined(separator: " · ")
+    }
+
+    func tierProgressCard(_ tier: LearnerEngine.TierProgress) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Tier \(tier.nextTier)").font(.headline)
+                Spacer()
+                Text("\(tier.knownInCurrentTier) of \(tier.neededInCurrentTier) known")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            ProgressView(value: Double(tier.knownInCurrentTier), total: Double(tier.neededInCurrentTier))
+            Text("Unlocks when \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // Honest connectivity: has the Safari extension talked to us this launch?
+    var extensionStatusCard: some View {
+        HStack(spacing: 8) {
+            if let last = model.lastExtensionContact {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Text("Safari extension connected — last synced \(RelativeDateTimeFormatter().localizedString(for: last, relativeTo: Date())).")
+            } else {
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                Text("The Safari extension hasn't connected since Cockatoo launched. Enable it in Safari → Settings → Extensions, then browse any page.")
+            }
+        }
+        .font(.callout)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // Pipeline order with the parked (locked) words last and muted — the
+    // dashboard shows motion, not a wall of unavailable items.
+    func stageBars(_ o: LearnerEngine.Overview) -> some View {
+        let order: [Stage] = [.ambient, .ready, .learning, .known, .mastered, .locked]
+        return ForEach(order, id: \.self) { stage in
+            let count = o.countsByStage[stage] ?? 0
+            HStack {
+                Text(stage.displayName).frame(width: 110, alignment: .leading).font(.callout)
+                GeometryReader { geo in
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(stageBarColor(stage))
+                        .frame(width: max(2, geo.size.width * CGFloat(count) / CGFloat(max(1, o.totalItems))))
+                }
+                .frame(height: 14)
+                Text("\(count)").font(.callout.monospaced()).frame(width: 40, alignment: .trailing)
+            }
+            .opacity(stage == .locked ? 0.5 : 1)
+        }
+    }
+
+    func stageBarColor(_ stage: Stage) -> Color {
+        switch stage {
+        case .locked: return Color.secondary.opacity(0.3)
+        case .known, .mastered: return Color.green.opacity(0.7)
+        default: return Color.accentColor.opacity(0.5)
+        }
     }
 }
 
@@ -117,6 +226,8 @@ struct LibraryView: View {
         let stage: Stage
         let box: Int
         let due: String
+        let seenCount: Int
+        let engagedCount: Int
     }
 
     var body: some View {
@@ -138,10 +249,10 @@ struct LibraryView: View {
 
     var columnHeader: some View {
         HStack(spacing: 12) {
-            Text("English").frame(width: 170, alignment: .leading)
-            Text("German").frame(width: 190, alignment: .leading)
-            Text("Stage").frame(width: 84, alignment: .leading)
-            Text("Strength").frame(width: 90, alignment: .leading)
+            Text("English").frame(width: 160, alignment: .leading)
+            Text("German").frame(width: 180, alignment: .leading)
+            Text("Stage").frame(width: 92, alignment: .leading)
+            Text("Progress").frame(width: 130, alignment: .leading)
             Text("Next review").frame(minWidth: 90, alignment: .leading)
             Spacer()
         }
@@ -175,10 +286,10 @@ struct LibraryView: View {
 
     func row(_ row: LibraryRow) -> some View {
         HStack(spacing: 12) {
-            Text(row.source).frame(width: 170, alignment: .leading)
-            Text(row.target).frame(width: 190, alignment: .leading)
-            StageChip(stage: row.stage).frame(width: 84, alignment: .leading)
-            StrengthDots(box: row.box).frame(width: 90, alignment: .leading)
+            Text(row.source).frame(width: 160, alignment: .leading)
+            Text(row.target).frame(width: 180, alignment: .leading)
+            StageChip(stage: row.stage).frame(width: 92, alignment: .leading)
+            progressCell(row).frame(width: 130, alignment: .leading)
             Text(row.due).foregroundStyle(.secondary).frame(minWidth: 90, alignment: .leading)
             Spacer()
         }
@@ -186,9 +297,37 @@ struct LibraryView: View {
         .opacity(row.stage == .locked ? 0.55 : 1)
     }
 
+    /// Ambient rows show exposure progress (the invisible waiting period,
+    /// made visible); scheduled rows show SRS strength.
+    @ViewBuilder
+    func progressCell(_ row: LibraryRow) -> some View {
+        switch row.stage {
+        case .locked:
+            Text("—").foregroundStyle(.tertiary)
+        case .ambient:
+            HStack(spacing: 5) {
+                Text("\(row.seenCount)/6 seen").font(.caption.monospacedDigit())
+                if row.engagedCount > 0 {
+                    Image(systemName: "cursorarrow.rays")
+                        .font(.caption2)
+                        .foregroundStyle(.blue)
+                        .help("Hovered — 3 sightings are enough")
+                }
+            }
+            .foregroundStyle(.secondary)
+        case .ready:
+            Text("practice now")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.teal)
+        case .learning, .known, .mastered:
+            StrengthDots(box: row.box)
+        }
+    }
+
     func reload() {
         let formatter = RelativeDateTimeFormatter()
-        guard let items = try? model.engine.store.items(language: "de"),
+        let language = (try? model.engine.store.setting(SettingsKey.activeLanguage) ?? "de") ?? "de"
+        guard let items = try? model.engine.store.items(language: language),
               let progress = try? model.engine.store.allProgress() else { return }
         unlockedTier = model.overview?.unlockedTier ?? 1
 
@@ -196,25 +335,33 @@ struct LibraryView: View {
             let p = progress[item.id]
             return (item.frequencyBand, LibraryRow(
                 id: item.id,
-                source: bareSource(item),
-                target: (item.targetMeta?.gender).map { "\($0) \(item.target)" } ?? item.target,
+                source: item.bareSourceForm ?? item.id,
+                target: item.displayTarget,
                 stage: p?.stage ?? .locked,
                 box: p?.srsBox ?? 0,
-                due: p?.dueAt.map { formatter.localizedString(for: $0, relativeTo: Date()) } ?? "—"
+                due: p?.dueAt.map { formatter.localizedString(for: $0, relativeTo: Date()) } ?? "—",
+                seenCount: p?.seenCount ?? 0,
+                engagedCount: p?.engagedCount ?? 0
             ))
         }
         tiers = Dictionary(grouping: rows, by: \.0)
             .sorted { $0.key < $1.key }
             .map { TierGroup(id: $0.key, rows: $0.value.map(\.1).sorted { $0.source < $1.source }) }
     }
+}
 
-    /// Bare form for display: "book", not "the book" — the determiner
-    /// variants exist for the matcher, not for reading lists.
-    func bareSource(_ item: VocabItem) -> String {
-        item.sourceForms.first { form in
-            let lowered = form.form.lowercased()
-            return !lowered.hasPrefix("the ") && !lowered.hasPrefix("a ") && !lowered.hasPrefix("an ")
-        }?.form ?? item.sourceForms.first?.form ?? item.id
+/// Human names for the engine's stage machine — the rawValues are engine
+/// jargon and never shown to users.
+extension Stage {
+    var displayName: String {
+        switch self {
+        case .locked: return "upcoming"
+        case .ambient: return "on pages"
+        case .ready: return "ready"
+        case .learning: return "practicing"
+        case .known: return "known"
+        case .mastered: return "mastered"
+        }
     }
 }
 
@@ -233,7 +380,7 @@ struct StageChip: View {
     }
 
     var body: some View {
-        Text(stage.rawValue)
+        Text(stage.displayName)
             .font(.caption.weight(.medium))
             .padding(.horizontal, 7).padding(.vertical, 2)
             .background(color.opacity(0.16), in: Capsule())

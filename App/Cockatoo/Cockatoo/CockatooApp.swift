@@ -53,7 +53,7 @@ struct MenuBarContent: View {
     var body: some View {
         VStack(alignment: .leading) {
             if let overview = model.overview {
-                Text("\(overview.dueNow) due · tier \(overview.unlockedTier)")
+                Text(menuStatus(overview))
             }
             Button(model.paused ? "Resume swapping" : "Pause swapping") {
                 model.togglePaused()
@@ -65,6 +65,18 @@ struct MenuBarContent: View {
             Divider()
             Button("Quit") { NSApp.terminate(nil) }
         }
+    }
+
+    /// Actionable status, not a census: what is there to do right now?
+    func menuStatus(_ overview: LearnerEngine.Overview) -> String {
+        let actionable = overview.dueNow + overview.readyCount
+        if actionable > 0 {
+            return "\(actionable) word\(actionable == 1 ? "" : "s") to practice · tier \(overview.unlockedTier)"
+        }
+        if overview.introAvailable > 0 {
+            return "New words available · tier \(overview.unlockedTier)"
+        }
+        return "All caught up · tier \(overview.unlockedTier)"
     }
 }
 

@@ -47,6 +47,12 @@ final class CockatooXPCListener {
                 }
             }
 
+            // Any message proves the extension ⇄ app path is alive; the UI
+            // shows this as honest connectivity status.
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .cockatooExtensionContact, object: nil)
+            }
+
             let response = box.service.handle(request, now: Date())
             return Unmanaged.passRetained(response as CFData)
         }
@@ -72,6 +78,8 @@ final class CockatooXPCListener {
 extension Notification.Name {
     /// Posted by the IPC callback when the extension asks to open the app.
     static let cockatooOpenDashboard = Notification.Name("dev.cockatoo.openDashboard")
+    /// Posted on every IPC message — drives the extension-status UI.
+    static let cockatooExtensionContact = Notification.Name("dev.cockatoo.extensionContact")
 }
 
 // MARK: - Keychain (API keys never touch the DB or UserDefaults — D7)

@@ -124,18 +124,11 @@ public struct QuestionFactory: Sendable {
 
     /// The bare (non-determiner) source form used as the item's "meaning" text.
     func primarySource(_ item: VocabItem) -> String? {
-        let bare = item.sourceForms.first { form in
-            let lowered = form.form.lowercased()
-            return !lowered.hasPrefix("the ") && !lowered.hasPrefix("a ") && !lowered.hasPrefix("an ")
-        }
-        return (bare ?? item.sourceForms.first)?.form
+        item.bareSourceForm
     }
 
     /// Target with citation-form article where authored, e.g. "das Haus".
     func displayTarget(_ item: VocabItem) -> String {
-        if let gender = item.targetMeta?.gender, !gender.isEmpty {
-            return "\(gender) \(item.target)"
-        }
-        return item.target
+        item.displayTarget
     }
 }
