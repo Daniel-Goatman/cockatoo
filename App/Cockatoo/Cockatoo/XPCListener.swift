@@ -1,64 +1,77 @@
 import Foundation
 import LearnerCore
 
-/// The app-side XPC API the appex forwards native messages to (decision D9).
-/// One method: opaque JSON envelope in, JSON response out — all typing
-/// happens in LearnerCore.SyncService on this side of the boundary.
-@objc public protocol CockatooXPCProtocol {
-    func handle(_ envelope: Data, reply: @escaping @Sendable (Data) -> Void)
-}
-
-final class CockatooXPCListener: NSObject, NSXPCListenerDelegate, @unchecked Sendable {
-    private let service: SyncService
-    private var listener: NSXPCListener?
-
-    init(service: SyncService) {
-        self.service = service
+/// The app-side IPC endpoint the appex forwards native messages to (D9).
+/// Mechanism: a CFMessagePort named with the App-Group prefix — the one
+/// dynamic registration the sandbox grants to group members regardless of
+/// how the app was launched. (NSXPCListener(machServiceName:) only worked
+/// when Xcode launched the app — launchd never owned the name otherwise;
+/// verified live, see docs/plan/03-data-model-and-storage.md §R2.)
+/// The protocol is unchanged: opaque JSON envelope in, JSON response out —
+/// all typing happens in LearnerCore.SyncService.
+final class CockatooXPCListener {
+    private final class ServiceBox {
+        let service: SyncService
+        init(_ service: SyncService) { self.service = service }
     }
 
-    /// Registers the App-Group-prefixed mach service. This only succeeds in
-    /// the packaged, entitled app bundle — in dev (swift run) registration
-    /// fails harmlessly and the extension falls back to its cache
-    /// (docs/plan/08-roadmap.md P0 spike verifies the packaged path).
+    private let box: ServiceBox
+    private var port: CFMessagePort?
+    private var source: CFRunLoopSource?
+
+    init(service: SyncService) {
+        self.box = ServiceBox(service)
+    }
+
     func start() {
-        let listener = NSXPCListener(machServiceName: CockatooPaths.xpcServiceName)
-        listener.delegate = self
-        listener.resume()
-        self.listener = listener
-    }
+        var context = CFMessagePortContext(
+            version: 0,
+            info: Unmanaged.passRetained(box).toOpaque(),
+            retain: nil,
+            release: nil,
+            copyDescription: nil
+        )
 
-    func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-        connection.exportedInterface = NSXPCInterface(with: CockatooXPCProtocol.self)
-        connection.exportedObject = XPCHandler(service: service)
-        connection.resume()
-        return true
+        // The callback is a C function pointer: no captures, state rides in.
+        let callback: CFMessagePortCallBack = { _, _, data, info in
+            guard let info else { return nil }
+            let box = Unmanaged<ServiceBox>.fromOpaque(info).takeUnretainedValue()
+            let request = (data as Data?) ?? Data()
+
+            // openDashboard is the one method with a UI side effect: front
+            // the window (LearnerCore just acks it — it has no UI).
+            if let object = try? JSONSerialization.jsonObject(with: request) as? [String: Any],
+               object["method"] as? String == "openDashboard" {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .cockatooOpenDashboard, object: nil)
+                }
+            }
+
+            let response = box.service.handle(request, now: Date())
+            return Unmanaged.passRetained(response as CFData)
+        }
+
+        guard let port = CFMessagePortCreateLocal(
+            nil,
+            CockatooPaths.xpcServiceName as CFString,
+            callback,
+            &context,
+            nil
+        ) else {
+            NSLog("Cockatoo: CFMessagePort registration failed for \(CockatooPaths.xpcServiceName)")
+            return
+        }
+        self.port = port
+        let source = CFMessagePortCreateRunLoopSource(nil, port, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        self.source = source
+        NSLog("Cockatoo: service listening on \(CockatooPaths.xpcServiceName)")
     }
 }
 
-final class XPCHandler: NSObject, CockatooXPCProtocol, @unchecked Sendable {
-    private let service: SyncService
-
-    init(service: SyncService) {
-        self.service = service
-    }
-
-    func handle(_ envelope: Data, reply: @escaping @Sendable (Data) -> Void) {
-        // openDashboard is the one method with a UI side effect: front the
-        // window (LearnerCore just acks it — it has no UI).
-        if let object = try? JSONSerialization.jsonObject(with: envelope) as? [String: Any],
-           object["method"] as? String == "openDashboard" {
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .cockatooOpenDashboard, object: nil)
-            }
-        }
-
-        // SyncService is synchronous over the database; hop to a utility
-        // queue so the XPC thread never blocks on SQLite.
-        let service = self.service
-        DispatchQueue.global(qos: .userInitiated).async {
-            reply(service.handle(envelope, now: Date()))
-        }
-    }
+extension Notification.Name {
+    /// Posted by the IPC callback when the extension asks to open the app.
+    static let cockatooOpenDashboard = Notification.Name("dev.cockatoo.openDashboard")
 }
 
 // MARK: - Keychain (API keys never touch the DB or UserDefaults — D7)
@@ -91,9 +104,4 @@ enum KeychainStore {
         add[kSecValueData as String] = Data(value.utf8)
         SecItemAdd(add as CFDictionary, nil)
     }
-}
-
-extension Notification.Name {
-    /// Posted by the XPC handler when the extension asks to open the app.
-    static let cockatooOpenDashboard = Notification.Name("dev.cockatoo.openDashboard")
 }

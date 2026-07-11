@@ -3,22 +3,13 @@ import Foundation
 import SafariServices
 
 // The appex: a STATELESS FORWARDER (decision D9). Native message in →
-// XPC call to the app → response out. No database access, no learning
-// logic, no state between invocations. This file is compiled into the
-// Xcode appex target (see App/README.md for the packaging steps).
+// CFMessagePort request to the app → response out. No database access, no
+// learning logic, no state between invocations. The port name carries the
+// App-Group prefix, which is what authorizes both the app's registration
+// and this lookup under the sandbox. This file is compiled into the Xcode
+// appex target (see App/README.md for the packaging steps).
 
-let xpcServiceName = "group.dev.cockatoo.shared.api"
-
-@objc public protocol CockatooXPCProtocol {
-    func handle(_ envelope: Data, reply: @escaping @Sendable (Data) -> Void)
-}
-
-/// Boxes framework objects that are documented thread-safe for the calls we
-/// make (NSExtensionContext.completeRequest, NSXPCConnection.invalidate) but
-/// predate Sendable annotations.
-private struct UncheckedSendable<T>: @unchecked Sendable {
-    let value: T
-}
+let appServiceName = "group.dev.cockatoo.shared.api"
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     func beginRequest(with context: NSExtensionContext) {
@@ -48,34 +39,39 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     }
 
     private static func forward(_ envelope: Data, attemptLaunch: Bool, completion: @escaping @Sendable (Data?) -> Void) {
-        let connection = NSXPCConnection(machServiceName: xpcServiceName)
-        connection.remoteObjectInterface = NSXPCInterface(with: CockatooXPCProtocol.self)
-        connection.resume()
-        let boxedConnection = UncheckedSendable(value: connection)
-
-        let proxy = connection.remoteObjectProxyWithErrorHandler { _ in
-            boxedConnection.value.invalidate()
-            if attemptLaunch {
-                launchApp {
-                    // One retry after a launch attempt.
-                    DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-                        forward(envelope, attemptLaunch: false, completion: completion)
-                    }
-                }
-            } else {
-                completion(nil)
+        DispatchQueue.global(qos: .userInitiated).async {
+            if let response = sendToApp(envelope) {
+                completion(response)
+                return
             }
-        } as? CockatooXPCProtocol
+            guard attemptLaunch else {
+                completion(nil)
+                return
+            }
+            launchApp {
+                // One retry after a launch attempt; a cold app needs a
+                // moment to register its port.
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 2.0) {
+                    completion(sendToApp(envelope))
+                }
+            }
+        }
+    }
 
-        guard let proxy else {
-            connection.invalidate()
-            completion(nil)
-            return
+    private static func sendToApp(_ envelope: Data) -> Data? {
+        guard let port = CFMessagePortCreateRemote(nil, appServiceName as CFString) else {
+            return nil
         }
-        proxy.handle(envelope) { response in
-            boxedConnection.value.invalidate()
-            completion(response)
+        var reply: Unmanaged<CFData>?
+        let status = CFMessagePortSendRequest(
+            port, 0, envelope as CFData, 5.0, 5.0,
+            CFRunLoopMode.defaultMode.rawValue, &reply
+        )
+        CFMessagePortInvalidate(port)
+        guard status == kCFMessagePortSuccess, let data = reply?.takeRetainedValue() else {
+            return nil
         }
+        return data as Data
     }
 
     private static func launchApp(then continuation: @escaping @Sendable () -> Void) {
@@ -84,7 +80,9 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             return
         }
         let config = NSWorkspace.OpenConfiguration()
-        config.activates = false
+        // Launch here only ever happens for openDashboard — an explicit
+        // click — so bringing the app forward is what the user asked for.
+        config.activates = true
         NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in
             continuation()
         }
@@ -95,4 +93,10 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         response.userInfo = [SFExtensionMessageKey: payload]
         context.completeRequest(returningItems: [response])
     }
+}
+
+/// Boxes NSExtensionContext (thread-safe for completeRequest) across the
+/// @Sendable completion boundary.
+private struct UncheckedSendable<T>: @unchecked Sendable {
+    let value: T
 }
