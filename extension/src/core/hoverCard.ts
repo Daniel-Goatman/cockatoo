@@ -48,6 +48,7 @@ export class HoverCard {
     if (this.card && this.anchor !== token) this.close(true);
     this.pinned = this.pinned || pin;
     this.anchor = token;
+    token.classList.add("is-active");
 
     if (!this.card) {
       this.card = this.build(token, item);
@@ -138,6 +139,7 @@ export class HoverCard {
     if (this.pinned && !force) return;
     this.card?.remove();
     this.card = null;
+    this.anchor?.classList.remove("is-active");
     this.anchor = null;
     this.pinned = false;
   }

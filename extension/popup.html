@@ -3,11 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <style>
-    body { font: 13px/1.4 -apple-system, system-ui, sans-serif; margin: 0; padding: 14px; width: 260px; }
-    h1 { font-size: 14px; margin: 0 0 8px; }
-    #status { opacity: 0.75; }
-    #warning { color: #b3541e; margin-top: 8px; display: none; }
-    button { margin-top: 10px; font: inherit; padding: 4px 10px; }
+    body {
+      font: 14px/1.5 "Newsreader", "Iowan Old Style", Georgia, serif;
+      margin: 0; padding: 16px; width: 270px;
+      background: #fffaf0; color: #1f1a14;
+    }
+    h1 {
+      font-size: 17px; font-weight: 600; margin: 0 0 6px;
+      color: #8a4a26; letter-spacing: -0.01em;
+    }
+    #status { color: #4a3f30; }
+    #warning { color: #6e2e2e; margin-top: 8px; display: none; }
+    button {
+      margin-top: 12px; width: 100%;
+      font: 600 13px "Newsreader", Georgia, serif;
+      padding: 8px 12px; border-radius: 7px; border: none; cursor: pointer;
+      background: #f2ecdb; color: #1f1a14;
+      box-shadow: inset 0 1px 0 rgba(255, 250, 235, 0.6), inset 0 -1px 0 rgba(120, 95, 60, 0.10);
+    }
+    button:hover { background: #ebe4cd; }
+    button:active { transform: translateY(1px); }
   </style>
 </head>
 <body>

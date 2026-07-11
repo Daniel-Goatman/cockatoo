@@ -1,80 +1,187 @@
-/* Token marking (R1b): visible-but-subtle so a swap reads as a vocabulary
-   card in place. approximate tier (reserved, v1-empty) gets a dotted line. */
+/* Cockatoo brand — content-script styles for inline highlight + hover card.
+   Visual language carried over from the prototype's paper/editorial design
+   (Newsreader serif, parchment card, warm accent).
+   Token marking is R1b: visible-but-subtle so a swap reads as a vocabulary
+   card in place; approximate tier (reserved, v1-empty) gets a dotted line. */
+
+.cck-token,
+.cck-hovercard,
+.cck-hovercard * {
+  --cck-paper-raised: #fffaf0;
+  --cck-paper-sunken: #f2ecdb;
+  --cck-paper-deep: #ebe4cd;
+  --cck-ink: #1f1a14;
+  --cck-ink-2: #4a3f30;
+  --cck-ink-3: #8b7e6a;
+  --cck-rule: #ddd5be;
+  --cck-rule-strong: #c8bda1;
+  --cck-accent: #8a4a26;
+  --cck-accent-hover: #6f3a1d;
+  --cck-accent-wash: rgba(192, 135, 85, 0.10);
+  --cck-font-serif: "Newsreader", "Iowan Old Style", "Apple Garamond", Georgia, serif;
+  --cck-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ====== INLINE HIGHLIGHT ====== */
 
 .cck-token {
-  border-bottom: 1.5px solid color-mix(in srgb, currentColor 45%, #2f7d5a);
-  background: color-mix(in srgb, transparent 92%, #2f7d5a);
-  border-radius: 2px;
+  color: var(--cck-accent);
+  border-bottom: 1.5px solid var(--cck-accent);
+  border-radius: 1px;
+  padding: 0 0.5px;
   cursor: help;
-  padding: 0 1px;
+  background: transparent;
+  font: inherit;
+  font-weight: inherit;
+  display: inline;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    border-radius 140ms ease;
+}
+
+.cck-token:hover,
+.cck-token.is-active {
+  background: var(--cck-accent-wash);
+  border-radius: 4px;
+  border-bottom-color: var(--cck-accent-hover);
+}
+
+.cck-token:focus-visible {
+  outline: 2px solid var(--cck-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .cck-token[data-cck-tier="approximate"] {
   border-bottom-style: dotted;
 }
 
-.cck-token:focus-visible {
-  outline: 2px solid #2f7d5a;
-  outline-offset: 1px;
-}
+/* ====== HOVER CARD ====== */
+/* position stays absolute: hoverCard.ts computes page coordinates
+   (rect + scroll offsets). */
 
 .cck-hovercard {
   position: absolute;
   z-index: 2147483647;
-  max-width: 300px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #1c1c1e;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  font: 13px/1.45 -apple-system, system-ui, sans-serif;
+  width: 340px;
+  max-width: calc(100vw - 16px);
+  background: var(--cck-paper-raised);
+  color: var(--cck-ink);
+  border: 1px solid var(--cck-rule-strong);
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  font-family: var(--cck-font-serif);
+  font-size: 15.5px;
+  line-height: 1.5;
+  text-align: left;
+  letter-spacing: normal;
+  box-sizing: border-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.8),
+    0 1px 0 rgba(80, 50, 20, 0.08),
+    0 30px 60px -20px rgba(40, 25, 10, 0.30),
+    0 12px 24px -10px rgba(40, 25, 10, 0.20);
+  transform-origin: top left;
+  animation: cck-card-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  .cck-hovercard {
-    background: #2c2c2e;
-    color: #f2f2f7;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+@keyframes cck-card-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.cck-hovercard-target {
-  font-size: 17px;
-  font-weight: 650;
-  margin-bottom: 2px;
+/* Target word — the big serif headline. */
+.cck-hovercard .cck-hovercard-target {
+  font-family: var(--cck-font-serif);
+  font-weight: 500;
+  font-size: 32px;
+  line-height: 1.1;
+  color: var(--cck-accent);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
 }
 
-.cck-hovercard-original {
-  opacity: 0.8;
-}
-
-.cck-hovercard-pos {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  opacity: 0.6;
-  margin-top: 4px;
-}
-
-.cck-hovercard-example {
-  margin-top: 8px;
+/* The English original — italic, muted. */
+.cck-hovercard .cck-hovercard-original {
+  font-family: var(--cck-font-serif);
   font-style: italic;
-  opacity: 0.85;
+  font-size: 15px;
+  color: var(--cck-ink-3);
+  margin-bottom: 10px;
 }
 
-.cck-hovercard-seen {
-  margin-top: 8px;
-  font-size: 11px;
-  opacity: 0.6;
+/* Part of speech — small-caps mono, the prototype's meta-row voice. */
+.cck-hovercard .cck-hovercard-pos {
+  font-family: var(--cck-font-mono);
+  font-size: 10.5px;
+  color: var(--cck-ink-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--cck-rule);
 }
 
-.cck-hovercard-open {
-  margin-top: 10px;
-  font: inherit;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  background: transparent;
+.cck-hovercard .cck-hovercard-example {
+  font-family: var(--cck-font-serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--cck-ink-2);
+  margin-bottom: 12px;
+}
+
+.cck-hovercard .cck-hovercard-seen {
+  font-family: var(--cck-font-mono);
+  font-size: 10.5px;
+  color: var(--cck-ink-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+/* The one action button — quiet paper style; the card informs, it doesn't
+   sell (P7: non-interruptive above all). */
+.cck-hovercard .cck-hovercard-open {
+  width: 100%;
+  justify-content: center;
+  font-family: var(--cck-font-serif);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: none;
   cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  background: var(--cck-paper-sunken);
+  color: var(--cck-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.6),
+    inset 0 -1px 0 rgba(120, 95, 60, 0.10);
+  transition:
+    transform 90ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.cck-hovercard .cck-hovercard-open:hover {
+  background: var(--cck-paper-deep);
+}
+
+.cck-hovercard .cck-hovercard-open:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(120, 95, 60, 0.15);
+}
+
+.cck-hovercard .cck-hovercard-open:focus-visible {
+  outline: 2px solid var(--cck-accent);
+  outline-offset: 2px;
 }
