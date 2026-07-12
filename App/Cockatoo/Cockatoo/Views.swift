@@ -288,17 +288,28 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        List {
-            columnHeader
-            ForEach(tiers) { tier in
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                 Section {
-                    ForEach(tier.rows, content: row)
+                    ForEach(tiers) { tier in
+                        tierHeader(tier)
+                        ForEach(tier.rows, content: row)
+                    }
                 } header: {
-                    tierHeader(tier)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Library")
+                            .font(.system(size: 21, weight: .semibold))
+                        columnHeader
+                    }
+                    .padding(.top, 24)
+                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.bg)
                 }
             }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 24)
         }
-        .listStyle(.inset)
         .onAppear(perform: reload)
         // dbGeneration, not countsByStage: seen/engaged counts change
         // without any stage changing, and they must update live too.
@@ -308,51 +319,64 @@ struct LibraryView: View {
 
     var columnHeader: some View {
         HStack(spacing: 12) {
-            Text("English").frame(width: 160, alignment: .leading)
-            Text("German").frame(width: 180, alignment: .leading)
-            Text("Stage").frame(width: 92, alignment: .leading)
-            Text("Progress").frame(width: 130, alignment: .leading)
-            Text("Next review").frame(minWidth: 90, alignment: .leading)
-            Spacer()
+            Text("ENGLISH").frame(width: 150, alignment: .leading)
+            Text("GERMAN").frame(width: 170, alignment: .leading)
+            Text("STAGE").frame(width: 104, alignment: .leading)
+            Text("PROGRESS").frame(width: 140, alignment: .leading)
+            Text("NEXT REVIEW").frame(minWidth: 90, alignment: .leading)
+            Spacer(minLength: 0)
         }
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .font(Theme.monoLabel())
+        .kerning(0.5)
+        .foregroundStyle(Theme.inkFaint)
+        .padding(.horizontal, 10)
     }
 
     func tierHeader(_ tier: TierGroup) -> some View {
-        HStack(spacing: 8) {
-            Text("Tier \(tier.id)").font(.headline)
+        HStack(spacing: 9) {
+            Text("Tier \(tier.id)").font(.system(size: 13.5, weight: .semibold))
             if tier.id <= unlockedTier {
                 Text("unlocked")
-                    .font(.caption.weight(.medium))
-                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .font(.system(size: 10, weight: .semibold))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Theme.live.opacity(0.15), in: Capsule())
                     .foregroundStyle(Theme.live)
             } else {
                 Label("locked", systemImage: "lock.fill")
-                    .font(.caption.weight(.medium))
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(.quaternary.opacity(0.6), in: Capsule())
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10, weight: .semibold))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Theme.surface, in: Capsule())
+                    .foregroundStyle(Theme.inkFaint)
             }
             Spacer()
             Text("\(tier.knownCount) of \(tier.rows.count) known")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(Theme.inkFaint)
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 10)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
     }
 
     func row(_ row: LibraryRow) -> some View {
         HStack(spacing: 12) {
-            Text(row.source).frame(width: 160, alignment: .leading)
-            Text(row.target).frame(width: 180, alignment: .leading)
-            StageChip(stage: row.stage).frame(width: 92, alignment: .leading)
-            progressCell(row).frame(width: 130, alignment: .leading)
-            Text(row.due).foregroundStyle(.secondary).frame(minWidth: 90, alignment: .leading)
-            Spacer()
+            Text(row.source)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .frame(width: 150, alignment: .leading)
+            Text(row.target)
+                .font(Theme.serif(14.5, weight: .medium))
+                .frame(width: 170, alignment: .leading)
+            StageChip(stage: row.stage).frame(width: 104, alignment: .leading)
+            progressCell(row).frame(width: 140, alignment: .leading)
+            Text(row.due)
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.inkFaint)
+                .frame(minWidth: 90, alignment: .leading)
+            Spacer(minLength: 0)
         }
-        .font(.callout)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
         .opacity(row.stage == .locked ? 0.55 : 1)
     }
 
@@ -439,15 +463,15 @@ struct StageChip: View {
     var color: Color { Theme.stageColor(stage) }
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             Text(stage.displayName)
             if stage == .mastered {
                 Image(systemName: "star.fill").font(.system(size: 7))
             }
         }
-        .font(.caption.weight(.medium))
-        .padding(.horizontal, 7).padding(.vertical, 2)
-        .background(color.opacity(0.16), in: Capsule())
+        .font(.system(size: 10.5, weight: .semibold))
+        .padding(.horizontal, 9).padding(.vertical, 3.5)
+        .background(color.opacity(0.15), in: Capsule())
         .foregroundStyle(color)
         .help(stage == .mastered ? "Mastered — retired from pages, kept fresh with rare reviews" : "")
     }

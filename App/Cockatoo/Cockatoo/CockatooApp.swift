@@ -42,11 +42,32 @@ struct MenuBarLabel: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Label(badge, systemImage: "bird")
-            .onReceive(NotificationCenter.default.publisher(for: .cockatooOpenDashboard)) { _ in
-                openDashboardWindow(openWindow)
-            }
+        HStack(spacing: 3) {
+            Image(nsImage: Self.markTemplate)
+            if !badge.isEmpty { Text(badge) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .cockatooOpenDashboard)) { _ in
+            openDashboardWindow(openWindow)
+        }
     }
+
+    /// The cockatoo mark as a template image — mono, so it follows the menu
+    /// bar like every native status item (the 16px pressure test in
+    /// research/prototype-v2/menubar.html chose template over colored crest).
+    static let markTemplate: NSImage = {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            ctx.setFillColor(NSColor.black.cgColor)
+            ctx.addPath(CockatooBodyShape().path(in: rect).cgPath)
+            ctx.fillPath()
+            ctx.addPath(CockatooCrestShape().path(in: rect).cgPath)
+            ctx.fillPath()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }()
 }
 
 struct MenuBarContent: View {

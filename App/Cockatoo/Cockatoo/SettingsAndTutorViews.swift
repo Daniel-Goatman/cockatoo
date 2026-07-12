@@ -74,6 +74,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.bg)
         .onAppear(perform: load)
         .navigationTitle("Settings")
     }
@@ -200,30 +202,52 @@ struct TutorView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
+                        Text("Tutor")
+                            .font(.system(size: 21, weight: .semibold))
+                            .padding(.bottom, 4)
                         ForEach(Array(messages.enumerated()), id: \.offset) { _, message in
                             HStack {
                                 if message.role == "user" { Spacer(minLength: 60) }
                                 Text(message.text)
-                                    .padding(10)
+                                    .font(.system(size: 13))
+                                    .padding(.horizontal, 13)
+                                    .padding(.vertical, 10)
                                     .background(
-                                        message.role == "user" ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1),
+                                        message.role == "user" ? Theme.selection : Theme.cardBg,
                                         in: RoundedRectangle(cornerRadius: 10)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .strokeBorder(message.role == "user" ? Theme.selectionLine : Theme.line)
                                     )
                                 if message.role != "user" { Spacer(minLength: 60) }
                             }
                         }
-                        if busy { ProgressView().padding(.leading, 8) }
+                        if busy { ProgressView().controlSize(.small).padding(.leading, 8) }
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: 640, alignment: .leading)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 40)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
                 }
-                HStack {
+                HStack(spacing: 10) {
                     TextField("Ask about a word, grammar, anything…", text: $input)
-                        .textFieldStyle(.roundedBorder)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 9)
+                        .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: 9))
+                        .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.line2))
                         .onSubmit(send)
-                    Button("Send", action: send).disabled(busy || input.isEmpty)
+                    Button("Send", action: send)
+                        .buttonStyle(.pillProminent)
+                        .disabled(busy || input.isEmpty)
                 }
-                .padding(12)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 40)
+                .padding(.bottom, 16)
             }
         }
         .navigationTitle("Tutor")
