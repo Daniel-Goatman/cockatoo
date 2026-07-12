@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cockatoo — Library</title>
+<style>
+/* ============================================================
+   COCKATOO · Library — phase 2 surface in the v2 frame.
+   Mirrors LibraryView: tier-grouped table (English / German /
+   Stage / Progress / Next review), unlocked/locked tier headers
+   with known counts, FOUR-stage chips (mastered = star on known),
+   exposure progress with the done-today cap, strength dots.
+   Data is the same coherent moment as overview.html:
+   tier 1 = 11/12 known, tier 2 = 8/12 known, tier 3+ locked.
+   ============================================================ */
+:root{
+  --desk:oklch(11% 0 0);
+  --page:oklch(15% 0 0);
+  --bg:oklch(21% 0 0);
+  --side-bg:oklch(17.5% 0 0);
+  --surf:oklch(25% 0 0);
+  --surf-2:oklch(29% 0 0);
+  --fg:oklch(96% 0 0);
+  --muted:oklch(74% 0 0);
+  --faint:oklch(65% 0 0);
+  --line:oklch(33% 0 0);
+  --line-2:oklch(40% 0 0);
+  --sel:oklch(32% 0.015 265);
+  --sel-line:oklch(45% 0.04 265);
+  --accent:oklch(84% 0.16 90);
+  --accent-deep:oklch(76% 0.15 88);
+  --live:oklch(72% 0.16 145);
+
+  --s-upcoming:oklch(64% 0.035 255);
+  --s-onpages:oklch(74% 0.08 255);
+  --s-practicing:oklch(80% 0.11 82);
+  --s-known:oklch(84% 0.155 90);
+
+  --serif:"Iowan Old Style","Charter",Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --win-shadow:0 0 0 1px rgba(0,0,0,.5),0 22px 24px -18px rgba(0,0,0,.7),0 60px 120px -40px rgba(0,0,0,.85);
+}
+:root[data-theme=light]{
+  --desk:oklch(88% 0.012 90);
+  --page:oklch(99% 0.005 95);
+  --bg:oklch(96.5% 0.008 95);
+  --side-bg:oklch(93% 0.01 92);
+  --surf:oklch(92.5% 0.01 92);
+  --surf-2:oklch(89.5% 0.012 92);
+  --fg:oklch(23% 0.01 80);
+  --muted:oklch(45% 0.015 80);
+  --faint:oklch(54% 0.015 80);
+  --line:oklch(88% 0.01 90);
+  --line-2:oklch(81% 0.012 90);
+  --sel:oklch(90% 0.02 265);
+  --sel-line:oklch(76% 0.05 265);
+  --accent:oklch(74% 0.155 85);
+  --accent-deep:oklch(60% 0.14 80);
+  --live:oklch(58% 0.15 145);
+
+  --s-upcoming:oklch(52% 0.045 255);
+  --s-onpages:oklch(52% 0.10 258);
+  --s-practicing:oklch(58% 0.125 78);
+  --s-known:oklch(60% 0.145 85);
+
+  --win-shadow:0 0 0 1px rgba(30,25,10,.10),0 22px 24px -18px rgba(30,25,10,.20),0 60px 120px -40px rgba(30,25,10,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{min-height:100vh;background:
+    radial-gradient(120% 90% at 50% -10%,color-mix(in oklch,var(--desk) 60%,var(--page)) 0%,var(--desk) 62%) fixed;
+  color:var(--fg);font:13.5px/1.55 var(--sys);
+  display:flex;align-items:center;justify-content:center;padding:24px;transition:background .25s,color .25s}
+.tnum{font-variant-numeric:tabular-nums}
+
+.app{position:relative;width:min(1080px,100%);height:min(672px,calc(100vh - 48px));
+  display:grid;grid-template-columns:212px minmax(0,1fr);
+  border-radius:10px;overflow:hidden;background:var(--bg);box-shadow:var(--win-shadow)}
+
+.win-controls{position:absolute;top:0;left:0;height:52px;z-index:50;
+  display:flex;align-items:center;gap:12px;padding:0 14px}
+.tl{display:flex;gap:8px}
+.tl b{width:12px;height:12px;border-radius:50%;display:block;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.28)}
+.tl .r{background:oklch(64% .19 25)}.tl .y{background:oklch(80% .14 85)}.tl .g{background:oklch(72% .16 145)}
+
+.side{background:var(--side-bg);display:flex;flex-direction:column;padding:52px 10px 14px;overflow:hidden}
+.brand{display:flex;align-items:center;gap:9px;padding:2px 10px 14px;font-size:13px;font-weight:600;letter-spacing:-.01em}
+.brand .mk{width:17px;height:17px;flex:none}
+.brand .mk{--ck-body:var(--fg);--ck-crest:var(--accent);--ck-eye:var(--side-bg);--ck-cheek:var(--accent)}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav a{display:flex;align-items:center;gap:11px;padding:7px 10px;border-radius:6px;font-size:13.5px;
+  color:var(--muted);text-decoration:none;transition:background .12s,color .12s}
+.nav a .ic{width:17px;height:17px;flex:none;opacity:.82}
+.nav a.on{background:var(--sel);color:var(--fg);box-shadow:inset 0 0 0 1px var(--sel-line)}
+.nav a.on .ic{color:var(--accent);opacity:1}
+.nav a:not(.on):hover{background:var(--surf)}
+.nav a .badge{margin-left:auto;font:10px/1 var(--mono);border:1px solid var(--line-2);color:var(--muted);
+  border-radius:5px;padding:2px 6px}
+.side .ext{margin-top:auto;display:flex;align-items:flex-start;gap:9px;padding:10px 11px 2px;
+  font-size:11.5px;color:var(--muted);line-height:1.4}
+.side .ext .live{width:7px;height:7px;border-radius:50%;background:var(--live);flex:none;margin-top:4px;
+  box-shadow:0 0 0 3px color-mix(in oklch,var(--live) 22%,transparent)}
+.side .ext .sync{display:block;font:10.5px/1.5 var(--mono);color:var(--faint);letter-spacing:.02em}
+
+/* ---- content: the tier-grouped table ---- */
+.content{min-width:0;min-height:0;display:flex;flex-direction:column;padding:52px 40px 0}
+.content h1{font:600 21px/1.2 var(--sys);letter-spacing:-.015em;margin-bottom:14px;flex:none}
+.table{flex:1;overflow-y:auto;min-height:0;padding-bottom:24px}
+
+.thead,.trow{display:grid;grid-template-columns:150px 170px 110px 150px 110px 1fr;
+  gap:12px;align-items:center;padding:6px 10px}
+.thead{position:sticky;top:0;z-index:5;background:var(--bg);
+  font:600 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+  padding-top:2px;padding-bottom:9px}
+.tierhead{display:flex;align-items:center;gap:9px;padding:20px 10px 8px}
+.tierhead h2{font:600 13.5px/1 var(--sys)}
+.pill{display:inline-flex;align-items:center;gap:4px;font:600 10px/1 var(--sys);letter-spacing:.02em;
+  border-radius:999px;padding:3px 8px}
+.pill.unlocked{color:var(--live);background:color-mix(in oklch,var(--live) 15%,transparent)}
+.pill.locked{color:var(--faint);background:var(--surf)}
+.pill svg{width:9px;height:9px}
+.tierhead .n{margin-left:auto;font:11px/1 var(--mono);color:var(--faint)}
+
+.trow{border-radius:7px;font-size:13px}
+.trow:hover{background:var(--surf)}
+.trow .en{color:var(--muted)}
+.trow .de{font:500 14.5px/1.3 var(--serif);color:var(--fg)}
+.trow.locked-row{opacity:.5}
+.trow .due{color:var(--faint);font-size:12px}
+
+/* stage chip — the four user-facing stages; mastered = star on known */
+.chip{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1 var(--sys);letter-spacing:.01em;
+  border-radius:999px;padding:3.5px 9px;background:color-mix(in oklch,var(--sc) 15%,transparent);color:var(--sc)}
+.chip svg{width:8px;height:8px}
+
+/* progress cell */
+.prog{display:flex;align-items:center;gap:6px;font:11px/1 var(--mono);color:var(--muted)}
+.prog .cap{color:var(--faint)}
+.prog .eng{width:12px;height:12px;color:var(--s-onpages)}
+.prog.now{color:var(--accent-deep);font:600 11.5px/1 var(--sys)}
+.prog.dash{color:var(--faint)}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:6.5px;height:6.5px;border-radius:50%;background:var(--line-2)}
+.dots i.f{background:var(--accent)}
+
+/* prototype-only chrome */
+.theme-flip{position:fixed;right:18px;bottom:16px;z-index:99;font:500 11.5px/1 var(--sys);
+  color:var(--muted);background:color-mix(in oklch,var(--bg) 80%,var(--page));
+  border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer}
+.theme-flip:hover{color:var(--fg)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ck" viewBox="0 0 32 32">
+    <path class="ck-body" fill="var(--ck-body,currentColor)" d="M5,24 Q6,15 10,10 Q11.2,6.8 12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4
+      Q16,5.2 17,6.4 Q19.6,6.8 21,8.4 Q20.6,10 18.6,10 Q17.6,10.4 16.6,10.8
+      Q14,15 12,19 Q10.6,22 9,23.6 Q7,24.6 5,24 Z"/>
+    <path class="ck-crest" fill="var(--ck-crest,currentColor)" d="M12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4 Q14,3.5 12.4,4.2 Z"/>
+    <circle class="ck-eye" fill="var(--ck-eye,transparent)" cx="14.4" cy="8" r="1.15"/><circle class="ck-cheek" fill="var(--ck-cheek,currentColor)" cx="17.1" cy="9.2" r="1"/>
+  </symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6M6 10v9h12v-9"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="12" height="9" rx="2"/><path d="M16 16.5H6.5A2.5 2.5 0 0 1 4 14V7.5"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/></symbol>
+  <symbol id="i-tutor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-4 3v-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 4.2v2.2M12 17.6v2.2M4.2 12h2.2M17.6 12h2.2M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M17.7 6.3l-1.6 1.6M7.9 16.1l-1.6 1.6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 6.2 6.7.5-5.1 4.4 1.6 6.5-5.8-3.5-5.8 3.5 1.6-6.5L2.7 9.2l6.7-.5z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-hover" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 9-5.2 1L15 19l-2.8 1.2L10 14l-4 3z"/></symbol>
+</svg>
+
+<div class="app" id="app" data-od-id="library-window">
+  <div class="win-controls"><span class="tl"><b class="r"></b><b class="y"></b><b class="g"></b></span></div>
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="brand"><svg class="mk" aria-hidden="true"><use href="#ck"/></svg><span class="lbl">Cockatoo</span></div>
+    <nav class="nav">
+      <a href="overview.html" data-od-id="nav-overview"><svg class="ic"><use href="#i-home"/></svg><span class="lbl">Overview</span></a>
+      <a href="practice.html" data-od-id="nav-practice"><svg class="ic"><use href="#i-cards"/></svg><span class="lbl">Practice</span><span class="badge">3</span></a>
+      <a href="#" class="on" data-od-id="nav-library"><svg class="ic"><use href="#i-lib"/></svg><span class="lbl">Library</span></a>
+      <a href="#" data-od-id="nav-tutor"><svg class="ic"><use href="#i-tutor"/></svg><span class="lbl">Tutor</span></a>
+      <a href="#" data-od-id="nav-settings"><svg class="ic"><use href="#i-set"/></svg><span class="lbl">Settings</span></a>
+    </nav>
+    <div class="ext"><span class="live"></span><span class="txt">Extension connected<span class="sync">synced 2m ago</span></span></div>
+  </aside>
+
+  <main class="content" data-od-id="library-content">
+    <h1>Library</h1>
+    <div class="table" data-od-id="library-table">
+      <div class="thead"><span>English</span><span>German</span><span>Stage</span><span>Progress</span><span>Next review</span><span></span></div>
+
+      <!-- Tier 1 — nearly done -->
+      <div class="tierhead" data-od-id="tier-1">
+        <h2>Tier 1</h2><span class="pill unlocked">unlocked</span>
+        <span class="n tnum">11 of 12 known</span>
+      </div>
+      <div class="trow"><span class="en">also</span><span class="de">auch</span><span><span class="chip" style="--sc:var(--s-practicing)">practicing</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i></span></span><span class="due">tomorrow</span><span></span></div>
+      <div class="trow"><span class="en">and</span><span class="de">und</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 5 days</span><span></span></div>
+      <div class="trow"><span class="en">good</span><span class="de">gut</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 4 days</span><span></span></div>
+      <div class="trow"><span class="en">here</span><span class="de">hier</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span></span><span class="due">in 2 weeks</span><span></span></div>
+      <div class="trow"><span class="en">no</span><span class="de">nein</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 1 week</span><span></span></div>
+      <div class="trow"><span class="en">not</span><span class="de">nicht</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 6 days</span><span></span></div>
+      <div class="trow"><span class="en">now</span><span class="de">jetzt</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 3 days</span><span></span></div>
+      <div class="trow"><span class="en">or</span><span class="de">oder</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 1 week</span><span></span></div>
+      <div class="trow"><span class="en">the house</span><span class="de">das Haus</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 4 days</span><span></span></div>
+      <div class="trow" title="Mastered — retired from pages, kept fresh with rare reviews"><span class="en">to be</span><span class="de">sein</span><span><span class="chip" style="--sc:var(--s-known)">known<svg><use href="#i-star"/></svg></span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span></span><span class="due">in 2 months</span><span></span></div>
+      <div class="trow" title="Mastered — retired from pages, kept fresh with rare reviews"><span class="en">yes</span><span class="de">ja</span><span><span class="chip" style="--sc:var(--s-known)">known<svg><use href="#i-star"/></svg></span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span></span><span class="due">in 3 months</span><span></span></div>
+      <div class="trow"><span class="en">you</span><span class="de">du</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 2 days</span><span></span></div>
+
+      <!-- Tier 2 — in progress, 1 to go for the unlock check -->
+      <div class="tierhead" data-od-id="tier-2">
+        <h2>Tier 2</h2><span class="pill unlocked">unlocked</span>
+        <span class="n tnum">8 of 12 known</span>
+      </div>
+      <div class="trow"><span class="en">the child</span><span class="de">das Kind</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 1 week</span><span></span></div>
+      <div class="trow"><span class="en">the day</span><span class="de">der Tag</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span><span class="due">in 1 week</span><span></span></div>
+      <div class="trow"><span class="en">the eye</span><span class="de">das Auge</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 4 days</span><span></span></div>
+      <div class="trow"><span class="en">the hand</span><span class="de">die Hand</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 5 days</span><span></span></div>
+      <div class="trow"><span class="en">the man</span><span class="de">der Mann</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 5 days</span><span></span></div>
+      <div class="trow" data-od-id="row-zeit" title='Sightings credit up to 3 per word per day (hovers 2). "Done today" means today&#39;s credit is banked; counts resume tomorrow.'><span class="en">the time</span><span class="de">die Zeit</span><span><span class="chip" style="--sc:var(--s-onpages)">on pages</span></span><span class="prog"><span class="tnum">5/6 seen</span><span class="cap">· done today</span></span><span class="due">—</span><span></span></div>
+      <div class="trow" data-od-id="row-wasser"><span class="en">the water</span><span class="de">das Wasser</span><span><span class="chip" style="--sc:var(--s-onpages)">on pages</span></span><span class="prog"><span class="tnum">5/6 seen</span><svg class="eng" aria-label="hovered — fast-tracked"><use href="#i-hover"/></svg></span><span class="due">—</span><span></span></div>
+      <div class="trow" data-od-id="row-weg"><span class="en">the way</span><span class="de">der Weg</span><span><span class="chip" style="--sc:var(--s-onpages)">on pages</span></span><span class="prog"><span class="tnum">2/6 seen</span></span><span class="due">—</span><span></span></div>
+      <div class="trow"><span class="en">the woman</span><span class="de">die Frau</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 6 days</span><span></span></div>
+      <div class="trow"><span class="en">the year</span><span class="de">das Jahr</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 3 days</span><span></span></div>
+      <div class="trow"><span class="en">to come</span><span class="de">kommen</span><span><span class="chip" style="--sc:var(--s-practicing)">practicing</span></span><span class="prog"><span class="dots"><i class="f"></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="due">today</span><span></span></div>
+      <div class="trow"><span class="en">to say</span><span class="de">sagen</span><span><span class="chip" style="--sc:var(--s-known)">known</span></span><span class="prog"><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span><span class="due">in 2 days</span><span></span></div>
+
+      <!-- Tier 3 — locked -->
+      <div class="tierhead" data-od-id="tier-3">
+        <h2>Tier 3</h2><span class="pill locked"><svg><use href="#i-lock"/></svg>locked</span>
+        <span class="n tnum">0 of 20 known</span>
+      </div>
+      <div class="trow locked-row"><span class="en">the city</span><span class="de">die Stadt</span><span><span class="chip" style="--sc:var(--s-upcoming)">upcoming</span></span><span class="prog dash">—</span><span class="due">—</span><span></span></div>
+      <div class="trow locked-row"><span class="en">the life</span><span class="de">das Leben</span><span><span class="chip" style="--sc:var(--s-upcoming)">upcoming</span></span><span class="prog dash">—</span><span class="due">—</span><span></span></div>
+      <div class="trow locked-row"><span class="en">the night</span><span class="de">die Nacht</span><span><span class="chip" style="--sc:var(--s-upcoming)">upcoming</span></span><span class="prog dash">—</span><span class="due">—</span><span></span></div>
+      <div class="trow locked-row"><span class="en">the world</span><span class="de">die Welt</span><span><span class="chip" style="--sc:var(--s-upcoming)">upcoming</span></span><span class="prog dash">—</span><span class="due">—</span><span></span></div>
+      <div class="trow locked-row"><span class="en">to see</span><span class="de">sehen</span><span><span class="chip" style="--sc:var(--s-upcoming)">upcoming</span></span><span class="prog dash">—</span><span class="due">—</span><span></span></div>
+    </div>
+  </main>
+</div>
+
+<button class="theme-flip" id="themeflip">Light mode</button>
+
+<script>
+(function(){
+  var root=document.documentElement, flip=document.getElementById('themeflip');
+  function setTheme(t){ root.dataset.theme=t; flip.textContent=(t==='dark'?'Light':'Dark')+' mode'; }
+  setTheme(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+  flip.addEventListener('click',function(){ setTheme(root.dataset.theme==='dark'?'light':'dark'); });
+})();
+</script>
+</body>
+</html>

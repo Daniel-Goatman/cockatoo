@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cockatoo — menu bar</title>
+<style>
+/* ============================================================
+   COCKATOO · menu bar — phase 2 pressure test.
+   The always-present touchpoint: the mark at 16px on light and
+   dark menu bars (template-mono AND colored-crest variants — an
+   open decision), the due badge, and the dropdown from
+   MenuBarContent: actionable status line, Pause swapping,
+   Open Cockatoo ⌘O, Quit. Both bars shown at once; no theme flip.
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:oklch(20% 0.01 270);color:oklch(92% 0 0);
+  font:13px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  display:flex;align-items:center;justify-content:center;padding:32px}
+.stage{width:min(760px,100%);display:flex;flex-direction:column;gap:26px}
+.h{font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.09em;text-transform:uppercase;
+  color:oklch(64% 0 0);margin-bottom:8px}
+
+/* ---- menu bar strips ---- */
+.bar{height:26px;display:flex;align-items:center;justify-content:flex-end;gap:17px;
+  padding:0 12px;border-radius:7px;font-size:12.5px;font-weight:500}
+.bar.light{background:linear-gradient(rgba(250,250,250,.96),rgba(238,238,238,.96));color:#1d1d1f;
+  box-shadow:0 0 0 .5px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.2)}
+.bar.dark{background:linear-gradient(rgba(44,44,48,.96),rgba(32,32,36,.96));color:#f2f2f4;
+  box-shadow:0 0 0 .5px rgba(255,255,255,.12),0 1px 3px rgba(0,0,0,.4)}
+.mb-item{display:inline-flex;align-items:center;gap:5px}
+.mb-item svg{width:16px;height:16px}
+.mb-item.cck.active-light{background:rgba(0,0,0,.14);border-radius:5px;padding:2px 7px;margin:0 -7px}
+.mb-item.cck.active-dark{background:rgba(255,255,255,.18);border-radius:5px;padding:2px 7px;margin:0 -7px}
+.badge{font:500 12px/1 -apple-system,sans-serif;font-variant-numeric:tabular-nums}
+.clock{font-variant-numeric:tabular-nums}
+
+/* the mark — template (currentColor, the symbol's defaults) vs colored crest.
+   Fill vars pierce the <use> shadow DOM; plain descendant selectors can't. */
+.mk-c{--mk-crest:oklch(78% 0.15 88)}
+.swatch.light .mk-c{--mk-crest:oklch(64% 0.145 80)}
+
+/* ---- dropdown ---- */
+.dd-anchor{position:relative;height:0}
+.menu{position:absolute;top:6px;right:118px;width:238px;border-radius:8px;padding:5px;
+  background:rgba(40,40,44,.92);backdrop-filter:blur(20px);
+  box-shadow:0 0 0 .5px rgba(255,255,255,.14),0 18px 40px -12px rgba(0,0,0,.65);
+  color:#f2f2f4;font-size:13px}
+.menu .status{padding:6px 11px 7px;color:rgba(242,242,244,.62);font-size:12.5px}
+.menu .status b{color:#f2f2f4;font-weight:600}
+.menu .item{display:flex;align-items:center;padding:5px 11px;border-radius:5px;cursor:default}
+.menu .item .kbd{margin-left:auto;color:rgba(242,242,244,.5);font-size:12px;letter-spacing:.05em}
+.menu .item:hover{background:oklch(45% 0.055 265)}
+.menu hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:5px 11px}
+
+/* ---- scale test ---- */
+.scale{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+.cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+.swatch{display:flex;align-items:flex-end;gap:14px;padding:14px 16px;border-radius:9px}
+.swatch.light{background:#f2f2f3;color:#1d1d1f;box-shadow:0 0 0 .5px rgba(0,0,0,.15)}
+.swatch.dark{background:#242428;color:#f2f2f4;box-shadow:0 0 0 .5px rgba(255,255,255,.12)}
+.cell .lab{font:500 10px/1 ui-monospace,Menlo,monospace;color:oklch(64% 0 0);letter-spacing:.05em}
+.note{font-size:12px;color:oklch(66% 0 0);max-width:60ch;line-height:1.55}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ck" viewBox="0 0 32 32">
+    <path fill="var(--mk-body,currentColor)" d="M5,24 Q6,15 10,10 Q11.2,6.8 12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4
+      Q16,5.2 17,6.4 Q19.6,6.8 21,8.4 Q20.6,10 18.6,10 Q17.6,10.4 16.6,10.8
+      Q14,15 12,19 Q10.6,22 9,23.6 Q7,24.6 5,24 Z"/>
+    <path fill="var(--mk-crest,currentColor)" d="M12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4 Q14,3.5 12.4,4.2 Z"/>
+    <circle fill="var(--mk-eye,transparent)" cx="14.4" cy="8" r="1.15"/><circle fill="var(--mk-crest,currentColor)" cx="17.1" cy="9.2" r="1"/>
+  </symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3.5 9.5a13 13 0 0 1 17 0M6.5 12.8a8.6 8.6 0 0 1 11 0M9.6 16a4.3 4.3 0 0 1 4.8 0M12 19.2h.01"/></symbol>
+  <symbol id="i-batt" viewBox="0 0 28 14"><rect x="1" y="1.5" width="22" height="11" rx="3" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="3" y="3.5" width="14" height="7" rx="1.6" fill="currentColor"/><path d="M25 5.2v3.6c1.2-.3 1.2-3.3 0-3.6z" fill="currentColor" fill-opacity=".45"/></symbol>
+</svg>
+
+<div class="stage">
+
+  <section>
+    <div class="h">Light menu bar · template mark + due badge</div>
+    <div class="bar light" data-od-id="bar-light">
+      <span class="mb-item cck"><svg class="mk-t"><use href="#ck"/></svg><span class="badge">3</span></span>
+      <span class="mb-item"><svg><use href="#i-wifi"/></svg></span>
+      <span class="mb-item"><svg width="26" height="13" viewBox="0 0 28 14"><use href="#i-batt"/></svg></span>
+      <span class="clock">Sat 12 Jul&nbsp;&nbsp;14:32</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="h">Dark menu bar · open dropdown (MenuBarContent, verbatim)</div>
+    <div class="bar dark" data-od-id="bar-dark">
+      <span class="mb-item cck active-dark"><svg class="mk-t"><use href="#ck"/></svg><span class="badge">3</span></span>
+      <span class="mb-item"><svg><use href="#i-wifi"/></svg></span>
+      <span class="mb-item"><svg width="26" height="13" viewBox="0 0 28 14"><use href="#i-batt"/></svg></span>
+      <span class="clock">Sat 12 Jul&nbsp;&nbsp;14:32</span>
+    </div>
+    <div class="dd-anchor">
+      <div class="menu" data-od-id="menubar-dropdown" role="menu">
+        <div class="status"><b>3 words to practice</b> · tier 2</div>
+        <div class="item" role="menuitem">Pause swapping</div>
+        <div class="item" role="menuitem">Open Cockatoo<span class="kbd">⌘O</span></div>
+        <hr />
+        <div class="item" role="menuitem">Quit</div>
+      </div>
+    </div>
+  </section>
+
+  <div style="height:118px"></div>
+
+  <section>
+    <div class="h">Mark scale test · template vs colored crest (open decision)</div>
+    <div class="scale">
+      <div class="cell"><div class="swatch light">
+        <svg class="mk-t" width="16" height="16"><use href="#ck"/></svg>
+        <svg class="mk-t" width="18" height="18"><use href="#ck"/></svg>
+        <svg class="mk-t" width="24" height="24"><use href="#ck"/></svg>
+        <svg class="mk-t" width="32" height="32"><use href="#ck"/></svg>
+      </div><span class="lab">template · light</span></div>
+      <div class="cell"><div class="swatch dark">
+        <svg class="mk-t" width="16" height="16"><use href="#ck"/></svg>
+        <svg class="mk-t" width="18" height="18"><use href="#ck"/></svg>
+        <svg class="mk-t" width="24" height="24"><use href="#ck"/></svg>
+        <svg class="mk-t" width="32" height="32"><use href="#ck"/></svg>
+      </div><span class="lab">template · dark</span></div>
+      <div class="cell"><div class="swatch light">
+        <svg class="mk-c" width="16" height="16"><use href="#ck"/></svg>
+        <svg class="mk-c" width="18" height="18"><use href="#ck"/></svg>
+        <svg class="mk-c" width="24" height="24"><use href="#ck"/></svg>
+        <svg class="mk-c" width="32" height="32"><use href="#ck"/></svg>
+      </div><span class="lab">gold crest · light</span></div>
+      <div class="cell"><div class="swatch dark">
+        <svg class="mk-c" width="16" height="16"><use href="#ck"/></svg>
+        <svg class="mk-c" width="18" height="18"><use href="#ck"/></svg>
+        <svg class="mk-c" width="24" height="24"><use href="#ck"/></svg>
+        <svg class="mk-c" width="32" height="32"><use href="#ck"/></svg>
+      </div><span class="lab">gold crest · dark</span></div>
+    </div>
+    <p class="note" style="margin-top:14px">Template (mono) follows macOS convention and always matches
+    the bar; the gold crest is more ownable but non-standard — judge whether the crest survives at 16px
+    before deciding. Badge stays a plain count either way (no red pill: calm, not urgent).</p>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cockatoo — in-page swap treatment</title>
+<style>
+/* ============================================================
+   COCKATOO · in-page swap + hover card — phase 2.
+   THE HOST PAGE below deliberately uses its own styling (generic
+   web-article look, its own fonts/colors) — the token treatment
+   must survive foreign CSS, light and dark, and never read as an
+   error or an ad. Tokens are CSS-only, inherit the host font,
+   and load no webfonts (extension constraint).
+   Fidelity tiers (user-visible concept):
+     exact        — solid gold underline
+     form-matched — softer solid (underline at reduced opacity)
+     approximate  — dotted (as promised in the vision doc)
+   The hover card is ALWAYS the graphite Cockatoo object with the
+   gold crest — a consistent brand artifact on any host, light or
+   dark; it always shows the original English (transparency req).
+   ============================================================ */
+
+/* ---------- host page: NOT Cockatoo's design ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --host-bg:#ffffff; --host-fg:#1a1d21; --host-muted:#5c646e;
+  --host-rule:#e5e8ec; --host-link:#0a66c2;
+}
+:root[data-theme=dark]{
+  --host-bg:#16181c; --host-fg:#e8eaed; --host-muted:#9aa2ad;
+  --host-rule:#2a2e35; --host-link:#7ab4f5;
+}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--host-bg);color:var(--host-fg);
+  font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  transition:background .2s,color .2s}
+.masthead{border-bottom:1px solid var(--host-rule);padding:14px 24px;
+  font:700 15px/1 Georgia,serif;letter-spacing:.04em}
+.masthead span{color:var(--host-muted);font:400 11px/1 -apple-system,sans-serif;margin-left:10px;letter-spacing:.08em}
+article{max-width:660px;margin:0 auto;padding:44px 24px 120px}
+article h1{font:700 34px/1.2 Georgia,serif;letter-spacing:-.01em;margin-bottom:10px}
+article .standfirst{color:var(--host-muted);font-size:18px;margin-bottom:6px}
+article .byline{color:var(--host-muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:30px;padding-bottom:18px;border-bottom:1px solid var(--host-rule)}
+article p{margin-bottom:20px}
+article a.hostlink{color:var(--host-link)}
+
+/* ---------- Cockatoo token treatment (content-script CSS) ---------- */
+.cck-token{
+  --cck-gold:oklch(56% 0.13 80);          /* light-host ink: readable gold-brown */
+  --cck-gold-under:oklch(66% 0.14 84);
+  --cck-wash:oklch(75% 0.14 88 / .13);
+  color:var(--cck-gold);
+  border-bottom:1.5px solid var(--cck-gold-under);
+  border-radius:1px;padding:0 .5px;cursor:help;background:transparent;
+  font:inherit;display:inline;position:relative;
+  transition:background .14s ease,border-color .14s ease,border-radius .14s ease;
+}
+:root[data-theme=dark] .cck-token{
+  --cck-gold:oklch(84% 0.15 90);
+  --cck-gold-under:oklch(78% 0.15 88);
+  --cck-wash:oklch(80% 0.15 88 / .14);
+}
+.cck-token:hover,.cck-token.is-active{background:var(--cck-wash);border-radius:4px}
+.cck-token:focus-visible{outline:2px solid var(--cck-gold-under);outline-offset:2px;border-radius:4px}
+.cck-token[data-cck-tier="form-matched"]{border-bottom-color:color-mix(in oklch,var(--cck-gold-under) 55%,transparent)}
+.cck-token[data-cck-tier="approximate"]{border-bottom-style:dotted}
+
+/* ---------- Cockatoo hover card: one graphite object, any host ---------- */
+.cck-hovercard{
+  --g-bg:oklch(23% 0.004 270); --g-bg2:oklch(27% 0.005 270);
+  --g-fg:oklch(96% 0 0); --g-muted:oklch(76% 0 0); --g-faint:oklch(66% 0 0);
+  --g-line:oklch(36% 0 0); --g-gold:oklch(84% 0.16 90);
+  position:absolute;z-index:2147483647;width:320px;max-width:calc(100vw - 16px);
+  background:linear-gradient(170deg,var(--g-bg2),var(--g-bg));
+  color:var(--g-fg);border:1px solid var(--g-line);border-radius:12px;
+  padding:18px 20px 16px;text-align:left;
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  box-shadow:0 1px 0 rgba(0,0,0,.2),0 30px 60px -20px rgba(0,0,0,.45),0 12px 24px -10px rgba(0,0,0,.3);
+  transform-origin:top left;animation:cck-in .16s cubic-bezier(.16,1,.3,1)}
+@keyframes cck-in{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cck-hovercard{animation:none}}
+.cck-hovercard .cck-mk{position:absolute;top:16px;right:16px;width:15px;height:15px;opacity:.9}
+.cck-hovercard .cck-mk .b{fill:var(--g-fg)}.cck-hovercard .cck-mk .c{fill:var(--g-gold)}
+.cck-hovercard .cck-mk .e{fill:var(--g-bg)}
+.cck-target{font:500 28px/1.15 "Iowan Old Style","Charter",Georgia,serif;color:var(--g-gold);
+  letter-spacing:-.01em;margin-bottom:3px;padding-right:26px}
+.cck-original{font:italic 14px/1.4 "Iowan Old Style",Georgia,serif;color:var(--g-muted);margin-bottom:10px}
+.cck-pos{font:10px/1 ui-monospace,Menlo,monospace;color:var(--g-faint);letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid var(--g-line)}
+.cck-example{font:italic 14px/1.5 "Iowan Old Style",Georgia,serif;color:var(--g-muted);margin-bottom:11px}
+.cck-seen{font:10px/1 ui-monospace,Menlo,monospace;color:var(--g-faint);letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:13px}
+.cck-open{width:100%;display:inline-flex;align-items:center;justify-content:center;
+  font:600 12.5px/1 -apple-system,sans-serif;padding:9px 12px;border-radius:8px;border:1px solid var(--g-line);
+  cursor:pointer;background:oklch(30% 0.005 270);color:var(--g-fg);
+  box-shadow:0 0 0 0 var(--g-gold);
+  transition:box-shadow .18s cubic-bezier(.3,.7,.2,1),transform .14s}
+.cck-open:hover{transform:translateY(-1px);box-shadow:0 3px 0 -1px var(--g-gold)}
+.cck-open:active{transform:translateY(1px);box-shadow:0 1px 0 -1px var(--g-gold)}
+
+/* ---------- prototype-only chrome ---------- */
+.proto{position:fixed;left:18px;bottom:16px;z-index:99;display:flex;gap:14px;align-items:center;
+  font:500 11px/1 -apple-system,sans-serif;color:var(--host-muted);
+  background:var(--host-bg);border:1px solid var(--host-rule);border-radius:999px;padding:8px 14px}
+.proto .k{display:inline-flex;align-items:center;gap:6px}
+.proto .u{display:inline-block;width:22px;border-bottom:1.5px solid oklch(66% 0.14 84)}
+.proto .u.soft{border-bottom-color:color-mix(in oklch,oklch(66% 0.14 84) 55%,transparent)}
+.proto .u.dot{border-bottom-style:dotted}
+.theme-flip{position:fixed;right:18px;bottom:16px;z-index:99;font:500 11.5px/1 -apple-system,sans-serif;
+  color:var(--host-muted);background:var(--host-bg);border:1px solid var(--host-rule);
+  border-radius:999px;padding:7px 13px;cursor:pointer}
+.theme-flip:hover{color:var(--host-fg)}
+</style>
+</head>
+<body>
+
+<div class="masthead">THE COAST REVIEW <span>ESSAYS · SATURDAY</span></div>
+
+<article>
+  <h1>Walking the old harbour path at the end of the season</h1>
+  <p class="standfirst">When the crowds go home, the shoreline gives the town back to the people who live there.</p>
+  <p class="byline">By a staff writer · 12 July 2026</p>
+
+  <p>By October the kiosks are shuttered and the rental bikes are gone, and the harbour path
+  belongs to dog-walkers and the occasional runner. The
+  <span class="cck-token" tabindex="0" data-cck-tier="exact" data-original="water"
+        data-target="das Wasser" data-pos="noun · neuter" data-seen="5"
+        data-example="Das Wasser ist kalt. — The water is cold.">Wasser</span>
+  turns a heavier shade of grey, and the light comes in low and sideways, the way it only does
+  in the off-season.</p>
+
+  <p>There is a particular pleasure in taking the long
+  <span class="cck-token" tabindex="0" data-cck-tier="form-matched" data-original="way"
+        data-target="der Weg" data-pos="noun · masculine" data-seen="2"
+        data-example="Der Weg ist weit. — The way is long.">Weg</span>
+  home when nothing is waiting for you. The fishermen mend nets they will not use until spring.
+  A café that stays open year-round puts its chairs back out the moment the rain stops, as an
+  act of faith.</p>
+
+  <p>Locals will tell you the town has two clocks. In summer, everything runs on the ferry
+  timetable; in winter, on the tide. Either way, the
+  <span class="cck-token" tabindex="0" data-cck-tier="approximate" data-original="time"
+        data-target="die Zeit" data-pos="noun · feminine" data-seen="5"
+        data-example="Die Zeit vergeht. — Time passes.">Zeit</span>
+  here is measured in weather, not hours — nobody hurries, because there is nowhere to be
+  that the sea cannot reach first.</p>
+
+  <p>Stay until the streetlights come on and you will see the whole shape of the place: the
+  breakwater, the chapel, the terraces stacked against the hill. It is not a spectacular view.
+  It is better than that — it is a <a class="hostlink" href="#">familiar</a> one.</p>
+</article>
+
+<!-- prototype chrome: fidelity-tier legend + host theme flip -->
+<div class="proto" aria-hidden="true">
+  <span class="k"><span class="u"></span>exact</span>
+  <span class="k"><span class="u soft"></span>form-matched</span>
+  <span class="k"><span class="u dot"></span>approximate</span>
+</div>
+<button class="theme-flip" id="themeflip">Dark page</button>
+
+<script>
+(function(){
+  var root=document.documentElement, flip=document.getElementById('themeflip');
+  function setTheme(t){ root.dataset.theme=t; flip.textContent=(t==='dark'?'Light':'Dark')+' page'; }
+  setTheme(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  flip.addEventListener('click',function(){ setTheme(root.dataset.theme==='dark'?'light':'dark'); });
+
+  // ---- minimal hoverCard.ts behaviour: hover/focus opens, 90ms grace,
+  //      click pins, Escape closes, below-else-above placement ----
+  var card=null, anchor=null, pinned=false, timer=null;
+  var MK='<svg class="cck-mk" viewBox="0 0 32 32" aria-hidden="true">'+
+    '<path class="b" d="M5,24 Q6,15 10,10 Q11.2,6.8 12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4 Q16,5.2 17,6.4 Q19.6,6.8 21,8.4 Q20.6,10 18.6,10 Q17.6,10.4 16.6,10.8 Q14,15 12,19 Q10.6,22 9,23.6 Q7,24.6 5,24 Z"/>'+
+    '<path class="c" d="M12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4 Q14,3.5 12.4,4.2 Z"/>'+
+    '<circle class="e" cx="14.4" cy="8" r="1.15"/><circle class="c" cx="17.1" cy="9.2" r="1"/></svg>';
+
+  function build(t){
+    var el=document.createElement('div');
+    el.className='cck-hovercard'; el.setAttribute('role','dialog');
+    el.innerHTML=MK+
+      '<div class="cck-target"></div><div class="cck-original"></div>'+
+      '<div class="cck-pos"></div><div class="cck-example"></div>'+
+      '<div class="cck-seen"></div><button class="cck-open">Open in Cockatoo</button>';
+    el.querySelector('.cck-target').textContent=t.dataset.target;
+    el.querySelector('.cck-original').textContent='English: '+t.dataset.original;
+    el.querySelector('.cck-pos').textContent=t.dataset.pos;
+    el.querySelector('.cck-example').textContent=t.dataset.example;
+    el.querySelector('.cck-seen').textContent='Seen '+t.dataset.seen+' times';
+    el.addEventListener('mouseenter',cancelClose);
+    el.addEventListener('mouseleave',scheduleClose);
+    return el;
+  }
+  function open(t,pin){
+    cancelClose();
+    if(card&&anchor!==t) close(true);
+    pinned=pinned||pin; anchor=t; t.classList.add('is-active');
+    if(!card){ card=build(t); document.body.append(card); }
+    var r=t.getBoundingClientRect(), h=card.offsetHeight||180, w=card.offsetWidth||320;
+    var top=r.bottom+8;
+    if(top+h>innerHeight && r.top-h-8>0) top=r.top-h-8;
+    var left=Math.max(8,Math.min(r.left,innerWidth-w-8));
+    card.style.top=(top+scrollY)+'px'; card.style.left=(left+scrollX)+'px';
+  }
+  function scheduleClose(){ if(pinned) return; cancelClose(); timer=setTimeout(function(){close(false)},90); }
+  function cancelClose(){ if(timer){clearTimeout(timer);timer=null;} }
+  function close(force){
+    if(pinned&&!force) return;
+    if(card){card.remove();card=null;}
+    if(anchor){anchor.classList.remove('is-active');anchor=null;}
+    pinned=false;
+  }
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(true); });
+  document.querySelectorAll('.cck-token').forEach(function(t){
+    t.addEventListener('mouseenter',function(){open(t,false)});
+    t.addEventListener('focusin',function(){open(t,false)});
+    t.addEventListener('mouseleave',scheduleClose);
+    t.addEventListener('focusout',scheduleClose);
+    t.addEventListener('click',function(e){e.preventDefault();open(t,true)});
+  });
+})();
+</script>
+</body>
+</html>
