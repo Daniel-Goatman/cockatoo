@@ -211,6 +211,20 @@ final class PracticeSessionModel: ObservableObject {
         }
     }
 
+    /// End the session now (the floating "End session" control): drop the
+    /// remaining queue and land on the ledger for what was answered.
+    /// Distinct from pause — leaving the tab already resumes implicitly.
+    func finishEarly() {
+        guard !queue.isEmpty else { return }
+        queue = []
+        index = 0
+        typed = ""
+        feedback = nil
+        showingIntro = false
+        introItem = nil
+        sessionDone = true
+    }
+
     func advance() {
         typed = ""
         feedback = nil

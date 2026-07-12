@@ -21,6 +21,9 @@ struct CockatooApp: App {
                 .environmentObject(model)
                 .frame(minWidth: 860, minHeight: 560)
         }
+        // Flush chrome (visual-redesign plan §direction): no titlebar band —
+        // the sidebar runs to the top and the traffic lights float over it.
+        .windowStyle(.hiddenTitleBar)
 
         MenuBarExtra {
             MenuBarContent()
@@ -103,21 +106,122 @@ struct RootView: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
-        if model.needsOnboarding {
-            OnboardingView()
-        } else {
-            NavigationSplitView {
-                List(AppSection.allCases, id: \.self, selection: $model.section) { section in
-                    Label(section.title, systemImage: section.icon)
+        Group {
+            if model.needsOnboarding {
+                OnboardingView()
+                    .background(Theme.bg)
+            } else {
+                // Tint zones, no borders: the sidebar/content difference is
+                // background alone (prototype-v2 frame).
+                HStack(spacing: 0) {
+                    SidebarView()
+                    detail
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Theme.bg)
                 }
-                .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            } detail: {
-                switch model.section ?? .dashboard {
-                case .dashboard: DashboardView()
-                case .practice: PracticeView()
-                case .library: LibraryView()
-                case .tutor: TutorView()
-                case .settings: SettingsView()
+            }
+        }
+        .foregroundStyle(Theme.ink)
+        .ignoresSafeArea(.container, edges: .top)
+    }
+
+    @ViewBuilder
+    var detail: some View {
+        switch model.section ?? .dashboard {
+        case .dashboard: DashboardView()
+        case .practice: PracticeView()
+        case .library: LibraryView()
+        case .tutor: TutorView()
+        case .settings: SettingsView()
+        }
+    }
+}
+
+/// Custom sidebar: full-height tint zone under the floating traffic lights,
+/// indigo selection with a gold active icon, extension status in the footer
+/// (the one home of the old status-bar data).
+struct SidebarView: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 9) {
+                CockatooMark(eyeColor: Theme.sideBg)
+                    .frame(width: 17, height: 17)
+                Text("Cockatoo")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 14)
+
+            VStack(spacing: 1) {
+                ForEach(AppSection.allCases, id: \.self, content: row)
+            }
+            .padding(.horizontal, 10)
+
+            Spacer(minLength: 0)
+            footer
+                .padding(.horizontal, 21)
+                .padding(.bottom, 14)
+        }
+        .padding(.top, Theme.chromeTop)
+        .frame(width: 212)
+        .frame(maxHeight: .infinity)
+        .background(Theme.sideBg)
+    }
+
+    func row(_ section: AppSection) -> some View {
+        let isOn = (model.section ?? .dashboard) == section
+        return Button {
+            model.section = section
+        } label: {
+            HStack(spacing: 11) {
+                Image(systemName: section.icon)
+                    .font(.system(size: 13))
+                    .frame(width: 17)
+                    .foregroundStyle(isOn ? Theme.gold : Theme.inkMuted.opacity(0.82))
+                Text(section.title)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(isOn ? Theme.ink : Theme.inkMuted)
+                Spacer(minLength: 0)
+                if section == .practice, let due = model.overview?.dueNow, due > 0 {
+                    Text("\(due)")
+                        .font(Theme.monoLabel())
+                        .foregroundStyle(Theme.inkMuted)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.line2))
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius))
+            .background(
+                RoundedRectangle(cornerRadius: Theme.controlRadius)
+                    .fill(isOn ? Theme.selection : .clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.controlRadius)
+                    .strokeBorder(isOn ? Theme.selectionLine : .clear)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    var footer: some View {
+        HStack(alignment: .top, spacing: 9) {
+            Circle()
+                .fill(model.lastExtensionContact != nil ? Theme.live : Theme.inkFaint)
+                .frame(width: 7, height: 7)
+                .padding(.top, 4)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(model.lastExtensionContact != nil ? "Extension connected" : "Extension not connected")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(Theme.inkMuted)
+                if let contact = model.lastExtensionContact {
+                    Text("synced \(RelativeDateTimeFormatter().localizedString(for: contact, relativeTo: Date()))")
+                        .font(.system(size: 10.5, design: .monospaced))
+                        .foregroundStyle(Theme.inkFaint)
                 }
             }
         }

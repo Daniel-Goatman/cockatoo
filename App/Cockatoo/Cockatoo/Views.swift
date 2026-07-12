@@ -27,8 +27,9 @@ struct OnboardingView: View {
 
             HStack(spacing: 10) {
                 Button("Start learning German") { model.importBundledPack() }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.pillProminent)
                 Button("Import a custom pack…") { pickPack() }
+                    .buttonStyle(.pill)
             }
             Text("The built-in pack has over 200 frequency-ordered words and phrases. You can practice your first words right away — no browsing required.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -89,8 +90,7 @@ struct DashboardView: View {
             if o.practiceAvailable {
                 HStack(spacing: 12) {
                     Button("Practice now") { model.section = .practice }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(.pillProminent)
                     Text(practiceSubtitle(o))
                         .foregroundStyle(.secondary)
                 }
@@ -104,19 +104,22 @@ struct DashboardView: View {
             }
             if !o.almostReady.isEmpty {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Almost ready — keep reading in Safari")
-                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text("ALMOST READY — KEEP READING IN SAFARI")
+                        .font(Theme.monoLabel())
+                        .foregroundStyle(Theme.inkFaint)
+                        .padding(.bottom, 4)
                     ForEach(o.almostReady, id: \.itemId) { need in
-                        Text("**\(need.target)** — \(ExposureHint.text(for: need))")
+                        (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
+                            + Text(" — \(ExposureHint.text(for: need))"))
                             .font(.callout)
+                            .foregroundStyle(Theme.inkMuted)
                     }
                 }
                 .padding(.top, 4)
             }
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+        .themeCard()
     }
 
     func practiceSubtitle(_ o: LearnerEngine.Overview) -> String {
@@ -134,11 +137,12 @@ struct DashboardView: View {
             HStack {
                 Text("Tier \(tier.nextTier)").font(.headline)
                 if checkReady {
+                    // Gold, not purple: the unlock is an earned gold moment.
                     Label("check ready", systemImage: "flag.checkered")
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(Color.purple.opacity(0.13), in: Capsule())
-                        .foregroundStyle(.purple)
+                        .background(Theme.gold.opacity(0.16), in: Capsule())
+                        .foregroundStyle(Theme.goldDeep)
                 }
                 Spacer()
                 Text("\(tier.knownInCurrentTier) of \(tier.neededInCurrentTier) known")
@@ -146,6 +150,7 @@ struct DashboardView: View {
                     .foregroundStyle(.secondary)
             }
             ProgressView(value: Double(min(tier.knownInCurrentTier, tier.neededInCurrentTier)), total: Double(tier.neededInCurrentTier))
+                .tint(Theme.goldDeep)
             if checkReady {
                 Text("Your next practice session ends with a \(EngineConfig.default.tierCheckQuestionCount)-question tier check — pass it to unlock tier \(tier.nextTier).")
                     .font(.caption)
@@ -156,8 +161,7 @@ struct DashboardView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(16)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+        .themeCard()
     }
 
     // Honest connectivity, two signals: IPC contact this launch (is the
@@ -166,7 +170,7 @@ struct DashboardView: View {
         let formatter = RelativeDateTimeFormatter()
         return HStack(spacing: 8) {
             if let contact = model.lastExtensionContact {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.live)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Safari extension connected — last synced \(formatter.localizedString(for: contact, relativeTo: Date())).")
                     if let event = model.overview?.lastEventAt {
@@ -175,7 +179,7 @@ struct DashboardView: View {
                     }
                 }
             } else {
-                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(Theme.outcomeAlmost)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("The Safari extension hasn't connected since Cockatoo launched. Enable it in Safari → Settings → Extensions, then browse any page.")
                     if let event = model.overview?.lastEventAt {
@@ -186,9 +190,8 @@ struct DashboardView: View {
             }
         }
         .font(.callout)
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+        .themeCard(padding: 12)
     }
 
     // The four user-facing stages, pipeline-ordered, with the parked
@@ -198,11 +201,12 @@ struct DashboardView: View {
         func count(_ stages: Stage...) -> Int {
             stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
         }
+        // The cold→gold ramp, pipeline-ordered.
         let groups: [(label: String, count: Int, color: Color, muted: Bool)] = [
-            ("on pages", count(.ambient, .ready), Color.accentColor.opacity(0.5), false),
-            ("practicing", count(.learning), Color.orange.opacity(0.55), false),
-            ("known", count(.known, .mastered), Color.green.opacity(0.7), false),
-            ("upcoming", count(.locked), Color.secondary.opacity(0.3), true),
+            ("on pages", count(.ambient, .ready), Theme.stageOnPages, false),
+            ("practicing", count(.learning), Theme.stagePracticing, false),
+            ("known", count(.known, .mastered), Theme.stageKnown, false),
+            ("upcoming", count(.locked), Theme.stageUpcoming.opacity(0.6), true),
         ]
         return ForEach(groups, id: \.label) { group in
             HStack {
@@ -227,11 +231,10 @@ struct StatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(value).font(.title.bold().monospacedDigit())
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(Theme.inkFaint)
         }
-        .padding(14)
         .frame(minWidth: 120, alignment: .leading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+        .themeCard(padding: 14)
     }
 }
 
@@ -301,8 +304,8 @@ struct LibraryView: View {
                 Text("unlocked")
                     .font(.caption.weight(.medium))
                     .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(Color.green.opacity(0.18), in: Capsule())
-                    .foregroundStyle(.green)
+                    .background(Theme.live.opacity(0.15), in: Capsule())
+                    .foregroundStyle(Theme.live)
             } else {
                 Label("locked", systemImage: "lock.fill")
                     .font(.caption.weight(.medium))
@@ -344,7 +347,7 @@ struct LibraryView: View {
                 if row.engagedCount > 0 {
                     Image(systemName: "cursorarrow.rays")
                         .font(.caption2)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Theme.stageOnPages)
                 }
                 if row.seenCappedToday {
                     Text("· done today")
@@ -357,7 +360,7 @@ struct LibraryView: View {
         case .ready:
             Text("practice now")
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.teal)
+                .foregroundStyle(Theme.goldDeep)
         case .learning, .known, .mastered:
             StrengthDots(box: row.box)
         }
@@ -411,14 +414,7 @@ extension Stage {
 struct StageChip: View {
     let stage: Stage
 
-    var color: Color {
-        switch stage {
-        case .locked: return .gray
-        case .ambient, .ready: return .blue
-        case .learning: return .orange
-        case .known, .mastered: return .green
-        }
-    }
+    var color: Color { Theme.stageColor(stage) }
 
     var body: some View {
         HStack(spacing: 3) {
@@ -443,7 +439,7 @@ struct StrengthDots: View {
         HStack(spacing: 3) {
             ForEach(0..<6, id: \.self) { i in
                 Circle()
-                    .fill(i < box ? Color.accentColor : Color.secondary.opacity(0.25))
+                    .fill(i < box ? Theme.gold : Theme.line2.opacity(0.6))
                     .frame(width: 7, height: 7)
             }
         }

@@ -21,7 +21,13 @@ struct PracticeSessionView: View {
     var body: some View {
         VStack(spacing: 20) {
             if let planned = session.currentQuestion {
-                progressStrip
+                HStack(spacing: 12) {
+                    progressStrip
+                    Spacer()
+                    Button("End session") { session.finishEarly() }
+                        .buttonStyle(.pill)
+                        .help("Finish now and see the session ledger")
+                }
                 Group {
                     if session.showingIntro, let item = session.introItem {
                         introCard(item)
@@ -77,12 +83,12 @@ struct PracticeSessionView: View {
                     .frame(width: 14, height: 6)
             }
             Capsule()
-                .fill(Color.accentColor)
+                .fill(Theme.gold)
                 .frame(width: 22, height: 6)
             let remaining = max(0, session.queue.count - session.index - 1)
             ForEach(0..<remaining, id: \.self) { _ in
                 Capsule()
-                    .fill(Color.secondary.opacity(0.2))
+                    .fill(Theme.line)
                     .frame(width: 14, height: 6)
             }
         }
@@ -91,10 +97,11 @@ struct PracticeSessionView: View {
 
     func outcomeColor(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> Color {
         switch outcome {
-        case .introduced: return .blue
-        case .strengthened, .repaired: return .green
-        case .almost: return .orange
-        case .missed: return .red.opacity(0.8)
+        case .introduced: return Theme.outcomeIntroduced
+        case .strengthened: return Theme.outcomeStrengthened
+        case .repaired: return Theme.outcomeRepaired
+        case .almost: return Theme.outcomeAlmost
+        case .missed: return Theme.outcomeMissed
         }
     }
 
@@ -106,10 +113,10 @@ struct PracticeSessionView: View {
             Text("New word")
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Color.blue.opacity(0.14), in: Capsule())
-                .foregroundStyle(.blue)
+                .background(Theme.stageOnPages.opacity(0.15), in: Capsule())
+                .foregroundStyle(Theme.stageOnPages)
             Text(item.displayTarget)
-                .font(.system(size: 38, weight: .semibold, design: .serif))
+                .font(Theme.serif(38, weight: .semibold))
             if let source = item.bareSourceForm {
                 Text(source).font(.title3).foregroundStyle(.secondary)
             }
@@ -126,7 +133,7 @@ struct PracticeSessionView: View {
                 .frame(maxWidth: 380)
                 .multilineTextAlignment(.center)
             Button("Got it — quiz me") { session.revealIntroQuestion() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.pillProminent)
                 .keyboardShortcut(.return, modifiers: [])
                 .padding(.top, 4)
         }
@@ -150,12 +157,12 @@ struct PracticeSessionView: View {
             if let unlocked = session.unlockedTier {
                 Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.gold)
             } else if let chip = reviewChip {
                 Text(chip).font(.caption).foregroundStyle(.secondary)
             }
             Button(session.index + 1 >= session.queue.count ? "Finish" : "Next") { session.advance() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.pillProminent)
                 .keyboardShortcut(.return, modifiers: [])
         }
     }
@@ -172,8 +179,8 @@ struct PracticeSessionView: View {
         return Label("Tier \(next) check — all correct unlocks it", systemImage: "flag.checkered")
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 9).padding(.vertical, 3)
-            .background(Color.purple.opacity(0.13), in: Capsule())
-            .foregroundStyle(.purple)
+            .background(Theme.gold.opacity(0.16), in: Capsule())
+            .foregroundStyle(Theme.goldDeep)
     }
 
     func progressLabel(_ planned: SessionPlanner.PlannedQuestion) -> String {
@@ -192,7 +199,7 @@ struct PracticeSessionView: View {
     func questionView(_ question: Question) -> some View {
         switch question {
         case .recognition(_, let prompt, let options, _):
-            Text(prompt).font(.system(size: 34, weight: .semibold, design: .serif))
+            Text(prompt).font(Theme.serif(34, weight: .semibold))
             Text("What does this mean?").foregroundStyle(.secondary)
             VStack(spacing: 8) {
                 ForEach(Array(options.enumerated()), id: \.offset) { i, option in
@@ -208,11 +215,11 @@ struct PracticeSessionView: View {
             Text("Press 1–\(options.count) to answer")
                 .font(.caption2).foregroundStyle(.tertiary)
         case .recall(_, let prompt, _):
-            Text(prompt).font(.system(size: 34, weight: .semibold, design: .serif))
+            Text(prompt).font(Theme.serif(34, weight: .semibold))
             Text("Type the German").foregroundStyle(.secondary)
             answerField
         case .cloze(_, let sentence, _):
-            Text(sentence).font(.system(size: 22, design: .serif)).multilineTextAlignment(.center)
+            Text(sentence).font(Theme.serif(22, weight: .regular)).multilineTextAlignment(.center)
             Text("Fill in the blank (German)").foregroundStyle(.secondary)
             answerField
         }
@@ -229,12 +236,16 @@ struct PracticeSessionView: View {
     @ViewBuilder
     func feedbackView(_ feedback: PracticeSessionModel.Feedback) -> some View {
         switch feedback {
+        // Gold family for good, terracotta for misses — green stays
+        // reserved for connectivity (Theme).
         case .correct:
-            Label("Correct", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+            Label("Correct", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.goldDeep)
         case .nearMiss(let expected):
-            Label("Almost — \(expected)", systemImage: "circle.bottomhalf.filled").foregroundStyle(.orange)
+            Label("Almost — \(expected) · held, not dropped", systemImage: "circle.bottomhalf.filled")
+                .foregroundStyle(Theme.outcomeAlmost)
         case .wrong(let expected):
-            Label("It's \(expected) — comes back in a moment", systemImage: "xmark.circle.fill").foregroundStyle(.red)
+            Label("It's \(expected) — comes back in a moment", systemImage: "xmark.circle.fill")
+                .foregroundStyle(Theme.outcomeMissed)
         }
     }
 
@@ -246,7 +257,7 @@ struct PracticeSessionView: View {
                 VStack(spacing: 4) {
                     Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.goldDeep)
                     Text("New words are entering rotation — they'll start appearing in Safari and in practice.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -254,7 +265,7 @@ struct PracticeSessionView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: 420)
-                .background(Color.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.gold.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
             }
             Text("Session complete").font(.title2.bold())
             Text("\(session.correctCount) of \(session.answeredCount) correct")
@@ -270,10 +281,9 @@ struct PracticeSessionView: View {
                     }
                 }
             }
-            .padding(14)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
+            .themeCard(padding: 14)
             Button("Start another") { session.startSession() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.pillProminent)
                 .keyboardShortcut(.return, modifiers: [])
         }
     }
@@ -281,11 +291,11 @@ struct PracticeSessionView: View {
     @ViewBuilder
     func ledgerIcon(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> some View {
         switch outcome {
-        case .introduced: Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
-        case .strengthened: Image(systemName: "arrow.up.circle.fill").foregroundStyle(.green)
-        case .repaired: Image(systemName: "arrow.uturn.up.circle.fill").foregroundStyle(.green)
-        case .almost: Image(systemName: "circle.bottomhalf.filled").foregroundStyle(.orange)
-        case .missed: Image(systemName: "arrow.down.circle.fill").foregroundStyle(.red)
+        case .introduced: Image(systemName: "plus.circle.fill").foregroundStyle(Theme.outcomeIntroduced)
+        case .strengthened: Image(systemName: "arrow.up.circle.fill").foregroundStyle(Theme.outcomeStrengthened)
+        case .repaired: Image(systemName: "arrow.uturn.up.circle.fill").foregroundStyle(Theme.outcomeRepaired)
+        case .almost: Image(systemName: "circle.bottomhalf.filled").foregroundStyle(Theme.outcomeAlmost)
+        case .missed: Image(systemName: "arrow.down.circle.fill").foregroundStyle(Theme.outcomeMissed)
         }
     }
 
@@ -323,10 +333,10 @@ struct PracticeSessionView: View {
                             .font(.callout)
                     }
                 }
-                .padding(12)
-                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+                .themeCard(padding: 12)
             }
             Button("Check again") { session.startSession() }
+                .buttonStyle(.pill)
         }
     }
 
