@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cockatoo — Practice</title>
+<style>
+/* ============================================================
+   COCKATOO · Practice — the app window (frame v2, post-critique).
+   Sulphur-crested: graphite surfaces, ivory ink, one gold crest.
+   Two hues now: words ripen COLD → GOLD (slate → gold, 4 user-facing
+   stages per Views.swift b45f683); terracotta is the functional
+   miss/repair colour; moss green stays reserved for "connected".
+   Chrome is flush: hidden titlebar (controls float), no status bar,
+   no 1px zone borders — zones separate by tint only.
+   Truth: ring targets ceil(0.7 × tier) known (ActivationEngine);
+   strip encodes answer OUTCOMES (answerTrail) and the queue grows
+   when a miss requeues a repair (8 planned → 9 asked).
+   Light + dark are both first-class; toggle bottom-right is
+   prototype chrome, not app UI.
+   ============================================================ */
+:root{
+  --desk:oklch(11% 0 0);
+  --page:oklch(15% 0 0);
+  --bg:oklch(21% 0 0);
+  --side-bg:oklch(17.5% 0 0);
+  --insp-bg:oklch(19.5% 0 0);
+  --surf:oklch(25% 0 0);
+  --surf-2:oklch(29% 0 0);
+  --fg:oklch(96% 0 0);
+  --muted:oklch(74% 0 0);
+  --faint:oklch(65% 0 0);
+  --line:oklch(33% 0 0);
+  --line-2:oklch(40% 0 0);
+  /* selection / focus — quietly indigo now, gold stays achievement-only */
+  --sel:oklch(32% 0.015 265);
+  --sel-line:oklch(45% 0.04 265);
+  --accent:oklch(84% 0.16 90);
+  --accent-deep:oklch(76% 0.15 88);
+  --on-accent:oklch(23% 0.03 70);
+  --live:oklch(72% 0.16 145);
+
+  /* stage ramp — FOUR user-facing stages, cold → gold.
+     (mastered is a star badge on a known chip, not a fifth stage) */
+  --s-upcoming:oklch(64% 0.035 255);
+  --s-onpages:oklch(74% 0.08 255);
+  --s-practicing:oklch(80% 0.11 82);
+  --s-known:oklch(84% 0.155 90);
+  --s-mastered:oklch(60% 0.12 56);
+
+  /* answer outcomes (the ledger's five) — gold family for good,
+     terracotta for almost/missed, periwinkle for brand-new */
+  --o-introduced:oklch(76% 0.09 260);
+  --o-strengthened:oklch(84% 0.16 90);
+  --o-repaired:oklch(78% 0.11 70);
+  --o-almost:oklch(72% 0.10 45);
+  --o-missed:oklch(64% 0.13 35);
+
+  --serif:"Iowan Old Style","Charter",Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --win-shadow:0 0 0 1px rgba(0,0,0,.5),0 22px 24px -18px rgba(0,0,0,.7),0 60px 120px -40px rgba(0,0,0,.85);
+  --card-shadow:0 8px 18px -12px rgba(0,0,0,.78);
+  --card-shadow-lift:0 22px 40px -14px rgba(0,0,0,.86);
+}
+:root[data-theme=light]{
+  --desk:oklch(88% 0.012 90);
+  --page:oklch(99% 0.005 95);
+  --bg:oklch(96.5% 0.008 95);
+  --side-bg:oklch(93% 0.01 92);
+  --insp-bg:oklch(94.5% 0.009 93);
+  --surf:oklch(92.5% 0.01 92);
+  --surf-2:oklch(89.5% 0.012 92);
+  --fg:oklch(23% 0.01 80);
+  --muted:oklch(45% 0.015 80);
+  --faint:oklch(54% 0.015 80);
+  --line:oklch(88% 0.01 90);
+  --line-2:oklch(81% 0.012 90);
+  --sel:oklch(90% 0.02 265);
+  --sel-line:oklch(76% 0.05 265);
+  --accent:oklch(74% 0.155 85);
+  --accent-deep:oklch(66% 0.15 80);
+  --on-accent:oklch(99% 0.005 95);
+  --live:oklch(58% 0.15 145);
+
+  --s-upcoming:oklch(58% 0.04 255);
+  --s-onpages:oklch(60% 0.09 258);
+  --s-practicing:oklch(70% 0.12 82);
+  --s-known:oklch(72% 0.16 88);
+  --s-mastered:oklch(55% 0.12 56);
+
+  --o-introduced:oklch(58% 0.10 260);
+  --o-strengthened:oklch(72% 0.16 88);
+  --o-repaired:oklch(66% 0.12 70);
+  --o-almost:oklch(62% 0.11 45);
+  --o-missed:oklch(54% 0.14 35);
+
+  --win-shadow:0 0 0 1px rgba(30,25,10,.10),0 22px 24px -18px rgba(30,25,10,.20),0 60px 120px -40px rgba(30,25,10,.25);
+  --card-shadow:0 8px 18px -12px rgba(30,25,10,.30);
+  --card-shadow-lift:0 22px 40px -14px rgba(30,25,10,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  min-height:100vh;background:
+    radial-gradient(120% 90% at 50% -10%,color-mix(in oklch,var(--desk) 60%,var(--page)) 0%,var(--desk) 62%) fixed;
+  color:var(--fg);font:13.5px/1.55 var(--sys);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  transition:background .25s,color .25s}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ============ WINDOW — hidden titlebar, three tint zones ============ */
+.app{position:relative;width:min(1080px,100%);height:min(672px,calc(100vh - 48px));
+  display:grid;grid-template-columns:212px minmax(0,1fr) 292px;
+  border-radius:10px;overflow:hidden;background:var(--bg);box-shadow:var(--win-shadow);
+  transition:grid-template-columns .3s cubic-bezier(.3,.7,.2,1)}
+.app.rail{grid-template-columns:64px minmax(0,1fr) 292px}
+.app.tuck{grid-template-columns:212px minmax(0,1fr) 0px}
+.app.rail.tuck{grid-template-columns:64px minmax(0,1fr) 0px}
+
+/* floating window controls — traffic lights + sidebar toggle, no bar */
+.win-controls{position:absolute;top:0;left:0;height:52px;z-index:50;
+  display:flex;align-items:center;gap:12px;padding:0 14px}
+.tl{display:flex;gap:8px}
+.tl b{width:12px;height:12px;border-radius:50%;display:block;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.28)}
+.tl .r{background:oklch(64% .19 25)}.tl .y{background:oklch(80% .14 85)}.tl .g{background:oklch(72% .16 145)}
+.tbtn{display:inline-grid;place-items:center;height:26px;border-radius:6px;border:1px solid transparent;
+  background:transparent;color:var(--muted);cursor:pointer;transition:background .14s,color .14s}
+.tbtn.icon{width:30px}
+.tbtn:hover{background:var(--surf-2);color:var(--fg)}
+.tbtn svg{width:16px;height:16px}
+
+/* ---- sidebar (tint zone, no border) ---- */
+.side{background:var(--side-bg);display:flex;flex-direction:column;
+  padding:52px 10px 14px;overflow:hidden;min-width:0}
+.brand{display:flex;align-items:center;gap:9px;padding:2px 10px 14px;font-size:13px;font-weight:600;
+  letter-spacing:-.01em;white-space:nowrap}
+.brand .mk{width:17px;height:17px;flex:none}
+.brand .mk .ck-body{fill:var(--fg)}.brand .mk .ck-crest{fill:var(--accent)}
+.brand .mk .ck-eye{fill:var(--side-bg)}.brand .mk .ck-cheek{fill:var(--accent)}
+.app.rail .brand{justify-content:center;padding-left:0;padding-right:0}
+.app.rail .brand .lbl{display:none}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav a{display:flex;align-items:center;gap:11px;padding:7px 10px;border-radius:6px;font-size:13.5px;
+  color:var(--muted);text-decoration:none;white-space:nowrap;transition:background .12s,color .12s}
+.nav a .ic{width:17px;height:17px;flex:none;opacity:.82}
+.app.rail .nav a{justify-content:center;gap:0}
+.app.rail .nav a .lbl,.app.rail .nav a .badge{opacity:0;width:0;overflow:hidden}
+.nav a.on{background:var(--sel);color:var(--fg);
+  box-shadow:inset 0 0 0 1px var(--sel-line)}
+.nav a.on .ic{color:var(--accent);opacity:1}
+.nav a:not(.on):hover{background:var(--surf)}
+.nav a .badge{margin-left:auto;font:10px/1 var(--mono);border:1px solid var(--line-2);color:var(--muted);
+  border-radius:5px;padding:2px 6px}
+/* footer: extension + sync — the old status bar's one unique datum lives here now */
+.side .ext{margin-top:auto;display:flex;align-items:flex-start;gap:9px;padding:10px 11px 2px;
+  font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.4}
+.side .ext .live{width:7px;height:7px;border-radius:50%;background:var(--live);flex:none;margin-top:4px;
+  box-shadow:0 0 0 3px color-mix(in oklch,var(--live) 22%,transparent)}
+.side .ext .sync{display:block;font:10.5px/1.5 var(--mono);color:var(--faint);letter-spacing:.02em}
+.app.rail .side .ext{justify-content:center;padding-left:0;padding-right:0}
+.app.rail .side .ext .txt{display:none}
+
+/* ---- content ---- */
+.content{display:flex;flex-direction:column;min-width:0;padding:0 34px;background:var(--bg)}
+/* top row — flush against the background: arc + floating session controls */
+.arc{flex:none;height:52px;display:flex;align-items:center;gap:12px}
+.app.rail .arc{padding-left:56px} /* clear the floating window controls */
+.arc .phase{font:10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.arc .segs{display:flex;gap:5px;flex:1}
+.arc .seg{height:5px;border-radius:2px;flex:1;max-width:30px;background:var(--line)}
+/* done segs are coloured by answer OUTCOME (the app's answerTrail), not stage */
+.arc .seg.done{background:var(--so,var(--o-strengthened))}
+.arc .seg.cur{background:transparent;box-shadow:inset 0 0 0 1.5px color-mix(in oklch,var(--accent) 72%,transparent)}
+.arc .count{font:10.5px/1 var(--mono);color:var(--faint);letter-spacing:.03em;white-space:nowrap;cursor:default}
+.arc .end-btn{margin-left:6px;font:500 12.5px/1 var(--sys);color:var(--fg);cursor:pointer;padding:6px 12px;
+  border-radius:6px;border:1px solid var(--line-2);
+  background:linear-gradient(var(--surf-2),var(--surf));
+  box-shadow:0 1px 0 rgba(0,0,0,.12);transition:filter .14s}
+.end-btn:hover{filter:brightness(1.08)}
+.end-btn:active{filter:brightness(.95)}
+
+.c-card{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:12px 0 24px;min-height:0}
+.newlab{font:10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:18px}
+.snippet{max-width:47ch;background:color-mix(in oklch,var(--page) 40%,var(--bg));border:1px solid var(--line);
+  border-radius:10px;padding:22px 26px;font:400 18px/1.78 var(--serif);color:var(--fg);text-align:left}
+.swap{position:relative;border-bottom:2px solid var(--accent);cursor:default;white-space:nowrap;
+  border-radius:2px;transition:background .14s;font-family:var(--serif)}
+.swap:hover{background:color-mix(in oklch,var(--accent) 15%,transparent)}
+.swap::after{content:attr(data-en);position:absolute;left:50%;bottom:calc(100% + 9px);
+  transform:translateX(-50%) translateY(4px);
+  background:var(--surf-2);border:1px solid var(--line-2);color:var(--fg);
+  font:500 12px/1 var(--sys);padding:7px 11px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;
+  box-shadow:var(--card-shadow);transition:opacity .16s,transform .16s}
+.swap:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
+.wild-cap{margin-top:16px;font-size:12.5px;color:var(--faint);max-width:44ch;line-height:1.5}
+.wild-tr{margin-top:15px;display:inline-flex;align-items:center;gap:11px;font-size:15px;color:var(--muted)}
+.wild-tr b{color:var(--fg);font-weight:600;font-family:var(--serif)}
+.gender{font:11px/1 var(--mono);letter-spacing:.02em;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:5px;padding:5px 8px;background:var(--surf)}
+
+/* actions — one honest action; the intro has no skip path in the engine */
+.c-actions{display:flex;align-items:center;justify-content:center;padding:0 0 26px}
+.btn{appearance:none;cursor:pointer;font:600 13.5px/1 var(--sys);border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center}
+.btn-primary{position:relative;color:var(--fg);padding:9px 20px;font-size:12.5px;letter-spacing:.005em;
+  border:1px solid var(--line-2);background:color-mix(in oklch,var(--page) 55%,var(--bg));
+  box-shadow:0 0 0 0 var(--accent);transform:translateY(0);
+  transition:box-shadow .2s cubic-bezier(.3,.7,.2,1),transform .16s cubic-bezier(.3,.7,.2,1)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 3px 0 -1px var(--accent)}
+.btn-primary:active{transform:translateY(1px);box-shadow:0 1px 0 -1px var(--accent)}
+.key-hint{margin-left:10px;font:10.5px/1 var(--mono);color:var(--faint);letter-spacing:.03em;align-self:center}
+
+/* ---- inspector (tint zone, no border; collapsible, open by default) ---- */
+.inspect{background:var(--insp-bg);padding:52px 18px 18px;display:flex;flex-direction:column;
+  gap:22px;overflow:hidden;min-width:0}
+.i-lab{font:10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.tier{display:flex;flex-direction:column;align-items:center}
+.tier .i-lab{align-self:flex-start;margin-bottom:14px}
+.ring-wrap{position:relative;width:146px;height:146px}
+.ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--line);stroke-width:10}
+.ring-fill{fill:none;stroke-width:10;stroke-linecap:round;
+  transition:stroke-dashoffset 1.05s cubic-bezier(.3,.7,.2,1),stroke .9s}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-center .big{font:590 30px/1 var(--sys);letter-spacing:-.02em}
+.ring-center .of{font:10.5px/1 var(--mono);color:var(--faint);letter-spacing:.03em;margin-top:2px}
+.tier-cap{margin-top:14px;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.45;max-width:26ch}
+.tier-cap b{color:var(--fg);font-weight:600}
+
+.done-sec{display:flex;flex-direction:column;min-height:0}
+.done-head{display:flex;align-items:baseline;justify-content:space-between}
+.done-head .n{font:11px/1 var(--mono);color:var(--faint)}
+.stack{position:relative;height:196px;margin-top:12px;user-select:none}
+.wcard{position:absolute;left:50%;top:0;width:188px;margin-left:-94px;padding:11px 13px 12px;border-radius:8px;
+  background:linear-gradient(152deg,var(--surf-2),var(--surf));border:1px solid var(--line-2);
+  box-shadow:var(--card-shadow);cursor:default;
+  transition:transform .34s cubic-bezier(.3,.7,.2,1),box-shadow .26s,border-color .22s}
+.wcard .wtop{display:flex;align-items:center;gap:8px}
+.wcard .de{font:600 17px/1 var(--serif)}
+/* outcome chip — what happened THIS session (the ledger's five outcomes) */
+.wcard .ochip{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:10px/1 var(--mono);
+  color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+.wcard .ochip .d{width:7px;height:7px;border-radius:50%;flex:none}
+.wcard .wbot{position:relative;display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:7px}
+.wcard .en{font-size:12px;color:var(--muted)}
+/* stage + exposure live on the hover peek, not the card face */
+.wcard .peek{font:10px/1 var(--mono);color:var(--faint);letter-spacing:.02em;white-space:nowrap;
+  opacity:0;transform:translateY(2px);transition:opacity .2s,transform .2s}
+.wcard.lift .peek{opacity:1;transform:none}
+.wcard.lift{box-shadow:var(--card-shadow-lift),0 0 0 1px color-mix(in oklch,var(--accent) 30%,transparent);
+  border-color:color-mix(in oklch,var(--accent) 46%,var(--line-2))}
+.stack-hint{margin-top:12px;font-size:11px;color:var(--faint);text-align:center}
+
+/* entrance — the one decisive flourish */
+@keyframes cin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.anim-1{animation:cin .5s cubic-bezier(.2,.7,.2,1) both}
+.anim-2{animation:cin .5s cubic-bezier(.2,.7,.2,1) .09s both}
+.anim-3{animation:cin .5s cubic-bezier(.2,.7,.2,1) .18s both}
+.anim-4{animation:cin .5s cubic-bezier(.2,.7,.2,1) .27s both}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* prototype-only chrome: theme flip */
+.theme-flip{position:fixed;right:18px;bottom:16px;z-index:99;font:500 11.5px/1 var(--sys);
+  color:var(--muted);background:color-mix(in oklch,var(--bg) 80%,var(--page));
+  border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer;
+  transition:color .14s,filter .14s}
+.theme-flip:hover{color:var(--fg);filter:brightness(1.08)}
+
+/* keep the desktop frame usable when small — inspector tucks below */
+@media (max-width:940px){
+  .app{height:auto;min-height:min(672px,calc(100vh - 48px));
+    grid-template-columns:64px minmax(0,1fr);grid-auto-rows:minmax(0,auto)}
+  .inspect{grid-column:1 / -1;flex-direction:row;flex-wrap:wrap;gap:24px 40px;
+    align-items:center;justify-content:center;padding:22px 18px}
+  .side{padding:52px 8px 14px}
+  .brand{justify-content:center;padding-left:0;padding-right:0}.brand .lbl{display:none}
+  .side .nav a{justify-content:center;gap:0}.side .nav a .lbl,.side .nav a .badge{opacity:0;width:0;overflow:hidden}
+  .side .ext{justify-content:center;padding-left:0;padding-right:0}.side .ext .txt{display:none}
+  .arc{padding-left:56px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ck" viewBox="0 0 32 32">
+    <path class="ck-body" fill="currentColor" d="M5,24 Q6,15 10,10 Q11.2,6.8 12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4
+      Q16,5.2 17,6.4 Q19.6,6.8 21,8.4 Q20.6,10 18.6,10 Q17.6,10.4 16.6,10.8
+      Q14,15 12,19 Q10.6,22 9,23.6 Q7,24.6 5,24 Z"/>
+    <path class="ck-crest" d="M12.4,4.2 L13.4,2 L14.2,3.4 L15,2.2 L15.6,4 Q14,3.5 12.4,4.2 Z"/>
+    <circle class="ck-eye" cx="14.4" cy="8" r="1.15"/><circle class="ck-cheek" cx="17.1" cy="9.2" r="1"/>
+  </symbol>
+  <symbol id="i-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9.5 5v14"/></symbol>
+  <symbol id="i-sidebar-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M14.5 5v14"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6M6 10v9h12v-9"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="12" height="9" rx="2"/><path d="M16 16.5H6.5A2.5 2.5 0 0 1 4 14V7.5"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/></symbol>
+  <symbol id="i-tutor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-4 3v-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 4.2v2.2M12 17.6v2.2M4.2 12h2.2M17.6 12h2.2M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M17.7 6.3l-1.6 1.6M7.9 16.1l-1.6 1.6"/></symbol>
+</svg>
+
+<div class="app" id="app" data-od-id="practice-window">
+  <!-- floating window controls: hidden titlebar, lights over the sidebar tint -->
+  <div class="win-controls" data-od-id="win-controls">
+    <span class="tl"><b class="r"></b><b class="y"></b><b class="g"></b></span>
+    <button class="tbtn icon" id="sidetoggle" aria-label="Toggle sidebar" title="Toggle sidebar"><svg><use href="#i-sidebar"/></svg></button>
+  </div>
+
+  <!-- sidebar -->
+  <aside class="side" data-od-id="sidebar">
+    <div class="brand"><svg class="mk" aria-hidden="true"><use href="#ck"/></svg><span class="lbl">Cockatoo</span></div>
+    <nav class="nav">
+      <a href="#" data-od-id="nav-overview"><svg class="ic"><use href="#i-home"/></svg><span class="lbl">Overview</span></a>
+      <a href="#" class="on" data-od-id="nav-practice"><svg class="ic"><use href="#i-cards"/></svg><span class="lbl">Practice</span><span class="badge">2</span></a>
+      <a href="#" data-od-id="nav-library"><svg class="ic"><use href="#i-lib"/></svg><span class="lbl">Library</span></a>
+      <a href="#" data-od-id="nav-tutor"><svg class="ic"><use href="#i-tutor"/></svg><span class="lbl">Tutor</span></a>
+      <a href="#" data-od-id="nav-settings"><svg class="ic"><use href="#i-set"/></svg><span class="lbl">Settings</span></a>
+    </nav>
+    <div class="ext" data-od-id="ext-status"><span class="live"></span><span class="txt">Extension connected<span class="sync">synced 2m ago</span></span></div>
+  </aside>
+
+  <!-- content -->
+  <main class="content" data-od-id="practice-content">
+    <!-- session arc: segments are answer outcomes; total grew 8 → 9
+         because auch was missed and its repair re-ask joined the queue -->
+    <div class="arc" data-od-id="session-arc">
+      <span class="phase">New words</span>
+      <span class="segs">
+        <span class="seg done" style="--so:var(--o-strengthened)" title="hier — strengthened"></span>
+        <span class="seg done" style="--so:var(--o-missed)" title="auch — missed (repair queued)"></span>
+        <span class="seg done" style="--so:var(--o-strengthened)" title="nicht — strengthened"></span>
+        <span class="seg done" style="--so:var(--o-almost)" title="oder — almost (box held)"></span>
+        <span class="seg done" style="--so:var(--o-introduced)" title="jetzt — introduced"></span>
+        <span class="seg done" style="--so:var(--o-repaired)" title="auch — repaired"></span>
+        <span class="seg cur" title="das Haus — up now"></span>
+        <span class="seg"></span>
+        <span class="seg"></span>
+      </span>
+      <span class="count tnum" title="8 planned + 1 repair from a miss">7 / 9</span>
+      <button class="end-btn" data-od-id="end-session" title="Finish now and see the session ledger">End session</button>
+      <button class="tbtn icon" id="insptoggle" aria-label="Toggle inspector" title="Toggle inspector"><svg><use href="#i-sidebar-r"/></svg></button>
+    </div>
+
+    <div class="c-card" id="cstage" data-od-id="new-word-card">
+      <span class="newlab anim-1">New word · seen in the wild</span>
+      <div class="snippet anim-2">The old <span class="swap" tabindex="0" data-en="das Haus · house · neuter">das Haus</span> at the end of the lane had stood empty for years, its windows dark against the hill.</div>
+      <div class="wild-cap anim-3">This is how you'll meet it, swapped into a page you were already reading. Hover the word for the English.</div>
+      <div class="wild-tr anim-4"><span class="gender">das · neuter</span><b>house</b></div>
+    </div>
+
+    <div class="c-actions" data-od-id="card-actions">
+      <button class="btn btn-primary" id="cta">Got it — quiz me</button>
+      <span class="key-hint">return</span>
+    </div>
+  </main>
+
+  <!-- inspector — collapsible, open by default -->
+  <aside class="inspect" data-od-id="inspector">
+    <section class="tier" data-od-id="tier-progress">
+      <div class="i-lab">Tier 2 → 3 · earned unlock</div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 146 146"><circle class="ring-track" cx="73" cy="73" r="61"></circle><circle class="ring-fill" id="ring" cx="73" cy="73" r="61"></circle></svg>
+        <div class="ring-center"><span class="big tnum" id="ring-num">8</span><span class="of">of 9 needed</span></div>
+      </div>
+      <p class="tier-cap">9 of Tier&nbsp;2's 12 words must be known. <b>1 to go</b>, then a 3-question check opens Tier&nbsp;3.</p>
+    </section>
+
+    <section class="done-sec" data-od-id="done-stack">
+      <div class="done-head"><span class="i-lab">Done this session</span><span class="n tnum">5</span></div>
+      <div class="stack" id="stack">
+        <article class="wcard" data-od-id="done-hier"><div class="wtop"><span class="de">hier</span><span class="ochip"><span class="d" style="background:var(--o-strengthened)"></span>strengthened</span></div><div class="wbot"><span class="en">here</span><span class="peek">known · seen 6×</span></div></article>
+        <article class="wcard" data-od-id="done-auch"><div class="wtop"><span class="de">auch</span><span class="ochip"><span class="d" style="background:var(--o-repaired)"></span>repaired</span></div><div class="wbot"><span class="en">also</span><span class="peek">practicing · seen 4×</span></div></article>
+        <article class="wcard" data-od-id="done-nicht"><div class="wtop"><span class="de">nicht</span><span class="ochip"><span class="d" style="background:var(--o-strengthened)"></span>strengthened</span></div><div class="wbot"><span class="en">not</span><span class="peek">known · seen 5×</span></div></article>
+        <article class="wcard" data-od-id="done-oder"><div class="wtop"><span class="de">oder</span><span class="ochip"><span class="d" style="background:var(--o-almost)"></span>almost</span></div><div class="wbot"><span class="en">or</span><span class="peek">practicing · seen 3×</span></div></article>
+        <article class="wcard" data-od-id="done-jetzt"><div class="wtop"><span class="de">jetzt</span><span class="ochip"><span class="d" style="background:var(--o-introduced)"></span>introduced</span></div><div class="wbot"><span class="en">now</span><span class="peek">on pages · seen 2×</span></div></article>
+      </div>
+      <p class="stack-hint">Hover a card for details</p>
+    </section>
+  </aside>
+</div>
+
+<button class="theme-flip" id="themeflip" data-od-id="theme-flip">Light mode</button>
+
+<script>
+(function(){
+  var root=document.documentElement, app=document.getElementById('app');
+
+  // ---- theme: follow system, manual flip is prototype-only chrome ----
+  var flip=document.getElementById('themeflip');
+  function setTheme(t){ root.dataset.theme=t; flip.textContent=(t==='dark'?'Light':'Dark')+' mode'; }
+  setTheme(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+  flip.addEventListener('click',function(){ setTheme(root.dataset.theme==='dark'?'light':'dark'); });
+
+  document.getElementById('sidetoggle').addEventListener('click',function(){ app.classList.toggle('rail'); });
+  document.getElementById('insptoggle').addEventListener('click',function(){ app.classList.toggle('tuck'); });
+
+  // ---- radial tier ring — targets the unlock threshold, not tier size:
+  //      needed = ceil(0.7 × tier items) per ActivationEngine ----
+  var known=8,needed=9,pct=Math.min(known/needed,1);
+  function ringColor(p){ var L=70+p*13,C=0.03+p*0.13,H=60+p*30; return 'oklch('+L.toFixed(1)+'% '+C.toFixed(3)+' '+H.toFixed(0)+')'; }
+  var ring=document.getElementById('ring'),R=61,CIRC=2*Math.PI*R;
+  ring.style.strokeDasharray=CIRC.toFixed(1); ring.style.strokeDashoffset=CIRC.toFixed(1); ring.style.stroke=ringColor(pct);
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(reduce){ ring.style.strokeDashoffset=(CIRC*(1-pct)).toFixed(1); }
+  else{ requestAnimationFrame(function(){ requestAnimationFrame(function(){ ring.style.strokeDashoffset=(CIRC*(1-pct)).toFixed(1); }); }); }
+
+  // ---- done-this-session stack: gentle cascade; hover peeks (never "review") ----
+  var stack=document.getElementById('stack');
+  var cards=Array.prototype.slice.call(stack.querySelectorAll('.wcard'));
+  var STEP=32,messy=[0,-1.4,1.8,-2.2,1.4];
+  cards.forEach(function(c,i){
+    c._base='translateY('+(i*STEP)+'px) rotate('+messy[i%messy.length]+'deg)';
+    c._z=10+i; c.style.transform=c._base; c.style.zIndex=String(c._z);
+    c.addEventListener('mouseenter',function(){
+      c.classList.add('lift'); c.style.zIndex='140';
+      c.style.transform='translateY('+(i*STEP-12)+'px) scale(1.05) rotate(0deg)';
+    });
+    c.addEventListener('mouseleave',function(){
+      c.classList.remove('lift'); c.style.zIndex=String(c._z); c.style.transform=c._base;
+    });
+  });
+
+  // ---- pin the hover peek on click (page-safe affordance) ----
+  document.querySelectorAll('.swap').forEach(function(w){
+    w.addEventListener('click',function(){ w.classList.toggle('pinned'); });
+  });
+
+  // ---- keyboard: Return = continue (skip was cut — no engine path) ----
+  document.addEventListener('keydown',function(e){
+    var t=e.target;
+    if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    if(e.key==='Enter'){ e.preventDefault(); document.getElementById('cta').click(); }
+  });
+})();
+</script>
+</body>
+</html>
