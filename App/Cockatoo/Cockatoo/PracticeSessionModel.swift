@@ -24,6 +24,11 @@ final class PracticeSessionModel: ObservableObject {
     @Published var lastGraded: ItemProgress?
     /// Set when this session's tier check passed and the unlock fired.
     @Published var unlockedTier: Int?
+    /// The recognition option the user picked (drives right/wrong outlines).
+    @Published var lastChoice: Int?
+    /// True once the unlock celebration has been acknowledged — the ledger
+    /// shows after, not instead of, the celebration.
+    @Published var celebrationSeen = false
 
     /// First-ask results for tier-check questions (repairs don't count).
     private var tierCheckFirsts: [String: Bool] = [:]
@@ -82,6 +87,8 @@ final class PracticeSessionModel: ObservableObject {
         answerTrail = []
         lastGraded = nil
         unlockedTier = nil
+        lastChoice = nil
+        celebrationSeen = false
         tierCheckFirsts = [:]
         prepareCurrent()
     }
@@ -105,6 +112,7 @@ final class PracticeSessionModel: ObservableObject {
     func answerChoice(_ selected: Int) {
         guard feedback == nil,
               case .recognition(_, _, _, let correctIndex) = currentQuestion?.question else { return }
+        lastChoice = selected
         let isCorrect = selected == correctIndex
         feedback = isCorrect ? .correct : .wrong(expectedText())
         record(correct: isCorrect, nearMiss: false)
@@ -228,6 +236,7 @@ final class PracticeSessionModel: ObservableObject {
     func advance() {
         typed = ""
         feedback = nil
+        lastChoice = nil
         if index + 1 >= queue.count {
             sessionDone = true
             queue = []

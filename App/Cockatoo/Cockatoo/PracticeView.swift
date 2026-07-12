@@ -5,6 +5,11 @@ import LearnerCore
 /// introduction cards for new words (cold start) and the in-session repair
 /// lane. Session state lives in PracticeSessionModel so leaving the tab
 /// mid-session doesn't discard it.
+///
+/// Layout follows research/prototype-v2/practice-session.html: a flush arc
+/// row (phase · outcome strip · count · End session), a centered question
+/// card, the collapsible inspector (tier ring + done-stack) that auto-tucks
+/// during the tier check, the ring-draw unlock celebration, and the ledger.
 struct PracticeView: View {
     @EnvironmentObject var model: AppModel
 
@@ -17,34 +22,29 @@ struct PracticeSessionView: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var session: PracticeSessionModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var inspectorOpen = true
 
     var body: some View {
-        VStack(spacing: 20) {
+        Group {
             if let planned = session.currentQuestion {
-                HStack(spacing: 12) {
-                    progressStrip
-                    Spacer()
-                    Button("End session") { session.finishEarly() }
-                        .buttonStyle(.pill)
-                        .help("Finish now and see the session ledger")
-                }
-                Group {
-                    if session.showingIntro, let item = session.introItem {
-                        introCard(item)
-                            .transition(revealTransition)
-                    } else {
-                        questionCard(planned)
-                            .transition(cardTransition)
+                HStack(spacing: 0) {
+                    mainColumn(planned)
+                    // Focus narrows for the check; the inspector returns after.
+                    if inspectorOpen, planned.beat != .tierCheck {
+                        PracticeInspector(session: session)
+                            .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                     }
                 }
-                .id("card-\(session.index)-\(session.showingIntro)")
             } else if !session.ledger.isEmpty {
-                summaryView
+                if let unlocked = session.unlockedTier, !session.celebrationSeen {
+                    CelebrationView(tier: unlocked) { session.celebrationSeen = true }
+                } else {
+                    summaryColumn
+                }
             } else {
-                emptyState
+                emptyColumn
             }
         }
-        .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(cardAnimation, value: session.index)
         .animation(cardAnimation, value: session.showingIntro)
@@ -53,8 +53,7 @@ struct PracticeSessionView: View {
         .navigationTitle("Practice")
     }
 
-    // MARK: - Motion (slide/stack base, flip-ish reveal; calm under
-    // Reduce Motion — the living-deck language from the design mockups)
+    // MARK: - Motion (slide/stack base per motion-spec.md; calm under RM)
 
     var cardAnimation: Animation? {
         reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.35, dampingFraction: 0.85)
@@ -73,63 +72,121 @@ struct PracticeSessionView: View {
         reduceMotion ? .opacity : .scale(scale: 0.96).combined(with: .opacity)
     }
 
-    // MARK: - Session progress strip (answers collapse into chips)
+    // MARK: - Main column
 
+    func mainColumn(_ planned: SessionPlanner.PlannedQuestion) -> some View {
+        VStack(spacing: 0) {
+            arcRow(planned)
+            Spacer(minLength: 12)
+            Group {
+                if session.showingIntro, let item = session.introItem {
+                    introCard(item)
+                        .transition(revealTransition)
+                } else {
+                    questionCard(planned)
+                        .transition(cardTransition)
+                }
+            }
+            .id("card-\(session.index)-\(session.showingIntro)")
+            .frame(maxWidth: 560)
+            Spacer(minLength: 24)
+        }
+        .padding(.horizontal, 34)
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Arc row (phase · strip · count · End session)
+
+    func arcRow(_ planned: SessionPlanner.PlannedQuestion) -> some View {
+        HStack(spacing: 12) {
+            Text(phaseName(planned.beat).uppercased())
+                .font(Theme.monoLabel())
+                .kerning(0.6)
+                .foregroundStyle(planned.beat == .tierCheck ? Theme.goldDeep : Theme.inkFaint)
+            progressStrip
+            Text("\(min(session.index + 1, session.queue.count)) / \(session.queue.count)")
+                .font(.system(size: 10.5, design: .monospaced))
+                .foregroundStyle(Theme.inkFaint)
+            Button("End session") { session.finishEarly() }
+                .buttonStyle(.pill)
+                .help("Finish now and see the session ledger")
+            Button {
+                withAnimation(cardAnimation) { inspectorOpen.toggle() }
+            } label: {
+                Image(systemName: "sidebar.right")
+                    .foregroundStyle(Theme.inkMuted)
+            }
+            .buttonStyle(.plain)
+            .help("Toggle session panel")
+        }
+        .frame(height: Theme.chromeTop)
+    }
+
+    func phaseName(_ beat: SessionPlanner.Beat) -> String {
+        switch beat {
+        case .warmup: return "Warm-up"
+        case .newWords: return "New words"
+        case .mix: return "Mix"
+        case .tierCheck: return "Tier check"
+        }
+    }
+
+    /// Answers collapse into outcome-coloured chips; the queue visibly grows
+    /// when a miss requeues a repair.
     var progressStrip: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             ForEach(Array(session.answerTrail.enumerated()), id: \.offset) { _, outcome in
                 Capsule()
-                    .fill(outcomeColor(outcome))
-                    .frame(width: 14, height: 6)
+                    .fill(outcome.color)
+                    .frame(height: 5)
+                    .frame(minWidth: 8, maxWidth: 30)
             }
             Capsule()
-                .fill(Theme.gold)
-                .frame(width: 22, height: 6)
+                .strokeBorder(Theme.gold.opacity(0.72), lineWidth: 1.5)
+                .frame(height: 5)
+                .frame(minWidth: 8, maxWidth: 30)
             let remaining = max(0, session.queue.count - session.index - 1)
             ForEach(0..<remaining, id: \.self) { _ in
                 Capsule()
                     .fill(Theme.line)
-                    .frame(width: 14, height: 6)
+                    .frame(height: 5)
+                    .frame(minWidth: 8, maxWidth: 30)
             }
+            Spacer(minLength: 0)
         }
         .accessibilityLabel("question \(min(session.index + 1, session.queue.count)) of \(session.queue.count)")
     }
 
-    func outcomeColor(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> Color {
-        switch outcome {
-        case .introduced: return Theme.outcomeIntroduced
-        case .strengthened: return Theme.outcomeStrengthened
-        case .repaired: return Theme.outcomeRepaired
-        case .almost: return Theme.outcomeAlmost
-        case .missed: return Theme.outcomeMissed
-        }
-    }
-
-    // MARK: - Introduction card (cold-start path c')
+    // MARK: - Introduction card (cold-start path)
 
     @ViewBuilder
     func introCard(_ item: VocabItem) -> some View {
         VStack(spacing: 10) {
-            Text("New word")
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Theme.stageOnPages.opacity(0.15), in: Capsule())
-                .foregroundStyle(Theme.stageOnPages)
+            Text("NEW WORD")
+                .font(Theme.monoLabel())
+                .kerning(0.8)
+                .foregroundStyle(Theme.inkFaint)
+                .padding(.bottom, 6)
             Text(item.displayTarget)
                 .font(Theme.serif(38, weight: .semibold))
             if let source = item.bareSourceForm {
-                Text(source).font(.title3).foregroundStyle(.secondary)
+                Text(source).font(.title3).foregroundStyle(Theme.inkMuted)
             }
             if let example = item.examples.first {
-                VStack(spacing: 2) {
-                    Text(example.target).font(.callout.italic())
-                    Text(example.source).font(.callout).foregroundStyle(.secondary)
+                VStack(spacing: 3) {
+                    Text(example.target).font(Theme.serif(15, weight: .regular)).italic()
+                    Text(example.source).font(.system(size: 12.5)).foregroundStyle(Theme.inkMuted)
                 }
-                .padding(.top, 6)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+                .frame(maxWidth: 420)
+                .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+                .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius).strokeBorder(Theme.line))
+                .padding(.top, 8)
             }
             Text("You'll see it swapped into pages you read — the first real test comes back in about an hour.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.inkFaint)
                 .frame(maxWidth: 380)
                 .multilineTextAlignment(.center)
             Button("Got it — quiz me") { session.revealIntroQuestion() }
@@ -144,26 +201,184 @@ struct PracticeSessionView: View {
     @ViewBuilder
     func questionCard(_ planned: SessionPlanner.PlannedQuestion) -> some View {
         VStack(spacing: 6) {
-            if planned.beat == .tierCheck, !planned.isRepair {
-                tierCheckBanner
-            }
-            // Honest progress: current position / current total (repairs grow it).
-            Text(progressLabel(planned))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(beatCaption(planned))
+                .font(Theme.monoLabel())
+                .kerning(0.8)
+                .foregroundStyle(planned.beat == .tierCheck && !planned.isRepair ? Theme.goldDeep : Theme.inkFaint)
+                .padding(.bottom, 12)
             questionView(planned.question)
-        }
-        if let feedback = session.feedback {
-            feedbackView(feedback)
-            if let unlocked = session.unlockedTier {
-                Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(Theme.gold)
-            } else if let chip = reviewChip {
-                Text(chip).font(.caption).foregroundStyle(.secondary)
+            if let feedback = session.feedback {
+                feedbackPanel(feedback, planned: planned)
+                    .padding(.top, 14)
+                Button(session.index + 1 >= session.queue.count ? "Finish" : "Continue") { session.advance() }
+                    .buttonStyle(.pillProminent)
+                    .keyboardShortcut(.return, modifiers: [])
+                    .padding(.top, 8)
             }
-            Button(session.index + 1 >= session.queue.count ? "Finish" : "Next") { session.advance() }
-                .buttonStyle(.pillProminent)
-                .keyboardShortcut(.return, modifiers: [])
+        }
+    }
+
+    func beatCaption(_ planned: SessionPlanner.PlannedQuestion) -> String {
+        if planned.isRepair { return "REPAIR · ONE MORE LOOK" }
+        switch planned.beat {
+        case .warmup: return "WARM-UP"
+        case .newWords: return "NEW WORD"
+        case .mix: return "MIX"
+        case .tierCheck: return "TIER CHECK · FIRST ANSWERS COUNT"
+        }
+    }
+
+    @ViewBuilder
+    func questionView(_ question: Question) -> some View {
+        switch question {
+        case .recognition(_, let prompt, let options, let correctIndex):
+            Text(prompt).font(Theme.serif(34, weight: .semibold))
+            Text("What does this mean?")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .padding(.bottom, 10)
+            VStack(spacing: 8) {
+                ForEach(Array(options.enumerated()), id: \.offset) { i, option in
+                    choiceButton(i, option, correct: correctIndex)
+                }
+            }
+            .frame(maxWidth: 360)
+            if session.feedback == nil {
+                Text("Press 1–\(options.count) to answer")
+                    .font(.caption2).foregroundStyle(Theme.inkFaint)
+                    .padding(.top, 6)
+            }
+        case .recall(_, let prompt, _):
+            Text(prompt).font(Theme.serif(34, weight: .semibold))
+            Text("Type the German")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .padding(.bottom, 10)
+            answerField
+        case .cloze(_, let sentence, _):
+            Text(sentence)
+                .font(Theme.serif(22, weight: .regular))
+                .multilineTextAlignment(.center)
+            Text("Fill in the blank (German)")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .padding(.bottom, 10)
+            answerField
+        }
+    }
+
+    func choiceButton(_ i: Int, _ option: String, correct: Int) -> some View {
+        let visual: ChoiceVisual
+        if session.feedback == nil {
+            visual = .idle
+        } else if i == correct {
+            visual = .right
+        } else if i == session.lastChoice {
+            visual = .wrongPick
+        } else {
+            visual = .dimmed
+        }
+        return Button {
+            session.answerChoice(i)
+        } label: {
+            HStack(spacing: 12) {
+                Text("\(i + 1)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 3)
+                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.line2))
+                Text(option).font(Theme.serif(16, weight: .regular))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .contentShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .buttonStyle(ChoiceButtonStyle(visual: visual))
+        .disabled(session.feedback != nil)
+        .keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: [])
+    }
+
+    var answerField: some View {
+        TextField("auf Deutsch…", text: $session.typed)
+            .textFieldStyle(.plain)
+            .font(Theme.serif(19, weight: .regular))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: 300)
+            .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.line2))
+            .onSubmit { session.answerTyped() }
+            .disabled(session.feedback != nil)
+    }
+
+    // MARK: - Feedback (title · why · micro chip, colour-coded left bar)
+
+    func feedbackPanel(_ feedback: PracticeSessionModel.Feedback, planned: SessionPlanner.PlannedQuestion) -> some View {
+        let color = feedbackColor(feedback)
+        return HStack(spacing: 0) {
+            Rectangle().fill(color).frame(width: 3)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(feedbackTitle(feedback, planned: planned))
+                    .font(.system(size: 13, weight: .semibold))
+                if let detail = feedbackDetail(feedback, planned: planned) {
+                    Text(detail)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.inkMuted)
+                }
+                if let chip = reviewChip {
+                    HStack(spacing: 7) {
+                        Circle().fill(color).frame(width: 7, height: 7)
+                        Text(chip)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(Theme.inkMuted)
+                    }
+                    .padding(.top, 5)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: 420)
+        .background(Theme.cardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 9))
+        .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.line))
+    }
+
+    func feedbackColor(_ feedback: PracticeSessionModel.Feedback) -> Color {
+        switch feedback {
+        case .correct: return Theme.gold
+        case .nearMiss: return Theme.outcomeAlmost
+        case .wrong: return Theme.outcomeMissed
+        }
+    }
+
+    func feedbackTitle(_ feedback: PracticeSessionModel.Feedback, planned: SessionPlanner.PlannedQuestion) -> String {
+        switch feedback {
+        case .correct:
+            return planned.beat == .tierCheck && !planned.isRepair
+                ? "Correct — counts toward the check"
+                : "Correct"
+        case .nearMiss(let expected):
+            return "Almost — \(expected)"
+        case .wrong(let expected):
+            return "Not quite — it's \(expected)"
+        }
+    }
+
+    func feedbackDetail(_ feedback: PracticeSessionModel.Feedback, planned: SessionPlanner.PlannedQuestion) -> String? {
+        switch feedback {
+        case .correct:
+            return nil
+        case .nearMiss:
+            return "Held, not dropped — it won't re-queue."
+        case .wrong:
+            return planned.beat == .tierCheck && !planned.isRepair
+                ? "First answer counts for the check; the repair still teaches."
+                : "It comes back for a repair in a moment."
         }
     }
 
@@ -174,129 +389,52 @@ struct PracticeSessionView: View {
         return "next review \(when)"
     }
 
-    var tierCheckBanner: some View {
-        let next = (model.overview?.tierProgress?.nextTier).map(String.init) ?? "next"
-        return Label("Tier \(next) check — all correct unlocks it", systemImage: "flag.checkered")
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 9).padding(.vertical, 3)
-            .background(Theme.gold.opacity(0.16), in: Capsule())
-            .foregroundStyle(Theme.goldDeep)
-    }
+    // MARK: - Session ledger (what actually changed)
 
-    func progressLabel(_ planned: SessionPlanner.PlannedQuestion) -> String {
-        var label = "\(min(session.index + 1, session.queue.count)) of \(session.queue.count)"
-        if planned.isRepair { label += " · repair" }
-        switch planned.beat {
-        case .warmup: label += " · warm-up"
-        case .newWords: label += " · new word"
-        case .tierCheck: label += " · tier check"
-        case .mix: break
-        }
-        return label
-    }
-
-    @ViewBuilder
-    func questionView(_ question: Question) -> some View {
-        switch question {
-        case .recognition(_, let prompt, let options, _):
-            Text(prompt).font(Theme.serif(34, weight: .semibold))
-            Text("What does this mean?").foregroundStyle(.secondary)
-            VStack(spacing: 8) {
-                ForEach(Array(options.enumerated()), id: \.offset) { i, option in
-                    Button {
-                        session.answerChoice(i)
-                    } label: {
-                        Text(option).frame(maxWidth: 320).padding(.vertical, 6)
-                    }
-                    .disabled(session.feedback != nil)
-                    .keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: [])
-                }
-            }
-            Text("Press 1–\(options.count) to answer")
-                .font(.caption2).foregroundStyle(.tertiary)
-        case .recall(_, let prompt, _):
-            Text(prompt).font(Theme.serif(34, weight: .semibold))
-            Text("Type the German").foregroundStyle(.secondary)
-            answerField
-        case .cloze(_, let sentence, _):
-            Text(sentence).font(Theme.serif(22, weight: .regular)).multilineTextAlignment(.center)
-            Text("Fill in the blank (German)").foregroundStyle(.secondary)
-            answerField
-        }
-    }
-
-    var answerField: some View {
-        TextField("answer", text: $session.typed)
-            .textFieldStyle(.roundedBorder)
-            .frame(maxWidth: 320)
-            .onSubmit { session.answerTyped() }
-            .disabled(session.feedback != nil)
-    }
-
-    @ViewBuilder
-    func feedbackView(_ feedback: PracticeSessionModel.Feedback) -> some View {
-        switch feedback {
-        // Gold family for good, terracotta for misses — green stays
-        // reserved for connectivity (Theme).
-        case .correct:
-            Label("Correct", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.goldDeep)
-        case .nearMiss(let expected):
-            Label("Almost — \(expected) · held, not dropped", systemImage: "circle.bottomhalf.filled")
-                .foregroundStyle(Theme.outcomeAlmost)
-        case .wrong(let expected):
-            Label("It's \(expected) — comes back in a moment", systemImage: "xmark.circle.fill")
-                .foregroundStyle(Theme.outcomeMissed)
-        }
-    }
-
-    // MARK: - Session summary (what actually changed)
-
-    var summaryView: some View {
-        VStack(spacing: 14) {
-            if let unlocked = session.unlockedTier {
-                VStack(spacing: 4) {
-                    Label("Tier \(unlocked) unlocked", systemImage: "sparkles")
-                        .font(.title3.weight(.semibold))
+    var summaryColumn: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: Theme.chromeTop)
+            Text("Session ledger")
+                .font(Theme.serif(24, weight: .medium))
+            HStack(spacing: 6) {
+                if let unlocked = session.unlockedTier {
+                    Text("Tier \(unlocked) unlocked ·")
+                        .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(Theme.goldDeep)
-                    Text("New words are entering rotation — they'll start appearing in Safari and in practice.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
                 }
-                .padding(14)
-                .frame(maxWidth: 420)
-                .background(Theme.gold.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                Text("\(session.correctCount) of \(session.answeredCount) correct")
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Theme.inkMuted)
             }
-            Text("Session complete").font(.title2.bold())
-            Text("\(session.correctCount) of \(session.answeredCount) correct")
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(session.ledger) { entry in
-                    HStack(spacing: 8) {
-                        ledgerIcon(entry.outcome)
-                        Text(entry.display).font(.callout.weight(.medium))
-                        Text(ledgerText(entry))
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
+            .padding(.top, 3)
+            .padding(.bottom, 16)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(session.ledger) { entry in
+                        HStack(spacing: 10) {
+                            Circle().fill(entry.outcome.color).frame(width: 8, height: 8)
+                            Text(entry.display)
+                                .font(Theme.serif(15.5, weight: .semibold))
+                                .frame(width: 140, alignment: .leading)
+                            Text(ledgerText(entry))
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(Theme.inkMuted)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
                     }
                 }
             }
-            .themeCard(padding: 14)
             Button("Start another") { session.startSession() }
                 .buttonStyle(.pillProminent)
                 .keyboardShortcut(.return, modifiers: [])
+                .padding(.top, 16)
+            Spacer(minLength: 24)
         }
-    }
-
-    @ViewBuilder
-    func ledgerIcon(_ outcome: PracticeSessionModel.LedgerEntry.Outcome) -> some View {
-        switch outcome {
-        case .introduced: Image(systemName: "plus.circle.fill").foregroundStyle(Theme.outcomeIntroduced)
-        case .strengthened: Image(systemName: "arrow.up.circle.fill").foregroundStyle(Theme.outcomeStrengthened)
-        case .repaired: Image(systemName: "arrow.uturn.up.circle.fill").foregroundStyle(Theme.outcomeRepaired)
-        case .almost: Image(systemName: "circle.bottomhalf.filled").foregroundStyle(Theme.outcomeAlmost)
-        case .missed: Image(systemName: "arrow.down.circle.fill").foregroundStyle(Theme.outcomeMissed)
-        }
+        .frame(maxWidth: 560, alignment: .leading)
+        .padding(.horizontal, 34)
+        .frame(maxWidth: .infinity)
     }
 
     func ledgerText(_ entry: PracticeSessionModel.LedgerEntry) -> String {
@@ -318,26 +456,39 @@ struct PracticeSessionView: View {
 
     // MARK: - Empty state (always says why, and what would change it)
 
-    var emptyState: some View {
-        VStack(spacing: 16) {
-            ContentUnavailableView(
-                "All caught up",
-                systemImage: "checkmark.circle",
-                description: Text(emptyReason)
-            )
+    var emptyColumn: some View {
+        VStack(spacing: 14) {
+            CockatooMark(bodyColor: Theme.inkFaint, crestColor: Theme.gold, eyeColor: Theme.bg)
+                .frame(width: 44, height: 44)
+                .padding(.bottom, 4)
+            Text("All caught up")
+                .font(Theme.serif(24, weight: .medium))
+            Text(emptyReason)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 380)
             if let almost = model.overview?.almostReady, !almost.isEmpty {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Almost ready").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text("ALMOST READY")
+                        .font(Theme.monoLabel())
+                        .kerning(0.6)
+                        .foregroundStyle(Theme.inkFaint)
                     ForEach(almost, id: \.itemId) { need in
-                        Text("\(need.target) — \(ExposureHint.text(for: need))")
+                        (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
+                            + Text(" — \(ExposureHint.text(for: need))"))
                             .font(.callout)
+                            .foregroundStyle(Theme.inkMuted)
                     }
                 }
                 .themeCard(padding: 12)
+                .padding(.top, 6)
             }
             Button("Check again") { session.startSession() }
                 .buttonStyle(.pill)
+                .padding(.top, 4)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     var emptyReason: String {
@@ -349,6 +500,234 @@ struct PracticeSessionView: View {
             return "Nothing is due right now — your next review is \(when)."
         }
         return "Nothing is due right now. Keep reading with the Safari extension to meet new words."
+    }
+}
+
+// MARK: - Choice styling
+
+enum ChoiceVisual { case idle, right, wrongPick, dimmed }
+
+struct ChoiceButtonStyle: ButtonStyle {
+    var visual: ChoiceVisual
+
+    func makeBody(configuration: Configuration) -> some View {
+        let border: Color
+        switch visual {
+        case .idle, .dimmed: border = Theme.line
+        case .right: border = Theme.gold
+        case .wrongPick: border = Theme.outcomeMissed
+        }
+        return configuration.label
+            .foregroundStyle(Theme.ink)
+            .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(border, lineWidth: visual == .right ? 1.5 : 1))
+            .opacity(visual == .dimmed ? 0.55 : 1)
+            .scaleEffect(configuration.isPressed ? 0.99 : 1)
+    }
+}
+
+// MARK: - Outcome presentation
+
+extension PracticeSessionModel.LedgerEntry.Outcome {
+    var color: Color {
+        switch self {
+        case .introduced: return Theme.outcomeIntroduced
+        case .strengthened: return Theme.outcomeStrengthened
+        case .repaired: return Theme.outcomeRepaired
+        case .almost: return Theme.outcomeAlmost
+        case .missed: return Theme.outcomeMissed
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .introduced: return "introduced"
+        case .strengthened: return "strengthened"
+        case .repaired: return "repaired"
+        case .almost: return "almost"
+        case .missed: return "missed"
+        }
+    }
+}
+
+// MARK: - Inspector (tier ring + done-stack; tucks during the tier check)
+
+struct PracticeInspector: View {
+    @EnvironmentObject var model: AppModel
+    @ObservedObject var session: PracticeSessionModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            if let tier = model.overview?.tierProgress {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("TIER \(tier.currentTier) → \(tier.nextTier) · EARNED UNLOCK")
+                        .font(Theme.monoLabel())
+                        .kerning(0.5)
+                        .foregroundStyle(Theme.inkFaint)
+                    TierRing(known: tier.knownInCurrentTier, needed: tier.neededInCurrentTier)
+                        .frame(maxWidth: .infinity)
+                    Text(ringCaption(tier))
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.inkMuted)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            HStack {
+                Text("DONE THIS SESSION")
+                    .font(Theme.monoLabel())
+                    .kerning(0.5)
+                    .foregroundStyle(Theme.inkFaint)
+                Spacer()
+                Text("\(session.ledger.count)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+            }
+            doneStack
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, Theme.chromeTop)
+        .padding(.bottom, 16)
+        .frame(width: 268)
+        .frame(maxHeight: .infinity)
+        .background(Theme.inspBg)
+    }
+
+    func ringCaption(_ tier: LearnerEngine.TierProgress) -> String {
+        if model.overview?.tierCheckReady == true {
+            return "Ready — this session ends with the \(EngineConfig.default.tierCheckQuestionCount)-question check."
+        }
+        let togo = max(0, tier.neededInCurrentTier - tier.knownInCurrentTier)
+        return "\(togo) to go, then a short check opens tier \(tier.nextTier)."
+    }
+
+    var doneStack: some View {
+        let entries = Array(session.ledger.suffix(6))
+        let messy: [Double] = [0, -1.4, 1.8, -2.2, 1.4]
+        return ZStack(alignment: .top) {
+            ForEach(Array(entries.enumerated()), id: \.element.id) { i, entry in
+                HStack(spacing: 8) {
+                    Text(entry.display)
+                        .font(Theme.serif(15, weight: .semibold))
+                        .lineLimit(1)
+                    Spacer(minLength: 6)
+                    Circle().fill(entry.outcome.color).frame(width: 7, height: 7)
+                    Text(entry.outcome.label)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Theme.inkMuted)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(width: 196)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.line2))
+                .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
+                .rotationEffect(.degrees(messy[i % messy.count]))
+                .offset(y: CGFloat(i) * 30)
+                .zIndex(Double(i))
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: entries.isEmpty ? 0 : CGFloat(entries.count - 1) * 30 + 44, alignment: .top)
+        .animation(.spring(response: 0.34, dampingFraction: 0.85), value: session.ledger.count)
+    }
+}
+
+/// The tier ring: fills toward the unlock threshold (needed, not tier size).
+struct TierRing: View {
+    let known: Int
+    let needed: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+
+    var fraction: CGFloat {
+        needed > 0 ? min(CGFloat(known) / CGFloat(needed), 1) : 0
+    }
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.line, lineWidth: 9)
+            Circle()
+                .trim(from: 0, to: shown ? fraction : 0)
+                .stroke(Theme.gold, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 2) {
+                Text("\(known)")
+                    .font(.system(size: 26, weight: .semibold))
+                    .monospacedDigit()
+                Text("of \(needed) needed")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+            }
+        }
+        .frame(width: 132, height: 132)
+        .onAppear {
+            if reduceMotion {
+                shown = true
+            } else {
+                withAnimation(.spring(response: 0.9, dampingFraction: 0.9)) { shown = true }
+            }
+        }
+        .accessibilityLabel("\(known) of \(needed) words needed for the tier check")
+    }
+}
+
+// MARK: - Unlock celebration (one ring-draw + one bloom — no confetti)
+
+struct CelebrationView: View {
+    let tier: Int
+    let onContinue: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var drawn = false
+    @State private var bloomed = false
+    @State private var textIn = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            ZStack {
+                Circle().stroke(Theme.line, lineWidth: 9)
+                Circle()
+                    .trim(from: 0, to: drawn ? 1 : 0)
+                    .stroke(Theme.gold, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                CockatooMark(eyeColor: Theme.bg)
+                    .frame(width: 64, height: 64)
+                Circle()
+                    .stroke(Theme.gold.opacity(bloomed ? 0 : 0.4), lineWidth: 2)
+                    .scaleEffect(bloomed ? 1.55 : 1)
+            }
+            .frame(width: 172, height: 172)
+            .padding(.bottom, 26)
+            Group {
+                Text("Tier \(tier) unlocked")
+                    .font(Theme.serif(30, weight: .medium))
+                Text("New words will begin appearing on pages you read. Nothing else changes — keep reading, and they'll ripen like the rest.")
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Theme.inkMuted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 340)
+                    .padding(.top, 9)
+                Button("Continue", action: onContinue)
+                    .buttonStyle(.pillProminent)
+                    .keyboardShortcut(.return, modifiers: [])
+                    .padding(.top, 26)
+            }
+            .opacity(textIn ? 1 : 0)
+            .offset(y: textIn ? 0 : 10)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            guard !reduceMotion else {
+                drawn = true; bloomed = true; textIn = true
+                return
+            }
+            withAnimation(.easeInOut(duration: 0.9)) { drawn = true }
+            withAnimation(.easeOut(duration: 0.9).delay(0.75)) { bloomed = true }
+            withAnimation(.easeOut(duration: 0.5).delay(0.55)) { textIn = true }
+        }
     }
 }
 

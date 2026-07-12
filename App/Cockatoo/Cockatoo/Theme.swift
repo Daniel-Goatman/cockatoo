@@ -17,6 +17,8 @@ enum Theme {
     static let bg = dynamic(0x181818, 0xF5F3EE)
     /// Sidebar tint zone (no border; tint difference *is* the structure)
     static let sideBg = dynamic(0x101010, 0xEAE8E1)
+    /// Inspector tint zone — between sidebar and content
+    static let inspBg = dynamic(0x141414, 0xF1EFE9)
     /// Card fill — slightly sunken from bg
     static let cardBg = dynamic(0x131313, 0xF8F7F2)
     /// Hover / raised fills

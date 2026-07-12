@@ -61,10 +61,13 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Overview")
+                    .font(.system(size: 21, weight: .semibold))
+                    .padding(.bottom, 4)
                 if let o = model.overview {
                     nextActionCard(o)
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         StatTile(title: "Due now", value: "\(o.dueNow)")
                         StatTile(title: "In rotation", value: "\((o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0))")
                         StatTile(title: "Practicing", value: "\(o.countsByStage[.learning] ?? 0)")
@@ -74,11 +77,15 @@ struct DashboardView: View {
                         tierProgressCard(tier)
                     }
                     extensionStatusCard
-                    Text("Progress by stage").font(.headline)
-                    stageBars(o)
+                    stageCard(o)
                 }
             }
-            .padding(24)
+            // The prototype's calm 640pt reading column, centered.
+            .frame(maxWidth: 640, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 40)
+            .padding(.top, 24)
+            .padding(.bottom, 32)
         }
         .navigationTitle("Overview")
     }
@@ -197,7 +204,7 @@ struct DashboardView: View {
     // The four user-facing stages, pipeline-ordered, with the parked
     // (upcoming) words last and muted — the dashboard shows motion, not a
     // wall of unavailable items.
-    func stageBars(_ o: LearnerEngine.Overview) -> some View {
+    func stageCard(_ o: LearnerEngine.Overview) -> some View {
         func count(_ stages: Stage...) -> Int {
             stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
         }
@@ -208,19 +215,34 @@ struct DashboardView: View {
             ("known", count(.known, .mastered), Theme.stageKnown, false),
             ("upcoming", count(.locked), Theme.stageUpcoming.opacity(0.6), true),
         ]
-        return ForEach(groups, id: \.label) { group in
-            HStack {
-                Text(group.label).frame(width: 110, alignment: .leading).font(.callout)
-                GeometryReader { geo in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(group.color)
-                        .frame(width: max(2, geo.size.width * CGFloat(group.count) / CGFloat(max(1, o.totalItems))))
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("PROGRESS BY STAGE")
+                .font(Theme.monoLabel())
+                .kerning(0.6)
+                .foregroundStyle(Theme.inkFaint)
+                .padding(.bottom, 2)
+            ForEach(groups, id: \.label) { group in
+                HStack(spacing: 12) {
+                    Text(group.label)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(Theme.inkMuted)
+                        .frame(width: 92, alignment: .leading)
+                    GeometryReader { geo in
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(group.color)
+                            .frame(width: max(2, geo.size.width * CGFloat(group.count) / CGFloat(max(1, o.totalItems))))
+                    }
+                    .frame(height: 11)
+                    Text("\(group.count)")
+                        .font(.system(size: 11.5, design: .monospaced))
+                        .foregroundStyle(Theme.inkMuted)
+                        .frame(width: 40, alignment: .trailing)
                 }
-                .frame(height: 14)
-                Text("\(group.count)").font(.callout.monospaced()).frame(width: 40, alignment: .trailing)
+                .opacity(group.muted ? 0.5 : 1)
             }
-            .opacity(group.muted ? 0.5 : 1)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .themeCard()
     }
 }
 
