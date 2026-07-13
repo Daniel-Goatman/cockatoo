@@ -124,6 +124,7 @@ struct PracticeSessionView: View {
         case .newWords: return "New words"
         case .mix: return "Mix"
         case .tierCheck: return "Tier check"
+        case .release: return "Release"
         }
     }
 
@@ -221,6 +222,7 @@ struct PracticeSessionView: View {
         case .newWords: return "NEW WORD"
         case .mix: return "MIX"
         case .tierCheck: return "TIER CHECK · FIRST ANSWERS COUNT"
+        case .release: return "RELEASE · LAST ONE, NO GRADING"
         }
     }
 
@@ -260,6 +262,38 @@ struct PracticeSessionView: View {
                 .foregroundStyle(Theme.inkMuted)
                 .padding(.bottom, 10)
             answerField
+        case .rebuild(_, let sourceText, let tokens, _):
+            Text("Build the German for")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+            Text(sourceText)
+                .font(Theme.serif(19, weight: .regular))
+                .italic()
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 12)
+            RebuildAnswerView(tokens: tokens, locked: session.feedback != nil) { order in
+                session.answerRebuild(order: order)
+            }
+        case .selfGrade(_, let prompt, _, _):
+            Text("Say — or just think — a small sentence with")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+            Text(prompt)
+                .font(Theme.serif(34, weight: .semibold))
+                .padding(.bottom, 10)
+            if session.feedback == nil {
+                HStack(spacing: 12) {
+                    Button("Shaky") { session.answerSelfGrade(gotIt: false) }
+                        .buttonStyle(.pill)
+                    Button("Got it") { session.answerSelfGrade(gotIt: true) }
+                        .buttonStyle(.pillProminent)
+                        .keyboardShortcut(.return, modifiers: [])
+                }
+                Text("Honesty beats streaks — shaky just holds the word where it is.")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.inkFaint)
+                    .padding(.top, 6)
+            }
         }
     }
 
@@ -356,6 +390,10 @@ struct PracticeSessionView: View {
     }
 
     func feedbackTitle(_ feedback: PracticeSessionModel.Feedback, planned: SessionPlanner.PlannedQuestion) -> String {
+        if case .selfGrade = planned.question {
+            if case .correct = feedback { return "Noted — got it" }
+            return "Noted — shaky"
+        }
         switch feedback {
         case .correct:
             return planned.beat == .tierCheck && !planned.isRepair
@@ -369,6 +407,16 @@ struct PracticeSessionView: View {
     }
 
     func feedbackDetail(_ feedback: PracticeSessionModel.Feedback, planned: SessionPlanner.PlannedQuestion) -> String? {
+        if case .selfGrade(_, _, let exampleTarget, let exampleSource) = planned.question {
+            var lines: [String] = []
+            if let exampleTarget, let exampleSource {
+                lines.append("One way: \(exampleTarget) — \(exampleSource)")
+            }
+            if case .nearMiss = feedback {
+                lines.append("Held where it is — it comes around again soon.")
+            }
+            return lines.isEmpty ? nil : lines.joined(separator: "\n")
+        }
         switch feedback {
         case .correct:
             return nil
@@ -499,6 +547,110 @@ struct PracticeSessionView: View {
             return "Nothing is due right now — your next review is \(when)."
         }
         return "Nothing is due right now. Keep reading with the Safari extension to meet new words."
+    }
+}
+
+// MARK: - Rebuild (token reorder)
+
+/// Tap tokens into order; tap a placed token to take it back. Tokens are
+/// addressed by index so duplicates stay distinct.
+struct RebuildAnswerView: View {
+    let tokens: [String]
+    let locked: Bool
+    let submit: ([String]) -> Void
+    @State private var placed: [Int] = []
+
+    var body: some View {
+        VStack(spacing: 14) {
+            // The answer line being assembled.
+            FlowLayout(spacing: 6) {
+                ForEach(placed, id: \.self) { i in
+                    TokenChip(text: tokens[i], placed: true) {
+                        guard !locked, let at = placed.firstIndex(of: i) else { return }
+                        placed.remove(at: at)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .padding(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 9)
+                    .strokeBorder(Theme.line2, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+            )
+            // The pool of remaining tokens.
+            FlowLayout(spacing: 6) {
+                ForEach(tokens.indices.filter { !placed.contains($0) }, id: \.self) { i in
+                    TokenChip(text: tokens[i], placed: false) {
+                        guard !locked else { return }
+                        placed.append(i)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if !locked {
+                Button("Check") { submit(placed.map { tokens[$0] }) }
+                    .buttonStyle(.pillProminent)
+                    .disabled(placed.count != tokens.count)
+                    .keyboardShortcut(.return, modifiers: [])
+                    .padding(.top, 2)
+            }
+        }
+        .frame(maxWidth: 420)
+        .animation(.spring(response: 0.28, dampingFraction: 0.85), value: placed)
+    }
+}
+
+struct TokenChip: View {
+    let text: String
+    let placed: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(text)
+                .font(Theme.serif(15, weight: .regular))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 6)
+                .background(hovering ? Theme.surface2 : Theme.surface, in: RoundedRectangle(cornerRadius: 7))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7)
+                        .strokeBorder(placed ? Theme.gold.opacity(0.45) : Theme.line2)
+                )
+        }
+        .buttonStyle(.plain)
+        .offset(y: hovering ? -1 : 0)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
+    }
+}
+
+/// Minimal wrapping layout for token chips.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? 420
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x + size.width > maxWidth, x > 0 { x = 0; y += rowHeight + spacing; rowHeight = 0 }
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: maxWidth, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX, x > bounds.minX { x = bounds.minX; y += rowHeight + spacing; rowHeight = 0 }
+            view.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
 

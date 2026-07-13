@@ -235,6 +235,10 @@ case "session":
                 print("\(i + 1). [recall] \(id): \(prompt) → \(expected)")
             case .cloze(let id, let sentence, let expected):
                 print("\(i + 1). [cloze] \(id): \(sentence) → \(expected)")
+            case .rebuild(let id, let source, _, let order):
+                print("\(i + 1). [rebuild] \(id): \(source) → \(order.joined(separator: " "))")
+            case .selfGrade(let id, let prompt, _, _):
+                print("\(i + 1). [selfGrade] \(id): \(prompt)")
             }
         }
     } catch {

@@ -27,19 +27,48 @@ public struct QuestionFactory: Sendable {
         self.config = config
     }
 
-    /// Modes the session planner may offer this item, by stage/box.
-    /// docs/plan/04-learning-engine.md §Session planner.
-    public func offerableModes(progress: ItemProgress, hasSentence: Bool) -> [PracticeMode] {
+    /// Modes the session planner may offer this item, by stage/box — the
+    /// Core Five ladder (research/brainstorm-mockups 03). Rebuild joins at
+    /// the bottom of the ladder so day-1 sessions aren't recognition-only;
+    /// cloze is available from pack examples before any sentence is
+    /// captured. selfGrade is never offered here — it is the release beat.
+    public func offerableModes(
+        progress: ItemProgress,
+        hasSentence: Bool,
+        hasExample: Bool = false
+    ) -> [PracticeMode] {
         switch progress.stage {
         case .locked, .ambient:
             return []
         case .ready:
             return [.recognition]
         case .learning, .known, .mastered:
-            if progress.srsBox <= 1 { return [.recognition] }
-            if progress.srsBox <= 3 { return [.recognition, .recall] }
-            return hasSentence ? [.recall, .cloze] : [.recall]
+            let clozeOK = hasSentence || hasExample
+            if progress.srsBox <= 1 {
+                return [.recognition] + (hasExample ? [.rebuild] : [])
+            }
+            if progress.srsBox <= 3 {
+                var modes: [PracticeMode] = [.recognition, .recall]
+                if clozeOK { modes.append(.cloze) }
+                if hasExample { modes.append(.rebuild) }
+                return modes
+            }
+            var modes: [PracticeMode] = [.recall]
+            if clozeOK { modes.append(.cloze) }
+            if hasExample { modes.append(.rebuild) }
+            return modes
         }
+    }
+
+    /// An example is rebuildable when its target sentence tokenizes to a
+    /// buildable puzzle: 3–10 whitespace tokens.
+    public static func rebuildableExample(_ item: VocabItem) -> Example? {
+        item.examples.first { rebuildTokens($0) != nil }
+    }
+
+    static func rebuildTokens(_ example: Example) -> [String]? {
+        let tokens = example.target.split(separator: " ").map(String.init)
+        return (3...10).contains(tokens.count) ? tokens : nil
     }
 
     /// Build a question. Returns nil only for impossible inputs (no forms) —
@@ -57,13 +86,45 @@ public struct QuestionFactory: Sendable {
         case .recall:
             return recall(item: item)
         case .cloze:
-            guard let sentence, let q = cloze(item: item, sentence: sentence) else {
-                // Documented fallback: no sentence → recall, and the question
-                // *is* a recall question (no silent degradation labeled cloze).
-                return recall(item: item)
+            if let sentence, let q = cloze(item: item, sentence: sentence) { return q }
+            // Day-1 cloze source: the pack example's source sentence
+            // (captured sentences win when they exist).
+            if let example = item.examples.first {
+                let synthetic = CapturedSentence(itemId: item.id, text: example.source, capturedAt: .distantPast)
+                if let q = cloze(item: item, sentence: synthetic) { return q }
             }
-            return q
+            // Documented fallback: no usable sentence → recall, and the
+            // question *is* a recall question (no silent degradation
+            // labeled cloze).
+            return recall(item: item)
+        case .rebuild:
+            // Same fallback contract as cloze.
+            return rebuild(item: item, rng: &rng) ?? recall(item: item)
+        case .selfGrade:
+            return selfGrade(item: item)
         }
+    }
+
+    func rebuild(item: VocabItem, rng: inout some RandomNumberGenerator) -> Question? {
+        guard let example = Self.rebuildableExample(item),
+              let order = Self.rebuildTokens(example) else { return nil }
+        var shuffled = order
+        var attempts = 0
+        repeat {
+            shuffled.shuffle(using: &rng)
+            attempts += 1
+        } while shuffled == order && attempts < 8
+        guard shuffled != order else { return nil }   // degenerate (repeated tokens)
+        return .rebuild(itemId: item.id, sourceText: example.source, tokens: shuffled, expectedOrder: order)
+    }
+
+    func selfGrade(item: VocabItem) -> Question? {
+        .selfGrade(
+            itemId: item.id,
+            prompt: displayTarget(item),
+            exampleTarget: item.examples.first?.target,
+            exampleSource: item.examples.first?.source
+        )
     }
 
     func recognition(

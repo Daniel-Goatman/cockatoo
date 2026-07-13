@@ -90,13 +90,75 @@ final class QuestionFactoryTests: XCTestCase {
         XCTAssertFalse(blanked.lowercased().contains("the houses"))
     }
 
-    /// Documented fallback: cloze without a sentence degrades to recall and
-    /// IS a recall question (no silent degradation labeled cloze — P4).
-    func testClozeWithoutSentenceFallsBackToLabeledRecall() {
+    /// Without a captured sentence, cloze uses the pack example's source
+    /// sentence (day-1 cloze); with no example either, it degrades to recall
+    /// and IS a recall question (no silent degradation labeled cloze — P4).
+    func testClozeWithoutSentenceUsesExampleThenFallsBackToLabeledRecall() {
         let item = pack.items.first { $0.id == "de.word.haus" }!
         var rng = SplitMix64(seed: 1)
-        let q = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng)
-        XCTAssertEqual(q?.mode, .recall)
+
+        let fromExample = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng)
+        XCTAssertEqual(fromExample?.mode, .cloze)
+
+        var bare = item
+        bare.examples = []
+        let fallback = factory.question(item: bare, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng)
+        XCTAssertEqual(fallback?.mode, .recall)
+    }
+
+    /// Rebuild tokenizes the example's target sentence and never presents
+    /// the tokens in already-solved order; without a usable example it
+    /// degrades to recall, labeled as such.
+    func testRebuildShufflesExampleTokensAndFallsBack() {
+        let item = pack.items.first { $0.id == "de.word.haus" }!
+        var rng = SplitMix64(seed: 1)
+
+        let q = factory.question(item: item, mode: .rebuild, distractorPool: pack.items, sentence: nil, rng: &rng)
+        guard case .rebuild(_, _, let tokens, let expectedOrder)? = q else {
+            return XCTFail("expected a rebuild question, got \(String(describing: q))")
+        }
+        XCTAssertEqual(tokens.sorted(), expectedOrder.sorted())
+        XCTAssertNotEqual(tokens, expectedOrder)
+        XCTAssertEqual(expectedOrder, item.examples[0].target.split(separator: " ").map(String.init))
+
+        var bare = item
+        bare.examples = []
+        let fallback = factory.question(item: bare, mode: .rebuild, distractorPool: pack.items, sentence: nil, rng: &rng)
+        XCTAssertEqual(fallback?.mode, .recall)
+    }
+
+    /// Self-grade carries the word and its example for the reveal.
+    func testSelfGradeCarriesPromptAndExample() {
+        let item = pack.items.first { $0.id == "de.word.haus" }!
+        var rng = SplitMix64(seed: 1)
+        let q = factory.question(item: item, mode: .selfGrade, distractorPool: pack.items, sentence: nil, rng: &rng)
+        guard case .selfGrade(_, let prompt, let exampleTarget, _)? = q else {
+            return XCTFail("expected a selfGrade question, got \(String(describing: q))")
+        }
+        XCTAssertEqual(prompt, item.displayTarget)
+        XCTAssertEqual(exampleTarget, item.examples.first?.target)
+    }
+
+    /// The ladder offers rebuild from the first box when an example exists,
+    /// so day-1 sessions aren't recognition-only (Core Five).
+    func testOfferableModesIncludeRebuildAndExampleClozeWhenAvailable() {
+        var p = ItemProgress(itemId: "de.word.haus", now: now)
+        p.stage = .learning
+        p.srsBox = 0
+        XCTAssertEqual(
+            factory.offerableModes(progress: p, hasSentence: false, hasExample: true),
+            [.recognition, .rebuild]
+        )
+        p.srsBox = 2
+        XCTAssertEqual(
+            factory.offerableModes(progress: p, hasSentence: false, hasExample: true),
+            [.recognition, .recall, .cloze, .rebuild]
+        )
+        p.srsBox = 5
+        XCTAssertEqual(
+            factory.offerableModes(progress: p, hasSentence: false, hasExample: true),
+            [.recall, .cloze, .rebuild]
+        )
     }
 
     func testOfferableModesByStageAndBox() {

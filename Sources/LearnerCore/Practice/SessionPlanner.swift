@@ -23,6 +23,9 @@ public struct SessionPlanner: Sendable {
         case newWords
         case mix
         case tierCheck
+        /// One light self-grade production card to close the session
+        /// (research/brainstorm 03: "release — self-grade or quick win").
+        case release
     }
 
     public struct PlannedQuestion: Equatable, Sendable {
@@ -48,8 +51,11 @@ public struct SessionPlanner: Sendable {
         public var newWords: [VocabItem] = []
         public var mix: [VocabItem] = []
         public var tierCheck: [VocabItem] = []
+        public var release: [VocabItem] = []
 
         public var isEmpty: Bool {
+            // Release never carries a session on its own — it's a closing
+            // beat, so it doesn't count toward "is there anything to do".
             warmup.isEmpty && newWords.isEmpty && mix.isEmpty && tierCheck.isEmpty
         }
     }
@@ -144,6 +150,30 @@ public struct SessionPlanner: Sendable {
                 .prefix(config.tierCheckQuestionCount)
                 .map { $0 }
         }
+
+        // Release: one light production card (self-grade) on the strongest
+        // word NOT already in this session — a quick win, and no double SRS
+        // credit for a word answered minutes earlier. Skipped when the
+        // session is otherwise empty or nothing qualifies (never padded).
+        if !selection.isEmpty {
+            let taken = warmupSet
+                .union(intro)
+                .union(core)
+                .union(selection.tierCheck.map(\.id))
+            // srsBox ≥ 2: a word with some standing — never a box-0/1 item
+            // that was introduced minutes ago and isn't due yet.
+            selection.release = progress.values
+                .filter { p in
+                    (p.stage == .learning || p.stage == .known)
+                        && p.srsBox >= 2
+                        && !taken.contains(p.itemId)
+                }
+                .sorted { a, b in
+                    a.srsBox == b.srsBox ? a.itemId < b.itemId : a.srsBox > b.srsBox
+                }
+                .prefix(1)
+                .compactMap { byId[$0.itemId] }
+        }
         return selection
     }
 
@@ -171,7 +201,11 @@ public struct SessionPlanner: Sendable {
                 let isIntro = beat == .newWords
                 let modes = isIntro
                     ? [PracticeMode.recognition]
-                    : factory.offerableModes(progress: p, hasSentence: !itemSentences.isEmpty)
+                    : factory.offerableModes(
+                        progress: p,
+                        hasSentence: !itemSentences.isEmpty,
+                        hasExample: QuestionFactory.rebuildableExample(item) != nil
+                    )
                 guard let mode = modes.randomElement(using: &rng) else { continue }
                 if let q = factory.question(
                     item: item,
@@ -189,6 +223,18 @@ public struct SessionPlanner: Sendable {
         try append(selection.newWords, beat: .newWords)
         try append(selection.mix, beat: .mix)
         try append(selection.tierCheck, beat: .tierCheck)
+        // Release is always self-grade — the one fixed-mode beat.
+        for item in selection.release {
+            if let q = factory.question(
+                item: item,
+                mode: .selfGrade,
+                distractorPool: allItems,
+                sentence: nil,
+                rng: &rng
+            ) {
+                planned.append(PlannedQuestion(question: q, isRepair: false, isIntro: false, beat: .release))
+            }
+        }
         return planned
     }
 

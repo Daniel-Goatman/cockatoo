@@ -33,7 +33,7 @@ public struct Grader: Sendable {
         switch question {
         case .recall(_, _, let e): expected = e
         case .cloze(_, _, let e): expected = e
-        case .recognition: return .wrong(expected: "")
+        case .recognition, .rebuild, .selfGrade: return .wrong(expected: "")
         }
         let normAnswer = normalize(answer)
         let normExpected = normalize(expected)
@@ -99,6 +99,10 @@ public struct Grader: Sendable {
             case .recognition: p.recognitionCorrect += 1
             case .recall: p.recallCorrect += 1
             case .cloze: p.clozeCorrect += 1
+            // Rebuild/self-grade don't feed the per-mode counters (the v1
+            // schema tracks the original three); box and streak above are
+            // the load-bearing state and count normally.
+            case .rebuild, .selfGrade: break
             }
         } else {
             p.correctStreak = 0

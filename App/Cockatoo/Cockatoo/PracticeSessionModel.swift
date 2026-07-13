@@ -139,6 +139,24 @@ final class PracticeSessionModel: ObservableObject {
         }
     }
 
+    /// Rebuild: exact token order or nothing — the tokens were given, so
+    /// there is no "almost".
+    func answerRebuild(order: [String]) {
+        guard feedback == nil,
+              case .rebuild(_, _, _, let expected) = currentQuestion?.question else { return }
+        let isCorrect = order == expected
+        feedback = isCorrect ? .correct : .wrong(expected.joined(separator: " "))
+        record(correct: isCorrect, nearMiss: false)
+    }
+
+    /// Self-grade: "shaky" is graded like a near-miss — the box holds, no
+    /// repair re-queue. Honest: the app doesn't pretend to grade production.
+    func answerSelfGrade(gotIt: Bool) {
+        guard feedback == nil, case .selfGrade = currentQuestion?.question else { return }
+        feedback = gotIt ? .correct : .nearMiss(expectedText())
+        record(correct: gotIt, nearMiss: !gotIt)
+    }
+
     private func record(correct isCorrect: Bool, nearMiss: Bool) {
         guard let planned = currentQuestion else { return }
         let updated = try? engine.grade(result: PracticeResult(
@@ -210,6 +228,9 @@ final class PracticeSessionModel: ObservableObject {
         case .recognition(_, let prompt, _, _): return prompt
         case .recall(_, _, let expected): return expected
         case .cloze(_, _, let expected): return expected
+        case .rebuild(let id, _, _, _):
+            return (try? engine.store.item(id: id))?.displayTarget ?? id
+        case .selfGrade(_, let prompt, _, _): return prompt
         }
     }
 
@@ -218,6 +239,8 @@ final class PracticeSessionModel: ObservableObject {
         case .recognition(_, _, let options, let i): return options[i]
         case .recall(_, _, let expected): return expected
         case .cloze(_, _, let expected): return expected
+        case .rebuild(_, _, _, let order): return order.joined(separator: " ")
+        case .selfGrade(_, let prompt, _, _): return prompt
         case nil: return ""
         }
     }

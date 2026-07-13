@@ -47,6 +47,34 @@ final class ColdStartTests: XCTestCase {
         XCTAssertEqual(updated.validateInvariants(), [])
     }
 
+    /// The release beat closes a session with ONE self-grade card on a
+    /// settled (box ≥ 2) word that isn't already in the session — and never
+    /// pads an otherwise-empty session into existence.
+    func testReleaseBeatPicksSettledOutOfSessionWord() throws {
+        let items = try engine.store.items(language: "de").filter { $0.frequencyBand == 1 }
+
+        // One due word (carries the session) and one settled, not-due word
+        // (the release candidate).
+        var due = try Fixtures.progress(engine, items[0].id)
+        due.stage = .learning
+        due.srsBox = 1
+        due.dueAt = t0.addingTimeInterval(-60)
+        try engine.store.saveProgress(due)
+
+        var settled = try Fixtures.progress(engine, items[1].id)
+        settled.stage = .known
+        settled.srsBox = 4
+        settled.dueAt = t0.addingTimeInterval(86_400)
+        try engine.store.saveProgress(settled)
+
+        let session = try engine.planSession(now: t0, seed: 1)
+        let release = session.queue.filter { $0.beat == .release }
+        XCTAssertEqual(release.count, 1)
+        XCTAssertEqual(release[0].question.itemId, items[1].id)
+        XCTAssertEqual(release[0].question.mode, .selfGrade)
+        XCTAssertEqual(session.queue.last?.beat, .release, "release closes the session")
+    }
+
     func testIntroducedItemLeavesNextSessionUntilDue() throws {
         let first = try engine.planSession(now: t0, seed: 1)
         let introducedId = first.queue[0].question.itemId

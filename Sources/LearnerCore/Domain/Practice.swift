@@ -4,6 +4,12 @@ public enum PracticeMode: String, Codable, CaseIterable, Sendable {
     case recognition
     case recall
     case cloze
+    /// Reassemble the target sentence from shuffled tokens (tactile
+    /// production without typing — Core Five, research/brainstorm 03).
+    case rebuild
+    /// Release-beat micro-production with honest self-report; the app never
+    /// pretends it can grade free production.
+    case selfGrade
 }
 
 public struct PracticeResult: Codable, Equatable, Sendable {
@@ -35,12 +41,20 @@ public enum Question: Equatable, Sendable {
     /// A captured sentence with the token blanked; type the surface form
     /// that appeared in that sentence.
     case cloze(itemId: String, sentenceWithBlank: String, expected: String)
+    /// Show the source sentence; rebuild the target sentence by ordering
+    /// the shuffled `tokens`. `expectedOrder` is the authored sentence.
+    case rebuild(itemId: String, sourceText: String, tokens: [String], expectedOrder: [String])
+    /// "Say — or think — a small sentence with <prompt>", then self-report
+    /// got-it / shaky. The example (when authored) is shown afterwards.
+    case selfGrade(itemId: String, prompt: String, exampleTarget: String?, exampleSource: String?)
 
     public var itemId: String {
         switch self {
         case .recognition(let id, _, _, _): return id
         case .recall(let id, _, _): return id
         case .cloze(let id, _, _): return id
+        case .rebuild(let id, _, _, _): return id
+        case .selfGrade(let id, _, _, _): return id
         }
     }
 
@@ -49,6 +63,8 @@ public enum Question: Equatable, Sendable {
         case .recognition: return .recognition
         case .recall: return .recall
         case .cloze: return .cloze
+        case .rebuild: return .rebuild
+        case .selfGrade: return .selfGrade
         }
     }
 }
