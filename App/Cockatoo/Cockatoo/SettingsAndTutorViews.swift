@@ -18,66 +18,127 @@ struct SettingsView: View {
     @State private var launchAtLoginError: String?
 
     var body: some View {
-        Form {
-            Section("General") {
-                Toggle("Launch Cockatoo at login", isOn: $launchAtLogin)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Settings")
+                    .font(.system(size: 21, weight: .semibold))
+                    .padding(.bottom, 4)
+
+                settingSection("GENERAL") {
+                    Toggle(isOn: $launchAtLogin) {
+                        Text("Launch Cockatoo at login").font(.system(size: 13))
+                    }
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .tint(Theme.goldDeep)
                     .onChange(of: launchAtLogin) { setLaunchAtLogin(launchAtLogin) }
-                if let launchAtLoginError {
-                    Text(launchAtLoginError).font(.caption).foregroundStyle(.red)
+                    if let launchAtLoginError {
+                        Text(launchAtLoginError).font(.caption).foregroundStyle(Theme.outcomeMissed)
+                    }
+                    caption("""
+                    Recommended: the Safari extension reads its vocabulary from the app, \
+                    so keeping Cockatoo running means swaps and progress sync are always live.
+                    """)
+                    Divider().overlay(Theme.line).padding(.vertical, 4)
+                    Button("Import language pack…", action: pickPack)
+                        .buttonStyle(.pill)
+                    caption("Re-importing a newer pack version keeps all your progress — items match by stable ID.")
                 }
-                Text("""
-                Recommended: the Safari extension reads its vocabulary from the app, \
-                so keeping Cockatoo running means swaps and progress sync are always live.
-                """).font(.caption).foregroundStyle(.secondary)
 
-                Button("Import language pack…", action: pickPack)
-                Text("Re-importing a newer pack version keeps all your progress — items match by stable ID.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-
-            Section("Language model (OpenAI-compatible)") {
-                TextField("Base URL", text: $baseURL, prompt: Text("https://openrouter.ai/api/v1"))
-                TextField("Model", text: $modelName, prompt: Text("e.g. anthropic/claude-sonnet-5"))
-                SecureField("API key (stored in Keychain)", text: $apiKey)
-                HStack {
-                    Button("Save") { save() }
-                    Button("Test connection") { testConnection() }
-                        .disabled(baseURL.isEmpty || modelName.isEmpty)
-                    if let testResult { Text(testResult).font(.callout).foregroundStyle(.secondary) }
+                settingSection("LANGUAGE MODEL · OPENAI-COMPATIBLE") {
+                    fieldRow("Base URL") {
+                        TextField("", text: $baseURL, prompt: Text("https://openrouter.ai/api/v1")).themeField()
+                    }
+                    fieldRow("Model") {
+                        TextField("", text: $modelName, prompt: Text("e.g. anthropic/claude-sonnet-5")).themeField()
+                    }
+                    fieldRow("API key") {
+                        SecureField("", text: $apiKey, prompt: Text("stored in the Keychain")).themeField()
+                    }
+                    HStack(spacing: 10) {
+                        Button("Save") { save() }
+                            .buttonStyle(.pillProminent)
+                        Button("Test connection") { testConnection() }
+                            .buttonStyle(.pill)
+                            .disabled(baseURL.isEmpty || modelName.isEmpty)
+                        if let testResult {
+                            Text(testResult).font(.system(size: 12)).foregroundStyle(Theme.inkMuted)
+                        }
+                    }
+                    .padding(.top, 2)
+                    caption("Works with OpenRouter, OpenAI, llama.cpp server (http://127.0.0.1:8080/v1) and Ollama (http://127.0.0.1:11434/v1).")
                 }
-                Text("Works with OpenRouter, OpenAI, llama.cpp server (http://127.0.0.1:8080/v1) and Ollama (http://127.0.0.1:11434/v1).")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
 
-            Section("Privacy") {
-                Toggle("Allow sending page sentences to the model", isOn: $pageContextOptIn)
+                settingSection("PRIVACY") {
+                    Toggle(isOn: $pageContextOptIn) {
+                        Text("Allow sending page sentences to the model").font(.system(size: 13))
+                    }
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .tint(Theme.goldDeep)
                     .onChange(of: pageContextOptIn) {
                         try? model.engine.store.setSetting(SettingsKey.pageContextOptIn, pageContextOptIn ? "true" : "false")
                     }
-                Text("""
-                Off (default): word swapping, hover, and reviews are fully local; only \
-                the tutor and word deep-dives use the model, and they send vocabulary \
-                words — never page text. On: sentences around a swapped word may be sent \
-                to your configured model to compute a better-inflected form. Enforced in \
-                the app, not just the UI.
-                """).font(.caption).foregroundStyle(.secondary)
-            }
+                    caption("""
+                    Off (default): word swapping, hover, and reviews are fully local; only \
+                    the tutor and word deep-dives use the model, and they send vocabulary \
+                    words — never page text. On: sentences around a swapped word may be sent \
+                    to your configured model to compute a better-inflected form. Enforced in \
+                    the app, not just the UI.
+                    """)
+                }
 
-            Section("Blocked sites") {
-                TextField("Hosts, comma-separated", text: $blockedHostsText, prompt: Text("bank.com, mail.example.org"))
-                    .onSubmit(saveBlockedHosts)
-                Button("Save blocked sites", action: saveBlockedHosts)
-            }
+                settingSection("BLOCKED SITES") {
+                    TextField("", text: $blockedHostsText, prompt: Text("bank.com, mail.example.org"))
+                        .themeField()
+                        .onSubmit(saveBlockedHosts)
+                    Button("Save blocked sites", action: saveBlockedHosts)
+                        .buttonStyle(.pill)
+                }
 
-            Section("How swapping works") {
-                HowSwappingWorksView()
+                settingSection("HOW SWAPPING WORKS") {
+                    HowSwappingWorksView()
+                }
             }
+            .frame(maxWidth: 640, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 32)
+            .padding(.top, 24)
+            .padding(.bottom, 32)
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Theme.bg)
         .onAppear(perform: load)
         .navigationTitle("Settings")
+    }
+
+    func settingSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(Theme.monoLabel())
+                .kerning(0.6)
+                .foregroundStyle(Theme.inkFaint)
+                .padding(.bottom, 2)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .themeCard(padding: 18)
+    }
+
+    func fieldRow(_ label: String, @ViewBuilder field: () -> some View) -> some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .frame(width: 80, alignment: .leading)
+            field()
+        }
+    }
+
+    func caption(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11.5))
+            .foregroundStyle(Theme.inkFaint)
+            .lineSpacing(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     func pickPack() {

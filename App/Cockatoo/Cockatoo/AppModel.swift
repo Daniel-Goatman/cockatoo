@@ -12,6 +12,10 @@ final class AppModel: ObservableObject {
     private var observation: AnyDatabaseCancellable?
 
     @Published var section: AppSection? = .dashboard
+    /// Chrome layout: at the base window size the two side panels don't both
+    /// fit, so opening one collapses the other (chevron toggles in the UI).
+    @Published var sidebarCollapsed = false
+    @Published var practiceInspectorOpen = false
     @Published var overview: LearnerEngine.Overview?
     @Published var needsOnboarding = false
     @Published var paused = false
@@ -73,6 +77,16 @@ final class AppModel: ObservableObject {
 
     func refresh() {
         overview = try? engine.overview(now: Date())
+    }
+
+    func toggleSidebar() {
+        sidebarCollapsed.toggle()
+        if !sidebarCollapsed { practiceInspectorOpen = false }
+    }
+
+    func togglePracticeInspector() {
+        practiceInspectorOpen.toggle()
+        if practiceInspectorOpen { sidebarCollapsed = true }
     }
 
     /// Menu bar badge: actionable reviews (due + ready). Introductions are

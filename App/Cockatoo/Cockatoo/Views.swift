@@ -61,72 +61,94 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Overview")
                     .font(.system(size: 21, weight: .semibold))
                     .padding(.bottom, 4)
                 if let o = model.overview {
-                    nextActionCard(o)
-                    HStack(spacing: 10) {
-                        StatTile(title: "Due now", value: "\(o.dueNow)")
-                        StatTile(title: "In rotation", value: "\((o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0))")
-                        StatTile(title: "Practicing", value: "\(o.countsByStage[.learning] ?? 0)")
-                        StatTile(title: "Words known", value: "\((o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0))")
-                    }
-                    if let tier = o.tierProgress {
-                        tierProgressCard(tier)
+                    heroCard(o)
+                    stageStripCard(o)
+                    HStack(spacing: 12) {
+                        practiceTile(o)
+                        libraryTile(o)
                     }
                     extensionStatusCard
-                    stageCard(o)
                 }
             }
-            // The prototype's calm 640pt reading column, centered.
+            // The prototype's calm reading column, centered.
             .frame(maxWidth: 640, alignment: .leading)
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 40)
+            .padding(.horizontal, 32)
             .padding(.top, 24)
             .padding(.bottom, 32)
         }
         .navigationTitle("Overview")
     }
 
-    // The dashboard's first job: say what to do next.
+    // The hub's first job: say what to do next — with the tier ring as the
+    // one piece of ambient progress, not a wall of stat cards.
     @ViewBuilder
-    func nextActionCard(_ o: LearnerEngine.Overview) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if o.practiceAvailable {
-                HStack(spacing: 12) {
-                    Button("Practice now") { model.section = .practice }
-                        .buttonStyle(.pillProminent)
-                    Text(practiceSubtitle(o))
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Label("All caught up", systemImage: "checkmark.circle")
-                    .font(.headline)
-                if let nextDue = o.nextDueAt {
-                    Text("Next review \(RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())).")
-                        .foregroundStyle(.secondary)
-                }
-            }
-            if !o.almostReady.isEmpty {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("ALMOST READY — KEEP READING IN SAFARI")
-                        .font(Theme.monoLabel())
-                        .foregroundStyle(Theme.inkFaint)
-                        .padding(.bottom, 4)
-                    ForEach(o.almostReady, id: \.itemId) { need in
-                        (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
-                            + Text(" — \(ExposureHint.text(for: need))"))
-                            .font(.callout)
+    func heroCard(_ o: LearnerEngine.Overview) -> some View {
+        HStack(alignment: .top, spacing: 24) {
+            VStack(alignment: .leading, spacing: 10) {
+                if o.practiceAvailable {
+                    HStack(spacing: 12) {
+                        Button("Practice now") { model.section = .practice }
+                            .buttonStyle(.pillProminent)
+                        Text(practiceSubtitle(o))
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.inkMuted)
+                    }
+                } else {
+                    Label("All caught up", systemImage: "checkmark.circle")
+                        .font(.headline)
+                    if let nextDue = o.nextDueAt {
+                        Text("Next review \(RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())).")
+                            .font(.system(size: 12.5))
                             .foregroundStyle(Theme.inkMuted)
                     }
                 }
-                .padding(.top, 4)
+                if !o.almostReady.isEmpty {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("ALMOST READY — KEEP READING IN SAFARI")
+                            .font(Theme.monoLabel())
+                            .foregroundStyle(Theme.inkFaint)
+                            .padding(.top, 6)
+                            .padding(.bottom, 3)
+                        ForEach(o.almostReady, id: \.itemId) { need in
+                            (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
+                                + Text(" — \(ExposureHint.text(for: need))"))
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(Theme.inkMuted)
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+            if let tier = o.tierProgress {
+                VStack(spacing: 8) {
+                    Text("TIER \(tier.nextTier)")
+                        .font(Theme.monoLabel())
+                        .kerning(0.6)
+                        .foregroundStyle(Theme.inkFaint)
+                    TierRing(known: tier.knownInCurrentTier, needed: tier.neededInCurrentTier, diameter: 104)
+                    if o.tierCheckReady {
+                        Text("check ready")
+                            .font(.system(size: 10, weight: .semibold))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Theme.gold.opacity(0.16), in: Capsule())
+                            .foregroundStyle(Theme.goldDeep)
+                    } else {
+                        Text("opens with a short check")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(Theme.inkFaint)
+                    }
+                }
+                .help("Unlocks through a short tier check once \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .themeCard()
+        .themeCard(padding: 20)
     }
 
     func practiceSubtitle(_ o: LearnerEngine.Overview) -> String {
@@ -138,37 +160,69 @@ struct DashboardView: View {
         return parts.joined(separator: " · ")
     }
 
-    func tierProgressCard(_ tier: LearnerEngine.TierProgress) -> some View {
-        let checkReady = model.overview?.tierCheckReady == true
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("Tier \(tier.nextTier)").font(.headline)
-                if checkReady {
-                    // Gold, not purple: the unlock is an earned gold moment.
-                    Label("check ready", systemImage: "flag.checkered")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(Theme.gold.opacity(0.16), in: Capsule())
-                        .foregroundStyle(Theme.goldDeep)
+    // Navigational tiles: one number each, and a door to the section.
+    func practiceTile(_ o: LearnerEngine.Overview) -> some View {
+        Button { model.section = .practice } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Image(systemName: "rectangle.stack")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.inkFaint)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.inkFaint)
                 }
-                Spacer()
-                Text("\(tier.knownInCurrentTier) of \(tier.neededInCurrentTier) known")
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                .padding(.bottom, 8)
+                Text("\(o.dueNow + o.readyCount)")
+                    .font(.system(size: 27, weight: .bold))
+                    .monospacedDigit()
+                Text("to practice")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.inkFaint)
+                Text("\(o.dueNow) due · \(o.introAvailable) new")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+                    .padding(.top, 5)
             }
-            ProgressView(value: Double(min(tier.knownInCurrentTier, tier.neededInCurrentTier)), total: Double(tier.neededInCurrentTier))
-                .tint(Theme.goldDeep)
-            if checkReady {
-                Text("Your next practice session ends with a \(EngineConfig.default.tierCheckQuestionCount)-question tier check — pass it to unlock tier \(tier.nextTier).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Unlocks through a short tier check once \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
         }
-        .themeCard()
+        .buttonStyle(.tile)
+    }
+
+    func libraryTile(_ o: LearnerEngine.Overview) -> some View {
+        let known = (o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0)
+        let onPages = (o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0)
+        return Button { model.section = .library } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Image(systemName: "books.vertical")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.inkFaint)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.inkFaint)
+                }
+                .padding(.bottom, 8)
+                Text("\(o.totalItems)")
+                    .font(.system(size: 27, weight: .bold))
+                    .monospacedDigit()
+                Text("words in your pack")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.inkFaint)
+                Text("\(known) known · \(onPages) on pages")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+                    .padding(.top, 5)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
+        }
+        .buttonStyle(.tile)
     }
 
     // Honest connectivity, two signals: IPC contact this launch (is the
@@ -201,62 +255,58 @@ struct DashboardView: View {
         .themeCard(padding: 12)
     }
 
-    // The four user-facing stages, pipeline-ordered, with the parked
-    // (upcoming) words last and muted — the dashboard shows motion, not a
-    // wall of unavailable items.
-    func stageCard(_ o: LearnerEngine.Overview) -> some View {
+    // The four user-facing stages as ONE stacked ramp bar (cold→gold),
+    // upcoming last and muted — motion, not a wall of rows.
+    func stageStripCard(_ o: LearnerEngine.Overview) -> some View {
         func count(_ stages: Stage...) -> Int {
             stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
         }
-        // The cold→gold ramp, pipeline-ordered.
         let groups: [(label: String, count: Int, color: Color, muted: Bool)] = [
             ("on pages", count(.ambient, .ready), Theme.stageOnPages, false),
             ("practicing", count(.learning), Theme.stagePracticing, false),
             ("known", count(.known, .mastered), Theme.stageKnown, false),
-            ("upcoming", count(.locked), Theme.stageUpcoming.opacity(0.6), true),
+            ("upcoming", count(.locked), Theme.stageUpcoming, true),
         ]
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("PROGRESS BY STAGE")
-                .font(Theme.monoLabel())
-                .kerning(0.6)
-                .foregroundStyle(Theme.inkFaint)
-                .padding(.bottom, 2)
-            ForEach(groups, id: \.label) { group in
-                HStack(spacing: 12) {
-                    Text(group.label)
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(Theme.inkMuted)
-                        .frame(width: 92, alignment: .leading)
-                    GeometryReader { geo in
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(group.color)
-                            .frame(width: max(2, geo.size.width * CGFloat(group.count) / CGFloat(max(1, o.totalItems))))
+        let total = CGFloat(max(1, o.totalItems))
+        return VStack(alignment: .leading, spacing: 11) {
+            HStack {
+                Text("PROGRESS BY STAGE")
+                    .font(Theme.monoLabel())
+                    .kerning(0.6)
+                    .foregroundStyle(Theme.inkFaint)
+                Spacer()
+                Text("\(o.totalItems) words")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(Theme.inkFaint)
+            }
+            GeometryReader { geo in
+                HStack(spacing: 2) {
+                    ForEach(groups.filter { $0.count > 0 }, id: \.label) { group in
+                        RoundedRectangle(cornerRadius: 2.5)
+                            .fill(group.color.opacity(group.muted ? 0.4 : 1))
+                            .frame(width: max(4, (geo.size.width - 6) * CGFloat(group.count) / total))
                     }
-                    .frame(height: 11)
-                    Text("\(group.count)")
-                        .font(.system(size: 11.5, design: .monospaced))
-                        .foregroundStyle(Theme.inkMuted)
-                        .frame(width: 40, alignment: .trailing)
+                    Spacer(minLength: 0)
                 }
-                .opacity(group.muted ? 0.5 : 1)
+            }
+            .frame(height: 12)
+            HStack(spacing: 16) {
+                ForEach(groups, id: \.label) { group in
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(group.color.opacity(group.muted ? 0.4 : 1))
+                            .frame(width: 7, height: 7)
+                        Text("\(group.label) \(group.count)")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(Theme.inkMuted)
+                            .monospacedDigit()
+                    }
+                }
+                Spacer(minLength: 0)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .themeCard()
-    }
-}
-
-struct StatTile: View {
-    let title: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(value).font(.title.bold().monospacedDigit())
-            Text(title).font(.caption).foregroundStyle(Theme.inkFaint)
-        }
-        .frame(minWidth: 120, alignment: .leading)
-        .themeCard(padding: 14)
     }
 }
 
@@ -307,7 +357,7 @@ struct LibraryView: View {
                     .background(Theme.bg)
                 }
             }
-            .padding(.horizontal, 40)
+            .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
         .onAppear(perform: reload)
@@ -317,18 +367,26 @@ struct LibraryView: View {
         .navigationTitle("Library")
     }
 
+    // Column widths sized so the last column survives the base window with
+    // the sidebar expanded — never clip the time-sensitive column.
+    static let colEnglish: CGFloat = 108
+    static let colGerman: CGFloat = 138
+    static let colStage: CGFloat = 96
+    static let colProgress: CGFloat = 112
+
     var columnHeader: some View {
         HStack(spacing: 12) {
-            Text("ENGLISH").frame(width: 150, alignment: .leading)
-            Text("GERMAN").frame(width: 170, alignment: .leading)
-            Text("STAGE").frame(width: 104, alignment: .leading)
-            Text("PROGRESS").frame(width: 140, alignment: .leading)
-            Text("NEXT REVIEW").frame(minWidth: 90, alignment: .leading)
+            Text("ENGLISH").frame(width: Self.colEnglish, alignment: .leading)
+            Text("GERMAN").frame(width: Self.colGerman, alignment: .leading)
+            Text("STAGE").frame(width: Self.colStage, alignment: .leading)
+            Text("PROGRESS").frame(width: Self.colProgress, alignment: .leading)
+            Text("NEXT REVIEW").frame(minWidth: 70, alignment: .leading)
             Spacer(minLength: 0)
         }
         .font(Theme.monoLabel())
         .kerning(0.5)
         .foregroundStyle(Theme.inkFaint)
+        .lineLimit(1)
         .padding(.horizontal, 10)
     }
 
@@ -359,25 +417,7 @@ struct LibraryView: View {
     }
 
     func row(_ row: LibraryRow) -> some View {
-        HStack(spacing: 12) {
-            Text(row.source)
-                .font(.system(size: 13))
-                .foregroundStyle(Theme.inkMuted)
-                .frame(width: 150, alignment: .leading)
-            Text(row.target)
-                .font(Theme.serif(14.5, weight: .medium))
-                .frame(width: 170, alignment: .leading)
-            StageChip(stage: row.stage).frame(width: 104, alignment: .leading)
-            progressCell(row).frame(width: 140, alignment: .leading)
-            Text(row.due)
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.inkFaint)
-                .frame(minWidth: 90, alignment: .leading)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .opacity(row.stage == .locked ? 0.55 : 1)
+        LibraryRowView(row: row) { progressCell(row) }
     }
 
     /// Ambient rows show exposure progress (the invisible waiting period,
@@ -438,6 +478,41 @@ struct LibraryView: View {
         tiers = Dictionary(grouping: rows, by: \.0)
             .sorted { $0.key < $1.key }
             .map { TierGroup(id: $0.key, rows: $0.value.map(\.1).sorted { $0.source < $1.source }) }
+    }
+}
+
+/// One library row: fixed columns matching the header, hover highlight.
+struct LibraryRowView<Progress: View>: View {
+    let row: LibraryView.LibraryRow
+    @ViewBuilder let progress: () -> Progress
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(row.source)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.inkMuted)
+                .lineLimit(1)
+                .frame(width: LibraryView.colEnglish, alignment: .leading)
+            Text(row.target)
+                .font(Theme.serif(14.5, weight: .medium))
+                .lineLimit(1)
+                .frame(width: LibraryView.colGerman, alignment: .leading)
+            StageChip(stage: row.stage).frame(width: LibraryView.colStage, alignment: .leading)
+            progress().frame(width: LibraryView.colProgress, alignment: .leading)
+            Text(row.due)
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.inkFaint)
+                .lineLimit(1)
+                .frame(minWidth: 70, alignment: .leading)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
+        .opacity(row.stage == .locked ? 0.55 : 1)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
     }
 }
 

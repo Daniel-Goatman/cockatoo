@@ -51,6 +51,7 @@ final class PracticeSessionModel: ObservableObject {
 
         let id: String             // itemId — one row per item
         var display: String        // target-language text, e.g. "das Haus"
+        var subtitle: String       // source text, e.g. "house"
         var outcome: Outcome
         var stage: Stage
         var dueAt: Date?
@@ -192,9 +193,11 @@ final class PracticeSessionModel: ObservableObject {
             ledger[i].stage = progress?.stage ?? ledger[i].stage
             ledger[i].dueAt = progress?.dueAt
         } else {
+            let item = try? engine.store.item(id: planned.question.itemId)
             ledger.append(LedgerEntry(
                 id: planned.question.itemId,
                 display: display,
+                subtitle: item?.bareSourceForm ?? "",
                 outcome: outcome,
                 stage: progress?.stage ?? .learning,
                 dueAt: progress?.dueAt

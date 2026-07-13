@@ -131,35 +131,98 @@ extension View {
 
 // MARK: - Buttons
 
-/// The prototype pill: quiet capsule; the prominent variant carries the
-/// signature gold underline-shadow that compresses on press.
+/// The prototype pill. The prominent variant's gold underline-shadow is
+/// hidden at rest and slides down in on hover; pressing compresses it.
 struct PillButtonStyle: ButtonStyle {
     var prominent = false
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12.5, weight: .semibold))
-            .foregroundStyle(prominent ? Theme.ink : Theme.inkMuted)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 8)
-            .background {
-                ZStack {
-                    if prominent {
-                        Capsule().fill(Theme.gold)
-                            .offset(y: configuration.isPressed ? 1 : 2.5)
+        PillBody(configuration: configuration, prominent: prominent)
+    }
+
+    private struct PillBody: View {
+        let configuration: Configuration
+        let prominent: Bool
+        @State private var hovering = false
+
+        var body: some View {
+            let goldOut = prominent && (hovering || configuration.isPressed)
+            configuration.label
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .font(.system(size: 12.5, weight: .semibold))
+                .foregroundStyle(prominent || hovering ? Theme.ink : Theme.inkMuted)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background {
+                    ZStack {
+                        if prominent {
+                            Capsule().fill(Theme.gold)
+                                .offset(y: configuration.isPressed ? 1.5 : 3)
+                                .opacity(goldOut ? 1 : 0)
+                        }
+                        Capsule().fill(Theme.cardBg)
+                        Capsule().strokeBorder(hovering ? Theme.line2 : Theme.line)
                     }
-                    Capsule().fill(Theme.cardBg)
-                    Capsule().strokeBorder(Theme.line2)
                 }
-            }
-            .offset(y: configuration.isPressed ? 1 : 0)
-            .animation(.easeOut(duration: 0.16), value: configuration.isPressed)
+                .offset(y: configuration.isPressed ? 1 : (hovering ? -1 : 0))
+                .onHover { hovering = $0 }
+                .animation(.easeOut(duration: 0.18), value: hovering)
+                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        }
     }
 }
 
 extension ButtonStyle where Self == PillButtonStyle {
     static var pill: PillButtonStyle { PillButtonStyle() }
     static var pillProminent: PillButtonStyle { PillButtonStyle(prominent: true) }
+}
+
+/// Clickable tile (Overview hub): card chrome that lifts on hover.
+struct TileButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        TileBody(configuration: configuration)
+    }
+
+    private struct TileBody: View {
+        let configuration: Configuration
+        @State private var hovering = false
+
+        var body: some View {
+            configuration.label
+                .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(hovering ? Theme.line2 : Theme.line)
+                )
+                .offset(y: hovering ? -1.5 : 0)
+                .shadow(color: .black.opacity(hovering ? 0.25 : 0), radius: 10, y: 6)
+                .scaleEffect(configuration.isPressed ? 0.99 : 1)
+                .onHover { hovering = $0 }
+                .animation(.easeOut(duration: 0.18), value: hovering)
+        }
+    }
+}
+
+extension ButtonStyle where Self == TileButtonStyle {
+    static var tile: TileButtonStyle { TileButtonStyle() }
+}
+
+/// Themed text input: sunken field on card surfaces.
+struct ThemeField: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .textFieldStyle(.plain)
+            .font(.system(size: 13))
+            .padding(.horizontal, 11)
+            .padding(.vertical, 8)
+            .background(Theme.bg, in: RoundedRectangle(cornerRadius: 7))
+            .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.line2))
+    }
+}
+
+extension View {
+    func themeField() -> some View { modifier(ThemeField()) }
 }
 
 // MARK: - The mark

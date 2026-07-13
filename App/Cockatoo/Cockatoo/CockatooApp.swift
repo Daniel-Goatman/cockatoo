@@ -24,6 +24,7 @@ struct CockatooApp: App {
         // Flush chrome (visual-redesign plan §direction): no titlebar band —
         // the sidebar runs to the top and the traffic lights float over it.
         .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 880, height: 580)
 
         MenuBarExtra {
             MenuBarContent()
@@ -137,9 +138,13 @@ struct RootView: View {
                 HStack(spacing: 0) {
                     SidebarView()
                     detail
+                        .id(model.section)
+                        .transition(.opacity.combined(with: .offset(y: 6)))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Theme.bg)
                 }
+                .animation(.spring(response: 0.32, dampingFraction: 0.85), value: model.sidebarCollapsed)
+                .animation(.easeOut(duration: 0.18), value: model.section)
             }
         }
         .foregroundStyle(Theme.ink)
@@ -164,69 +169,45 @@ struct RootView: View {
 struct SidebarView: View {
     @EnvironmentObject var model: AppModel
 
+    var collapsed: Bool { model.sidebarCollapsed }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 9) {
                 CockatooMark(eyeColor: Theme.sideBg)
                     .frame(width: 17, height: 17)
-                Text("Cockatoo")
-                    .font(.system(size: 13, weight: .semibold))
+                if !collapsed {
+                    Text("Cockatoo")
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
+                }
             }
-            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
+            .padding(.horizontal, collapsed ? 0 : 20)
             .padding(.bottom, 14)
 
             VStack(spacing: 1) {
-                ForEach(AppSection.allCases, id: \.self, content: row)
+                ForEach(AppSection.allCases, id: \.self) { section in
+                    SidebarRow(section: section, collapsed: collapsed)
+                }
             }
             .padding(.horizontal, 10)
 
             Spacer(minLength: 0)
+
+            SidebarChevron(collapsed: collapsed) { model.toggleSidebar() }
+                .padding(.horizontal, collapsed ? 0 : 18)
+                .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
+                .padding(.bottom, 10)
             footer
-                .padding(.horizontal, 21)
+                .padding(.horizontal, collapsed ? 0 : 21)
+                .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
                 .padding(.bottom, 14)
         }
         .padding(.top, Theme.chromeTop)
-        .frame(width: 212)
+        .frame(width: collapsed ? 64 : 212)
         .frame(maxHeight: .infinity)
         .background(Theme.sideBg)
-    }
-
-    func row(_ section: AppSection) -> some View {
-        let isOn = (model.section ?? .dashboard) == section
-        return Button {
-            model.section = section
-        } label: {
-            HStack(spacing: 11) {
-                Image(systemName: section.icon)
-                    .font(.system(size: 13))
-                    .frame(width: 17)
-                    .foregroundStyle(isOn ? Theme.gold : Theme.inkMuted.opacity(0.82))
-                Text(section.title)
-                    .font(.system(size: 13.5))
-                    .foregroundStyle(isOn ? Theme.ink : Theme.inkMuted)
-                Spacer(minLength: 0)
-                if section == .practice, let due = model.overview?.dueNow, due > 0 {
-                    Text("\(due)")
-                        .font(Theme.monoLabel())
-                        .foregroundStyle(Theme.inkMuted)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.line2))
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius))
-            .background(
-                RoundedRectangle(cornerRadius: Theme.controlRadius)
-                    .fill(isOn ? Theme.selection : .clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.controlRadius)
-                    .strokeBorder(isOn ? Theme.selectionLine : .clear)
-            )
-        }
-        .buttonStyle(.plain)
     }
 
     var footer: some View {
@@ -235,17 +216,104 @@ struct SidebarView: View {
                 .fill(model.lastExtensionContact != nil ? Theme.live : Theme.inkFaint)
                 .frame(width: 7, height: 7)
                 .padding(.top, 4)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(model.lastExtensionContact != nil ? "Extension connected" : "Extension not connected")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(Theme.inkMuted)
-                if let contact = model.lastExtensionContact {
-                    Text("synced \(RelativeDateTimeFormatter().localizedString(for: contact, relativeTo: Date()))")
-                        .font(.system(size: 10.5, design: .monospaced))
-                        .foregroundStyle(Theme.inkFaint)
+                .help(model.lastExtensionContact != nil ? "Extension connected" : "Extension not connected")
+            if !collapsed {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(model.lastExtensionContact != nil ? "Extension connected" : "Extension not connected")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(Theme.inkMuted)
+                        .lineLimit(1)
+                    if let contact = model.lastExtensionContact {
+                        Text("synced \(RelativeDateTimeFormatter().localizedString(for: contact, relativeTo: Date()))")
+                            .font(.system(size: 10.5, design: .monospaced))
+                            .foregroundStyle(Theme.inkFaint)
+                            .lineLimit(1)
+                    }
                 }
             }
         }
+    }
+}
+
+struct SidebarRow: View {
+    @EnvironmentObject var model: AppModel
+    let section: AppSection
+    let collapsed: Bool
+    @State private var hovering = false
+
+    var body: some View {
+        let isOn = (model.section ?? .dashboard) == section
+        Button {
+            model.section = section
+        } label: {
+            HStack(spacing: 11) {
+                Image(systemName: section.icon)
+                    .font(.system(size: 13))
+                    .frame(width: 17)
+                    .foregroundStyle(isOn ? Theme.gold : Theme.inkMuted.opacity(0.82))
+                if !collapsed {
+                    Text(section.title)
+                        .font(.system(size: 13.5))
+                        .foregroundStyle(isOn ? Theme.ink : (hovering ? Theme.ink : Theme.inkMuted))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if section == .practice, let due = model.overview?.dueNow, due > 0 {
+                        Text("\(due)")
+                            .font(Theme.monoLabel())
+                            .foregroundStyle(Theme.inkMuted)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.line2))
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
+            .padding(.horizontal, collapsed ? 0 : 10)
+            .padding(.vertical, 7)
+            .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius))
+            .background(
+                RoundedRectangle(cornerRadius: Theme.controlRadius)
+                    .fill(isOn ? Theme.selection : (hovering ? Theme.surface : .clear))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.controlRadius)
+                    .strokeBorder(isOn ? Theme.selectionLine : .clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
+        .help(collapsed ? section.title : "")
+    }
+}
+
+/// The subtle chevron that expands/collapses a side panel. `edge` is the
+/// window edge the panel lives on; the chevron points where the panel goes.
+struct SidebarChevron: View {
+    var edge: HorizontalEdge = .leading
+    let collapsed: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var icon: String {
+        switch edge {
+        case .leading: return collapsed ? "chevron.right" : "chevron.left"
+        case .trailing: return collapsed ? "chevron.left" : "chevron.right"
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(hovering ? Theme.ink : Theme.inkFaint)
+                .frame(width: 22, height: 22)
+                .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
+        .help(collapsed ? "Expand panel" : "Collapse panel")
     }
 }
 

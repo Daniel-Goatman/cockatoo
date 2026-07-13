@@ -22,7 +22,6 @@ struct PracticeSessionView: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var session: PracticeSessionModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var inspectorOpen = true
 
     var body: some View {
         Group {
@@ -30,11 +29,12 @@ struct PracticeSessionView: View {
                 HStack(spacing: 0) {
                     mainColumn(planned)
                     // Focus narrows for the check; the inspector returns after.
-                    if inspectorOpen, planned.beat != .tierCheck {
+                    if model.practiceInspectorOpen, planned.beat != .tierCheck {
                         PracticeInspector(session: session)
                             .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                     }
                 }
+                .animation(cardAnimation, value: model.practiceInspectorOpen)
             } else if !session.ledger.isEmpty {
                 if let unlocked = session.unlockedTier, !session.celebrationSeen {
                     CelebrationView(tier: unlocked) { session.celebrationSeen = true }
@@ -110,14 +110,10 @@ struct PracticeSessionView: View {
             Button("End session") { session.finishEarly() }
                 .buttonStyle(.pill)
                 .help("Finish now and see the session ledger")
-            Button {
-                withAnimation(cardAnimation) { inspectorOpen.toggle() }
-            } label: {
-                Image(systemName: "sidebar.right")
-                    .foregroundStyle(Theme.inkMuted)
+            SidebarChevron(edge: .trailing, collapsed: !model.practiceInspectorOpen) {
+                model.togglePracticeInspector()
             }
-            .buttonStyle(.plain)
-            .help("Toggle session panel")
+            .help(model.practiceInspectorOpen ? "Hide session panel" : "Show session panel")
         }
         .frame(height: Theme.chromeTop)
     }
@@ -343,6 +339,9 @@ struct PracticeSessionView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: 420)
+        // Hug the text — without this the colour bar's unbounded ideal
+        // height inflates the panel to fill the column.
+        .fixedSize(horizontal: false, vertical: true)
         .background(Theme.cardBg)
         .clipShape(RoundedRectangle(cornerRadius: 9))
         .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.line))
@@ -511,18 +510,35 @@ struct ChoiceButtonStyle: ButtonStyle {
     var visual: ChoiceVisual
 
     func makeBody(configuration: Configuration) -> some View {
-        let border: Color
-        switch visual {
-        case .idle, .dimmed: border = Theme.line
-        case .right: border = Theme.gold
-        case .wrongPick: border = Theme.outcomeMissed
+        ChoiceBody(configuration: configuration, visual: visual)
+    }
+
+    private struct ChoiceBody: View {
+        let configuration: Configuration
+        let visual: ChoiceVisual
+        @State private var hovering = false
+
+        var border: Color {
+            switch visual {
+            case .right: return Theme.gold
+            case .wrongPick: return Theme.outcomeMissed
+            case .idle: return hovering ? Theme.line2 : Theme.line
+            case .dimmed: return Theme.line
+            }
         }
-        return configuration.label
-            .foregroundStyle(Theme.ink)
-            .background(Theme.cardBg, in: RoundedRectangle(cornerRadius: 9))
-            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(border, lineWidth: visual == .right ? 1.5 : 1))
-            .opacity(visual == .dimmed ? 0.55 : 1)
-            .scaleEffect(configuration.isPressed ? 0.99 : 1)
+
+        var body: some View {
+            configuration.label
+                .foregroundStyle(Theme.ink)
+                .background(hovering && visual == .idle ? Theme.surface : Theme.cardBg,
+                            in: RoundedRectangle(cornerRadius: 9))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(border, lineWidth: visual == .right ? 1.5 : 1))
+                .opacity(visual == .dimmed ? 0.55 : 1)
+                .offset(y: hovering && visual == .idle ? -1 : 0)
+                .scaleEffect(configuration.isPressed ? 0.99 : 1)
+                .onHover { hovering = $0 }
+                .animation(.easeOut(duration: 0.14), value: hovering)
+        }
     }
 }
 
@@ -604,33 +620,67 @@ struct PracticeInspector: View {
 
     var doneStack: some View {
         let entries = Array(session.ledger.suffix(6))
-        let messy: [Double] = [0, -1.4, 1.8, -2.2, 1.4]
         return ZStack(alignment: .top) {
             ForEach(Array(entries.enumerated()), id: \.element.id) { i, entry in
-                HStack(spacing: 8) {
-                    Text(entry.display)
-                        .font(Theme.serif(15, weight: .semibold))
-                        .lineLimit(1)
-                    Spacer(minLength: 6)
-                    Circle().fill(entry.outcome.color).frame(width: 7, height: 7)
-                    Text(entry.outcome.label)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(Theme.inkMuted)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .frame(width: 196)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.line2))
-                .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
-                .rotationEffect(.degrees(messy[i % messy.count]))
-                .offset(y: CGFloat(i) * 30)
-                .zIndex(Double(i))
+                DoneCard(entry: entry, index: i)
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: entries.isEmpty ? 0 : CGFloat(entries.count - 1) * 30 + 44, alignment: .top)
+        .frame(height: entries.isEmpty ? 0 : CGFloat(entries.count - 1) * 32 + 62, alignment: .top)
         .animation(.spring(response: 0.34, dampingFraction: 0.85), value: session.ledger.count)
+    }
+}
+
+/// One fanned "done this session" card. Hover brings it to the front,
+/// straightens and lifts it so the whole card is readable.
+struct DoneCard: View {
+    let entry: PracticeSessionModel.LedgerEntry
+    let index: Int
+    @State private var hovering = false
+
+    private static let messy: [Double] = [0, -1.4, 1.8, -2.2, 1.4]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 8) {
+                Text(entry.display)
+                    .font(Theme.serif(15, weight: .semibold))
+                    .lineLimit(1)
+                Spacer(minLength: 6)
+                Circle().fill(entry.outcome.color).frame(width: 7, height: 7)
+                Text(entry.outcome.label)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(Theme.inkMuted)
+            }
+            HStack {
+                Text(entry.subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.inkMuted)
+                    .lineLimit(1)
+                Spacer(minLength: 6)
+                if let dueAt = entry.dueAt {
+                    Text(RelativeDateTimeFormatter().localizedString(for: dueAt, relativeTo: Date()))
+                        .font(.system(size: 9.5, design: .monospaced))
+                        .foregroundStyle(Theme.inkFaint)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(width: 204)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(hovering ? Theme.gold.opacity(0.5) : Theme.line2)
+        )
+        .shadow(color: .black.opacity(hovering ? 0.5 : 0.3), radius: hovering ? 12 : 6, y: hovering ? 8 : 4)
+        .scaleEffect(hovering ? 1.05 : 1)
+        .rotationEffect(.degrees(hovering ? 0 : Self.messy[index % Self.messy.count]))
+        .offset(y: CGFloat(index) * 32 + (hovering ? -6 : 0))
+        .zIndex(hovering ? 100 : Double(index))
+        .onHover { hovering = $0 }
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: hovering)
     }
 }
 
@@ -638,6 +688,7 @@ struct PracticeInspector: View {
 struct TierRing: View {
     let known: Int
     let needed: Int
+    var diameter: CGFloat = 132
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
 
@@ -646,22 +697,23 @@ struct TierRing: View {
     }
 
     var body: some View {
+        let stroke = diameter * 9 / 132
         ZStack {
-            Circle().stroke(Theme.line, lineWidth: 9)
+            Circle().stroke(Theme.line, lineWidth: stroke)
             Circle()
                 .trim(from: 0, to: shown ? fraction : 0)
-                .stroke(Theme.gold, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                .stroke(Theme.gold, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 2) {
                 Text("\(known)")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: diameter * 0.2, weight: .semibold))
                     .monospacedDigit()
                 Text("of \(needed) needed")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: max(9, diameter * 0.075), design: .monospaced))
                     .foregroundStyle(Theme.inkFaint)
             }
         }
-        .frame(width: 132, height: 132)
+        .frame(width: diameter, height: diameter)
         .onAppear {
             if reduceMotion {
                 shown = true
