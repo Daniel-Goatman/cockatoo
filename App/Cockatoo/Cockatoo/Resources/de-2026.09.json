@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "language": "de",
-  "version": "2026.08",
+  "version": "2026.09",
   "provenance": {
     "corpus": "hand-curated seed + model-authored expansion, frequency-informed (full FrequencyWords/OpenSubtitles pipeline pending)",
     "license": "project-original content",
     "packtool": "seed-generator-2.0",
     "authoringModel": "claude-fable-5 (bands 5-10 + additions; human spot-review: docs/pack-review-2026.08.md)",
-    "generatedAt": "2026-07-11"
+    "generatedAt": "2026-07-14"
   },
   "grading": {
     "articles": [
@@ -46,6 +46,14 @@
         {
           "source": "Bread and butter.",
           "target": "Brot und Butter."
+        },
+        {
+          "source": "Coffee and cake.",
+          "target": "Kaffee und Kuchen."
+        },
+        {
+          "source": "You and I stay here.",
+          "target": "Du und ich bleiben hier."
         }
       ]
     },
@@ -76,6 +84,14 @@
         {
           "source": "I am coming, but later.",
           "target": "Ich komme, aber später."
+        },
+        {
+          "source": "Small, but nice.",
+          "target": "Klein, aber fein."
+        },
+        {
+          "source": "I am tired, but happy.",
+          "target": "Ich bin müde, aber glücklich."
         }
       ]
     },
@@ -106,6 +122,14 @@
         {
           "source": "Coffee or tea?",
           "target": "Kaffee oder Tee?"
+        },
+        {
+          "source": "Now or never.",
+          "target": "Jetzt oder nie."
+        },
+        {
+          "source": "Are we walking or driving?",
+          "target": "Gehen wir oder fahren wir?"
         }
       ]
     },
@@ -136,6 +160,14 @@
         {
           "source": "Me too.",
           "target": "Ich auch."
+        },
+        {
+          "source": "My sister is also coming.",
+          "target": "Meine Schwester kommt auch."
+        },
+        {
+          "source": "That is also possible.",
+          "target": "Das ist auch möglich."
         }
       ]
     },
@@ -166,6 +198,14 @@
         {
           "source": "That is not good.",
           "target": "Das ist nicht gut."
+        },
+        {
+          "source": "I do not know that.",
+          "target": "Das weiß ich nicht."
+        },
+        {
+          "source": "The water is not warm.",
+          "target": "Das Wasser ist nicht warm."
         }
       ]
     },
@@ -196,6 +236,14 @@
         {
           "source": "We are here.",
           "target": "Wir sind hier."
+        },
+        {
+          "source": "The bakery here is good.",
+          "target": "Die Bäckerei hier ist gut."
+        },
+        {
+          "source": "Here it is quiet.",
+          "target": "Hier ist es ruhig."
         }
       ]
     },
@@ -226,6 +274,14 @@
         {
           "source": "We are going now.",
           "target": "Wir gehen jetzt."
+        },
+        {
+          "source": "The film starts now.",
+          "target": "Der Film beginnt jetzt."
+        },
+        {
+          "source": "Now I understand.",
+          "target": "Jetzt verstehe ich."
         }
       ]
     },
@@ -256,6 +312,14 @@
         {
           "source": "Today is Monday.",
           "target": "Heute ist Montag."
+        },
+        {
+          "source": "Today the sun is shining.",
+          "target": "Heute scheint die Sonne."
+        },
+        {
+          "source": "What are we doing today?",
+          "target": "Was machen wir heute?"
         }
       ]
     },
@@ -302,6 +366,14 @@
         {
           "source": "The house is old.",
           "target": "Das Haus ist alt."
+        },
+        {
+          "source": "The house has a garden.",
+          "target": "Das Haus hat einen Garten."
+        },
+        {
+          "source": "We are buying a house.",
+          "target": "Wir kaufen ein Haus."
         }
       ]
     },
@@ -348,6 +420,14 @@
         {
           "source": "The dog is sleeping.",
           "target": "Der Hund schläft."
+        },
+        {
+          "source": "The dog wants to go outside.",
+          "target": "Der Hund will nach draußen."
+        },
+        {
+          "source": "A dog is waiting at the door.",
+          "target": "Ein Hund wartet an der Tür."
         }
       ]
     },
@@ -386,6 +466,14 @@
         {
           "source": "The water is cold.",
           "target": "Das Wasser ist kalt."
+        },
+        {
+          "source": "A glass of water, please.",
+          "target": "Ein Glas Wasser, bitte."
+        },
+        {
+          "source": "The water in the lake is clear.",
+          "target": "Das Wasser im See ist klar."
         }
       ]
     },
@@ -432,6 +520,14 @@
         {
           "source": "The book is good.",
           "target": "Das Buch ist gut."
+        },
+        {
+          "source": "I am reading a good book.",
+          "target": "Ich lese ein gutes Buch."
+        },
+        {
+          "source": "The book is on the table.",
+          "target": "Das Buch liegt auf dem Tisch."
         }
       ]
     },
@@ -462,6 +558,14 @@
         {
           "source": "It is always like that.",
           "target": "Es ist immer so."
+        },
+        {
+          "source": "It is always cold here.",
+          "target": "Hier ist es immer kalt."
+        },
+        {
+          "source": "She always comes on time.",
+          "target": "Sie kommt immer pünktlich."
         }
       ]
     },
@@ -492,6 +596,14 @@
         {
           "source": "We see that often.",
           "target": "Wir sehen das oft."
+        },
+        {
+          "source": "We often eat pasta.",
+          "target": "Wir essen oft Nudeln."
+        },
+        {
+          "source": "It often rains in April.",
+          "target": "Im April regnet es oft."
         }
       ]
     },
@@ -522,6 +634,14 @@
         {
           "source": "That never happens.",
           "target": "Das passiert nie."
+        },
+        {
+          "source": "I never drink coffee.",
+          "target": "Ich trinke nie Kaffee."
+        },
+        {
+          "source": "It is never too late.",
+          "target": "Es ist nie zu spät."
         }
       ]
     },
@@ -552,6 +672,14 @@
         {
           "source": "We will see each other again.",
           "target": "Wir sehen uns wieder."
+        },
+        {
+          "source": "It is raining again.",
+          "target": "Es regnet wieder."
+        },
+        {
+          "source": "We will try it again.",
+          "target": "Wir versuchen es wieder."
         }
       ]
     },
@@ -582,6 +710,14 @@
         {
           "source": "Thank you very much.",
           "target": "Danke sehr."
+        },
+        {
+          "source": "The city is very old.",
+          "target": "Die Stadt ist sehr alt."
+        },
+        {
+          "source": "I like that very much.",
+          "target": "Das gefällt mir sehr."
         }
       ]
     },
@@ -616,6 +752,14 @@
         {
           "source": "Maybe tomorrow.",
           "target": "Vielleicht morgen."
+        },
+        {
+          "source": "Maybe it will rain.",
+          "target": "Vielleicht regnet es."
+        },
+        {
+          "source": "Maybe he is right.",
+          "target": "Vielleicht hat er recht."
         }
       ]
     },
@@ -646,6 +790,14 @@
         {
           "source": "See you tomorrow!",
           "target": "Bis morgen!"
+        },
+        {
+          "source": "Tomorrow is a new day.",
+          "target": "Morgen ist ein neuer Tag."
+        },
+        {
+          "source": "We are driving to Berlin tomorrow.",
+          "target": "Wir fahren morgen nach Berlin."
         }
       ]
     },
@@ -676,6 +828,14 @@
         {
           "source": "Yesterday was Sunday.",
           "target": "Gestern war Sonntag."
+        },
+        {
+          "source": "Yesterday I was at home.",
+          "target": "Gestern war ich zu Hause."
+        },
+        {
+          "source": "The letter arrived yesterday.",
+          "target": "Der Brief kam gestern an."
         }
       ]
     },
@@ -722,6 +882,14 @@
         {
           "source": "The city is big.",
           "target": "Die Stadt ist groß."
+        },
+        {
+          "source": "The city never sleeps.",
+          "target": "Die Stadt schläft nie."
+        },
+        {
+          "source": "We live near the city.",
+          "target": "Wir wohnen nahe der Stadt."
         }
       ]
     },
@@ -768,6 +936,14 @@
         {
           "source": "The child is laughing.",
           "target": "Das Kind lacht."
+        },
+        {
+          "source": "The child is playing in the garden.",
+          "target": "Das Kind spielt im Garten."
+        },
+        {
+          "source": "A child is singing.",
+          "target": "Ein Kind singt."
         }
       ]
     },
@@ -814,6 +990,14 @@
         {
           "source": "My friend lives here.",
           "target": "Mein Freund wohnt hier."
+        },
+        {
+          "source": "A friend is helping me.",
+          "target": "Ein Freund hilft mir."
+        },
+        {
+          "source": "My friend cooks for us.",
+          "target": "Mein Freund kocht für uns."
         }
       ]
     },
@@ -860,6 +1044,14 @@
         {
           "source": "A year has twelve months.",
           "target": "Ein Jahr hat zwölf Monate."
+        },
+        {
+          "source": "The year is going by quickly.",
+          "target": "Das Jahr vergeht schnell."
+        },
+        {
+          "source": "Next year we are travelling.",
+          "target": "Nächstes Jahr reisen wir."
         }
       ]
     },
@@ -894,6 +1086,14 @@
         {
           "source": "There is a lot to see.",
           "target": "Es gibt viel zu sehen."
+        },
+        {
+          "source": "There is a problem.",
+          "target": "Es gibt ein Problem."
+        },
+        {
+          "source": "There is nothing new.",
+          "target": "Es gibt nichts Neues."
         }
       ]
     },
@@ -924,6 +1124,14 @@
         {
           "source": "Many cities, for example Berlin.",
           "target": "Viele Städte, zum Beispiel Berlin."
+        },
+        {
+          "source": "Animals, for example cats and dogs.",
+          "target": "Tiere, zum Beispiel Katzen und Hunde."
+        },
+        {
+          "source": "For example on Sunday.",
+          "target": "Zum Beispiel am Sonntag."
         }
       ]
     },
@@ -954,6 +1162,14 @@
         {
           "source": "Coffee with milk.",
           "target": "Kaffee mit Milch."
+        },
+        {
+          "source": "We are driving with the car.",
+          "target": "Wir fahren mit dem Auto."
+        },
+        {
+          "source": "Tea with milk, please.",
+          "target": "Tee mit Milch, bitte."
         }
       ]
     },
@@ -984,6 +1200,14 @@
         {
           "source": "Without you it is boring.",
           "target": "Ohne dich ist es langweilig."
+        },
+        {
+          "source": "Coffee without sugar, please.",
+          "target": "Kaffee ohne Zucker, bitte."
+        },
+        {
+          "source": "We are going without him.",
+          "target": "Wir gehen ohne ihn."
         }
       ]
     },
@@ -1014,6 +1238,14 @@
         {
           "source": "Yes, gladly!",
           "target": "Ja, gerne!"
+        },
+        {
+          "source": "Yes, that works.",
+          "target": "Ja, das passt."
+        },
+        {
+          "source": "Yes, I am coming along.",
+          "target": "Ja, ich komme mit."
         }
       ]
     },
@@ -1044,6 +1276,14 @@
         {
           "source": "One coffee, please.",
           "target": "Einen Kaffee, bitte."
+        },
+        {
+          "source": "Two tickets, please.",
+          "target": "Zwei Karten, bitte."
+        },
+        {
+          "source": "Please wait here.",
+          "target": "Bitte hier warten."
         }
       ]
     },
@@ -1074,6 +1314,14 @@
         {
           "source": "Hello, how are you?",
           "target": "Hallo, wie geht's?"
+        },
+        {
+          "source": "Hello, nice to meet you.",
+          "target": "Hallo, schön dich kennenzulernen."
+        },
+        {
+          "source": "Hello, is anyone there?",
+          "target": "Hallo, ist da jemand?"
         }
       ]
     },
@@ -1104,6 +1352,14 @@
         {
           "source": "That is really good.",
           "target": "Das ist wirklich gut."
+        },
+        {
+          "source": "Is that really true?",
+          "target": "Ist das wirklich wahr?"
+        },
+        {
+          "source": "The food is really tasty.",
+          "target": "Das Essen ist wirklich lecker."
         }
       ]
     },
@@ -1134,6 +1390,14 @@
         {
           "source": "It is raining; we are going nevertheless.",
           "target": "Es regnet, trotzdem gehen wir."
+        },
+        {
+          "source": "It is late; we are staying nevertheless.",
+          "target": "Es ist spät, trotzdem bleiben wir."
+        },
+        {
+          "source": "He is tired; he works nevertheless.",
+          "target": "Er ist müde, trotzdem arbeitet er."
         }
       ]
     },
@@ -1164,6 +1428,14 @@
         {
           "source": "That is why I am here.",
           "target": "Deshalb bin ich hier."
+        },
+        {
+          "source": "It is cold, therefore we are staying inside.",
+          "target": "Es ist kalt, deshalb bleiben wir drinnen."
+        },
+        {
+          "source": "Therefore we are starting early.",
+          "target": "Deshalb beginnen wir früh."
         }
       ]
     },
@@ -1194,6 +1466,14 @@
         {
           "source": "It is almost done.",
           "target": "Es ist fast fertig."
+        },
+        {
+          "source": "It is almost midnight.",
+          "target": "Es ist fast Mitternacht."
+        },
+        {
+          "source": "Almost everyone is here.",
+          "target": "Fast alle sind da."
         }
       ]
     },
@@ -1224,6 +1504,14 @@
         {
           "source": "Only today.",
           "target": "Nur heute."
+        },
+        {
+          "source": "It costs only two euros.",
+          "target": "Es kostet nur zwei Euro."
+        },
+        {
+          "source": "Only one question, please.",
+          "target": "Nur eine Frage, bitte."
         }
       ]
     },
@@ -1254,6 +1542,14 @@
         {
           "source": "I am already there.",
           "target": "Ich bin schon da."
+        },
+        {
+          "source": "The bus is already here.",
+          "target": "Der Bus ist schon da."
+        },
+        {
+          "source": "It is already late.",
+          "target": "Es ist schon spät."
         }
       ]
     },
@@ -1284,6 +1580,14 @@
         {
           "source": "We are here together.",
           "target": "Wir sind zusammen hier."
+        },
+        {
+          "source": "We are cooking together today.",
+          "target": "Wir kochen heute zusammen."
+        },
+        {
+          "source": "Together it goes faster.",
+          "target": "Zusammen geht es schneller."
         }
       ]
     },
@@ -1314,6 +1618,14 @@
         {
           "source": "See you soon!",
           "target": "Bis bald!"
+        },
+        {
+          "source": "The train is coming soon.",
+          "target": "Der Zug kommt bald."
+        },
+        {
+          "source": "It will soon be winter.",
+          "target": "Bald ist Winter."
         }
       ]
     },
@@ -1344,6 +1656,14 @@
         {
           "source": "Unfortunately not.",
           "target": "Leider nein."
+        },
+        {
+          "source": "Unfortunately I have no time.",
+          "target": "Leider habe ich keine Zeit."
+        },
+        {
+          "source": "The shop is unfortunately closed.",
+          "target": "Der Laden ist leider zu."
         }
       ]
     },
@@ -1390,6 +1710,14 @@
         {
           "source": "The world is small.",
           "target": "Die Welt ist klein."
+        },
+        {
+          "source": "The world is changing.",
+          "target": "Die Welt verändert sich."
+        },
+        {
+          "source": "A map of the world.",
+          "target": "Eine Karte der Welt."
         }
       ]
     },
@@ -1436,6 +1764,14 @@
         {
           "source": "The night was long.",
           "target": "Die Nacht war lang."
+        },
+        {
+          "source": "The night is quiet.",
+          "target": "Die Nacht ist still."
+        },
+        {
+          "source": "We are driving through the night.",
+          "target": "Wir fahren durch die Nacht."
         }
       ]
     },
@@ -1482,6 +1818,14 @@
         {
           "source": "The door is open.",
           "target": "Die Tür ist offen."
+        },
+        {
+          "source": "Please close the door.",
+          "target": "Bitte die Tür schließen."
+        },
+        {
+          "source": "The door is locked.",
+          "target": "Die Tür ist abgeschlossen."
         }
       ]
     },
@@ -1528,6 +1872,14 @@
         {
           "source": "My hand is cold.",
           "target": "Meine Hand ist kalt."
+        },
+        {
+          "source": "Give me your hand.",
+          "target": "Gib mir deine Hand."
+        },
+        {
+          "source": "He is waving with his hand.",
+          "target": "Er winkt mit der Hand."
         }
       ]
     },
@@ -1558,6 +1910,14 @@
         {
           "source": "Of course I am coming.",
           "target": "Natürlich komme ich."
+        },
+        {
+          "source": "Of course that works.",
+          "target": "Natürlich geht das."
+        },
+        {
+          "source": "Of course you can come along.",
+          "target": "Natürlich kannst du mitkommen."
         }
       ]
     },
@@ -1588,6 +1948,14 @@
         {
           "source": "Where are you?",
           "target": "Wo bist du?"
+        },
+        {
+          "source": "Where is the station?",
+          "target": "Wo ist der Bahnhof?"
+        },
+        {
+          "source": "Where do you live now?",
+          "target": "Wo wohnst du jetzt?"
         }
       ]
     },
@@ -1618,6 +1986,14 @@
         {
           "source": "How does that work?",
           "target": "Wie funktioniert das?"
+        },
+        {
+          "source": "How was your day?",
+          "target": "Wie war dein Tag?"
+        },
+        {
+          "source": "How do you say that?",
+          "target": "Wie sagt man das?"
         }
       ]
     },
@@ -1648,6 +2024,14 @@
         {
           "source": "Why not?",
           "target": "Warum nicht?"
+        },
+        {
+          "source": "Why are you laughing?",
+          "target": "Warum lachst du?"
+        },
+        {
+          "source": "Why is it so quiet?",
+          "target": "Warum ist es so leise?"
         }
       ]
     },
@@ -1694,6 +2078,14 @@
         {
           "source": "The man is reading.",
           "target": "Der Mann liest."
+        },
+        {
+          "source": "The man is waiting outside.",
+          "target": "Der Mann wartet draußen."
+        },
+        {
+          "source": "An old man is sitting there.",
+          "target": "Ein alter Mann sitzt dort."
         }
       ]
     },
@@ -1740,6 +2132,14 @@
         {
           "source": "The woman is speaking.",
           "target": "Die Frau spricht."
+        },
+        {
+          "source": "The woman is laughing loudly.",
+          "target": "Die Frau lacht laut."
+        },
+        {
+          "source": "A woman is asking for directions.",
+          "target": "Eine Frau fragt nach dem Weg."
         }
       ]
     },
@@ -1786,6 +2186,14 @@
         {
           "source": "The car is new.",
           "target": "Das Auto ist neu."
+        },
+        {
+          "source": "The car will not start.",
+          "target": "Das Auto springt nicht an."
+        },
+        {
+          "source": "We are washing the car.",
+          "target": "Wir waschen das Auto."
         }
       ]
     },
@@ -1832,6 +2240,14 @@
         {
           "source": "The street is quiet.",
           "target": "Die Straße ist ruhig."
+        },
+        {
+          "source": "The street is wet.",
+          "target": "Die Straße ist nass."
+        },
+        {
+          "source": "We live on this street.",
+          "target": "Wir wohnen in dieser Straße."
         }
       ]
     },
@@ -1870,6 +2286,14 @@
         {
           "source": "Money is not everything.",
           "target": "Geld ist nicht alles."
+        },
+        {
+          "source": "The money is not enough.",
+          "target": "Das Geld reicht nicht."
+        },
+        {
+          "source": "He is saving money for a trip.",
+          "target": "Er spart Geld für eine Reise."
         }
       ]
     },
@@ -1908,6 +2332,14 @@
         {
           "source": "The food is ready.",
           "target": "Das Essen ist fertig."
+        },
+        {
+          "source": "The food smells wonderful.",
+          "target": "Das Essen riecht wunderbar."
+        },
+        {
+          "source": "The food is getting cold.",
+          "target": "Das Essen wird kalt."
         }
       ]
     },
@@ -1954,6 +2386,14 @@
         {
           "source": "The school is closed today.",
           "target": "Die Schule ist heute geschlossen."
+        },
+        {
+          "source": "The school starts at eight.",
+          "target": "Die Schule beginnt um acht."
+        },
+        {
+          "source": "The children are going to school.",
+          "target": "Die Kinder gehen zur Schule."
         }
       ]
     },
@@ -1984,6 +2424,14 @@
         {
           "source": "I think that is right.",
           "target": "Ich glaube, das stimmt."
+        },
+        {
+          "source": "I think it will work.",
+          "target": "Ich glaube, es klappt."
+        },
+        {
+          "source": "I think he is at home.",
+          "target": "Ich glaube, er ist zu Hause."
         }
       ]
     },
@@ -2014,6 +2462,14 @@
         {
           "source": "Actually yes.",
           "target": "Eigentlich ja."
+        },
+        {
+          "source": "Actually I wanted to sleep.",
+          "target": "Eigentlich wollte ich schlafen."
+        },
+        {
+          "source": "What is that actually?",
+          "target": "Was ist das eigentlich?"
         }
       ]
     },
@@ -2044,6 +2500,14 @@
         {
           "source": "Exactly!",
           "target": "Genau!"
+        },
+        {
+          "source": "That is exactly right.",
+          "target": "Das ist genau richtig."
+        },
+        {
+          "source": "Exactly at nine o'clock.",
+          "target": "Genau um neun Uhr."
         }
       ]
     },
@@ -2078,6 +2542,14 @@
         {
           "source": "I am coming immediately.",
           "target": "Ich komme sofort."
+        },
+        {
+          "source": "Please come immediately.",
+          "target": "Bitte komm sofort."
+        },
+        {
+          "source": "The taxi is coming immediately.",
+          "target": "Das Taxi kommt sofort."
         }
       ]
     },
@@ -2108,6 +2580,14 @@
         {
           "source": "Finally the weekend!",
           "target": "Endlich Wochenende!"
+        },
+        {
+          "source": "Finally it is warm.",
+          "target": "Endlich ist es warm."
+        },
+        {
+          "source": "Finally you are here!",
+          "target": "Endlich bist du da!"
         }
       ]
     },
@@ -2138,6 +2618,14 @@
         {
           "source": "Sometimes it rains.",
           "target": "Manchmal regnet es."
+        },
+        {
+          "source": "Sometimes I forget that.",
+          "target": "Manchmal vergesse ich das."
+        },
+        {
+          "source": "Sometimes less is more.",
+          "target": "Manchmal ist weniger mehr."
         }
       ]
     },
@@ -2168,6 +2656,14 @@
         {
           "source": "Water is everywhere.",
           "target": "Wasser ist überall."
+        },
+        {
+          "source": "There are flowers everywhere.",
+          "target": "Überall sind Blumen."
+        },
+        {
+          "source": "I looked everywhere.",
+          "target": "Ich habe überall gesucht."
         }
       ]
     },
@@ -2198,6 +2694,14 @@
         {
           "source": "Breakfast first.",
           "target": "Zuerst das Frühstück."
+        },
+        {
+          "source": "At first it was strange.",
+          "target": "Zuerst war es seltsam."
+        },
+        {
+          "source": "At first we drink coffee.",
+          "target": "Zuerst trinken wir Kaffee."
         }
       ]
     },
@@ -2228,6 +2732,14 @@
         {
           "source": "By the way, thanks.",
           "target": "Übrigens, danke."
+        },
+        {
+          "source": "By the way, the film was great.",
+          "target": "Übrigens, der Film war super."
+        },
+        {
+          "source": "By the way, Anna is coming too.",
+          "target": "Übrigens kommt Anna auch."
         }
       ]
     },
@@ -2274,6 +2786,14 @@
         {
           "source": "I have no time.",
           "target": "Ich habe keine Zeit."
+        },
+        {
+          "source": "Time goes by quickly.",
+          "target": "Die Zeit vergeht schnell."
+        },
+        {
+          "source": "We have enough time.",
+          "target": "Wir haben genug Zeit."
         }
       ]
     },
@@ -2320,6 +2840,14 @@
         {
           "source": "The day starts early.",
           "target": "Der Tag beginnt früh."
+        },
+        {
+          "source": "The day was long.",
+          "target": "Der Tag war lang."
+        },
+        {
+          "source": "A beautiful day begins.",
+          "target": "Ein schöner Tag beginnt."
         }
       ]
     },
@@ -2366,6 +2894,14 @@
         {
           "source": "The week has seven days.",
           "target": "Die Woche hat sieben Tage."
+        },
+        {
+          "source": "The week is almost over.",
+          "target": "Die Woche ist fast vorbei."
+        },
+        {
+          "source": "Next week it will start.",
+          "target": "Nächste Woche geht es los."
         }
       ]
     },
@@ -2412,6 +2948,14 @@
         {
           "source": "The month is almost over.",
           "target": "Der Monat ist fast vorbei."
+        },
+        {
+          "source": "The month has thirty days.",
+          "target": "Der Monat hat dreißig Tage."
+        },
+        {
+          "source": "The month begins on a Monday.",
+          "target": "Der Monat beginnt am Montag."
         }
       ]
     },
@@ -2442,6 +2986,14 @@
         {
           "source": "Good morning, how are you?",
           "target": "Guten Morgen, wie geht's?"
+        },
+        {
+          "source": "Good morning, the coffee is ready.",
+          "target": "Guten Morgen, der Kaffee ist fertig."
+        },
+        {
+          "source": "Good morning, did you sleep well?",
+          "target": "Guten Morgen, hast du gut geschlafen?"
         }
       ]
     },
@@ -2472,6 +3024,14 @@
         {
           "source": "Thank you for everything.",
           "target": "Danke für alles."
+        },
+        {
+          "source": "Thank you for the help.",
+          "target": "Danke für die Hilfe."
+        },
+        {
+          "source": "Thank you, that is kind.",
+          "target": "Danke, das ist lieb."
         }
       ]
     },
@@ -2504,6 +3064,14 @@
         {
           "source": "See you soon, Anna!",
           "target": "Bis bald, Anna!"
+        },
+        {
+          "source": "See you soon, take care!",
+          "target": "Bis bald, mach's gut!"
+        },
+        {
+          "source": "Bye, see you soon!",
+          "target": "Tschüss, bis bald!"
         }
       ]
     },
@@ -2550,6 +3118,14 @@
         {
           "source": "My mother is calling.",
           "target": "Meine Mutter ruft an."
+        },
+        {
+          "source": "My mother bakes bread.",
+          "target": "Meine Mutter backt Brot."
+        },
+        {
+          "source": "The mother is singing quietly.",
+          "target": "Die Mutter singt leise."
         }
       ]
     },
@@ -2596,6 +3172,14 @@
         {
           "source": "My father cooks well.",
           "target": "Mein Vater kocht gut."
+        },
+        {
+          "source": "My father reads the newspaper.",
+          "target": "Mein Vater liest die Zeitung."
+        },
+        {
+          "source": "The father is playing with the child.",
+          "target": "Der Vater spielt mit dem Kind."
         }
       ]
     },
@@ -2642,6 +3226,14 @@
         {
           "source": "My brother is older.",
           "target": "Mein Bruder ist älter."
+        },
+        {
+          "source": "My brother lives in Hamburg.",
+          "target": "Mein Bruder wohnt in Hamburg."
+        },
+        {
+          "source": "Her brother is very tall.",
+          "target": "Ihr Bruder ist sehr groß."
         }
       ]
     },
@@ -2688,6 +3280,14 @@
         {
           "source": "My sister lives in Berlin.",
           "target": "Meine Schwester wohnt in Berlin."
+        },
+        {
+          "source": "My sister is studying medicine.",
+          "target": "Meine Schwester studiert Medizin."
+        },
+        {
+          "source": "His sister is calling.",
+          "target": "Seine Schwester ruft an."
         }
       ]
     },
@@ -2734,6 +3334,14 @@
         {
           "source": "The family is eating together.",
           "target": "Die Familie isst zusammen."
+        },
+        {
+          "source": "The family is travelling by train.",
+          "target": "Die Familie fährt mit dem Zug."
+        },
+        {
+          "source": "A big family lives here.",
+          "target": "Eine große Familie wohnt hier."
         }
       ]
     },
@@ -2780,6 +3388,14 @@
         {
           "source": "The evening was lovely.",
           "target": "Der Abend war schön."
+        },
+        {
+          "source": "The evening is still young.",
+          "target": "Der Abend ist noch jung."
+        },
+        {
+          "source": "In the evening we cook.",
+          "target": "Am Abend kochen wir."
         }
       ]
     },
@@ -2826,6 +3442,14 @@
         {
           "source": "The name is easy.",
           "target": "Der Name ist einfach."
+        },
+        {
+          "source": "What is your name?",
+          "target": "Wie ist dein Name?"
+        },
+        {
+          "source": "The name sounds familiar.",
+          "target": "Der Name klingt bekannt."
         }
       ]
     },
@@ -2872,6 +3496,14 @@
         {
           "source": "A new word every day.",
           "target": "Jeden Tag ein neues Wort."
+        },
+        {
+          "source": "A word says a lot.",
+          "target": "Ein Wort sagt viel."
+        },
+        {
+          "source": "What does this word mean?",
+          "target": "Was bedeutet dieses Wort?"
         }
       ]
     },
@@ -2918,6 +3550,14 @@
         {
           "source": "German is a beautiful language.",
           "target": "Deutsch ist eine schöne Sprache."
+        },
+        {
+          "source": "The language sounds soft.",
+          "target": "Die Sprache klingt weich."
+        },
+        {
+          "source": "Every language has rules.",
+          "target": "Jede Sprache hat Regeln."
         }
       ]
     },
@@ -2964,6 +3604,14 @@
         {
           "source": "Good question!",
           "target": "Gute Frage!"
+        },
+        {
+          "source": "I have a question.",
+          "target": "Ich habe eine Frage."
+        },
+        {
+          "source": "The question is easy.",
+          "target": "Die Frage ist leicht."
         }
       ]
     },
@@ -2994,6 +3642,14 @@
         {
           "source": "Something is missing.",
           "target": "Etwas fehlt."
+        },
+        {
+          "source": "I would like to eat something.",
+          "target": "Ich möchte etwas essen."
+        },
+        {
+          "source": "Something is different today.",
+          "target": "Etwas ist heute anders."
         }
       ]
     },
@@ -3024,6 +3680,14 @@
         {
           "source": "Nothing happened.",
           "target": "Nichts ist passiert."
+        },
+        {
+          "source": "I see nothing.",
+          "target": "Ich sehe nichts."
+        },
+        {
+          "source": "Nothing lasts forever.",
+          "target": "Nichts hält ewig."
         }
       ]
     },
@@ -3054,6 +3718,14 @@
         {
           "source": "More coffee, please.",
           "target": "Mehr Kaffee, bitte."
+        },
+        {
+          "source": "I need more time.",
+          "target": "Ich brauche mehr Zeit."
+        },
+        {
+          "source": "More light, please.",
+          "target": "Mehr Licht, bitte."
         }
       ]
     },
@@ -3084,6 +3756,14 @@
         {
           "source": "I know, I know.",
           "target": "Ich weiß, ich weiß."
+        },
+        {
+          "source": "I know where that is.",
+          "target": "Ich weiß, wo das ist."
+        },
+        {
+          "source": "I know what you mean.",
+          "target": "Ich weiß, was du meinst."
         }
       ]
     },
@@ -3114,6 +3794,14 @@
         {
           "source": "I don't know, sorry.",
           "target": "Ich weiß nicht, tut mir leid."
+        },
+        {
+          "source": "I don't know why.",
+          "target": "Ich weiß nicht, warum."
+        },
+        {
+          "source": "I don't know if that works.",
+          "target": "Ich weiß nicht, ob das geht."
         }
       ]
     },
@@ -3144,6 +3832,14 @@
         {
           "source": "I am staying at home today.",
           "target": "Ich bleibe heute zu Hause."
+        },
+        {
+          "source": "We are staying at home tonight.",
+          "target": "Wir bleiben heute Abend zu Hause."
+        },
+        {
+          "source": "At home it is nicest.",
+          "target": "Zu Hause ist es am schönsten."
         }
       ]
     },
@@ -3176,6 +3872,14 @@
         {
           "source": "Me too, actually.",
           "target": "Ich auch, eigentlich."
+        },
+        {
+          "source": "Me too, of course.",
+          "target": "Ich auch, natürlich."
+        },
+        {
+          "source": "Me too, probably.",
+          "target": "Ich auch, wahrscheinlich."
         }
       ]
     },
@@ -3222,6 +3926,14 @@
         {
           "source": "The table is round.",
           "target": "Der Tisch ist rund."
+        },
+        {
+          "source": "The table is set.",
+          "target": "Der Tisch ist gedeckt."
+        },
+        {
+          "source": "The keys are on the table.",
+          "target": "Die Schlüssel liegen auf dem Tisch."
         }
       ]
     },
@@ -3268,6 +3980,14 @@
         {
           "source": "The chair is free.",
           "target": "Der Stuhl ist frei."
+        },
+        {
+          "source": "The chair is comfortable.",
+          "target": "Der Stuhl ist bequem."
+        },
+        {
+          "source": "Please take a chair.",
+          "target": "Nimm dir bitte einen Stuhl."
         }
       ]
     },
@@ -3314,6 +4034,14 @@
         {
           "source": "The room is bright.",
           "target": "Das Zimmer ist hell."
+        },
+        {
+          "source": "The room has two windows.",
+          "target": "Das Zimmer hat zwei Fenster."
+        },
+        {
+          "source": "The room is warm and quiet.",
+          "target": "Das Zimmer ist warm und ruhig."
         }
       ]
     },
@@ -3360,6 +4088,14 @@
         {
           "source": "The window is open.",
           "target": "Das Fenster ist offen."
+        },
+        {
+          "source": "Please open the window.",
+          "target": "Bitte das Fenster öffnen."
+        },
+        {
+          "source": "The window looks onto the garden.",
+          "target": "Das Fenster geht zum Garten."
         }
       ]
     },
@@ -3406,6 +4142,14 @@
         {
           "source": "Fresh bread smells wonderful.",
           "target": "Frisches Brot riecht wunderbar."
+        },
+        {
+          "source": "The bread is still warm.",
+          "target": "Das Brot ist noch warm."
+        },
+        {
+          "source": "We are buying bread at the market.",
+          "target": "Wir kaufen Brot auf dem Markt."
         }
       ]
     },
@@ -3444,6 +4188,14 @@
         {
           "source": "The milk is fresh.",
           "target": "Die Milch ist frisch."
+        },
+        {
+          "source": "The milk is in the fridge.",
+          "target": "Die Milch steht im Kühlschrank."
+        },
+        {
+          "source": "Coffee with warm milk.",
+          "target": "Kaffee mit warmer Milch."
         }
       ]
     },
@@ -3482,6 +4234,14 @@
         {
           "source": "The coffee is hot.",
           "target": "Der Kaffee ist heiß."
+        },
+        {
+          "source": "The coffee smells good.",
+          "target": "Der Kaffee riecht gut."
+        },
+        {
+          "source": "One more coffee, please.",
+          "target": "Noch einen Kaffee, bitte."
         }
       ]
     },
@@ -3520,6 +4280,14 @@
         {
           "source": "Tea with honey helps.",
           "target": "Tee mit Honig hilft."
+        },
+        {
+          "source": "The tea is too hot.",
+          "target": "Der Tee ist zu heiß."
+        },
+        {
+          "source": "Green tea calms you.",
+          "target": "Grüner Tee beruhigt."
         }
       ]
     },
@@ -3566,6 +4334,14 @@
         {
           "source": "An apple a day.",
           "target": "Ein Apfel am Tag."
+        },
+        {
+          "source": "The apple is sweet.",
+          "target": "Der Apfel ist süß."
+        },
+        {
+          "source": "An apple is lying in the bowl.",
+          "target": "Ein Apfel liegt in der Schale."
         }
       ]
     },
@@ -3612,6 +4388,14 @@
         {
           "source": "The teacher explains it.",
           "target": "Der Lehrer erklärt es."
+        },
+        {
+          "source": "The teacher is patient.",
+          "target": "Der Lehrer ist geduldig."
+        },
+        {
+          "source": "Our teacher speaks clearly.",
+          "target": "Unser Lehrer spricht deutlich."
         }
       ]
     },
@@ -3642,6 +4426,14 @@
         {
           "source": "Two coffees, please.",
           "target": "Zwei Kaffee, bitte."
+        },
+        {
+          "source": "We have two cats.",
+          "target": "Wir haben zwei Katzen."
+        },
+        {
+          "source": "Two minutes to go.",
+          "target": "Noch zwei Minuten."
         }
       ]
     },
@@ -3672,6 +4464,14 @@
         {
           "source": "Three days to go.",
           "target": "Noch drei Tage."
+        },
+        {
+          "source": "Three apples, please.",
+          "target": "Drei Äpfel, bitte."
+        },
+        {
+          "source": "The child is three years old.",
+          "target": "Das Kind ist drei Jahre alt."
         }
       ]
     },
@@ -3702,6 +4502,14 @@
         {
           "source": "Four seasons.",
           "target": "Vier Jahreszeiten."
+        },
+        {
+          "source": "It is four o'clock.",
+          "target": "Es ist vier Uhr."
+        },
+        {
+          "source": "Four chairs at the table.",
+          "target": "Vier Stühle am Tisch."
         }
       ]
     },
@@ -3732,6 +4540,14 @@
         {
           "source": "Five minutes, please.",
           "target": "Fünf Minuten, bitte."
+        },
+        {
+          "source": "Five days until the trip.",
+          "target": "Noch fünf Tage bis zur Reise."
+        },
+        {
+          "source": "We are meeting at five.",
+          "target": "Wir treffen uns um fünf."
         }
       ]
     },
@@ -3762,6 +4578,14 @@
         {
           "source": "Six euros, please.",
           "target": "Sechs Euro, bitte."
+        },
+        {
+          "source": "The train leaves at six.",
+          "target": "Der Zug fährt um sechs."
+        },
+        {
+          "source": "Six months already.",
+          "target": "Schon sechs Monate."
         }
       ]
     },
@@ -3792,6 +4616,14 @@
         {
           "source": "Seven days a week.",
           "target": "Sieben Tage die Woche."
+        },
+        {
+          "source": "The rainbow has seven colours.",
+          "target": "Sieben Farben hat der Regenbogen."
+        },
+        {
+          "source": "We are eating at seven.",
+          "target": "Wir essen um sieben."
         }
       ]
     },
@@ -3822,6 +4654,14 @@
         {
           "source": "Eight hours of sleep.",
           "target": "Acht Stunden Schlaf."
+        },
+        {
+          "source": "The shop opens at eight.",
+          "target": "Der Laden öffnet um acht."
+        },
+        {
+          "source": "Eight euros, please.",
+          "target": "Acht Euro, bitte."
         }
       ]
     },
@@ -3852,6 +4692,14 @@
         {
           "source": "Nine o'clock works.",
           "target": "Neun Uhr passt."
+        },
+        {
+          "source": "The course begins at nine.",
+          "target": "Der Kurs beginnt um neun."
+        },
+        {
+          "source": "Nine letters in one word.",
+          "target": "Neun Buchstaben in einem Wort."
         }
       ]
     },
@@ -3882,6 +4730,14 @@
         {
           "source": "Ten new words.",
           "target": "Zehn neue Wörter."
+        },
+        {
+          "source": "Ten minutes on foot.",
+          "target": "Zehn Minuten zu Fuß."
+        },
+        {
+          "source": "We are counting to ten.",
+          "target": "Wir zählen bis zehn."
         }
       ]
     },
@@ -3912,6 +4768,14 @@
         {
           "source": "However, that takes time.",
           "target": "Das braucht jedoch Zeit."
+        },
+        {
+          "source": "However, it is expensive.",
+          "target": "Es ist jedoch teuer."
+        },
+        {
+          "source": "The plan, however, is good.",
+          "target": "Der Plan ist jedoch gut."
         }
       ]
     },
@@ -3942,6 +4806,14 @@
         {
           "source": "Especially in winter.",
           "target": "Besonders im Winter."
+        },
+        {
+          "source": "The cake is especially tasty.",
+          "target": "Der Kuchen ist besonders lecker."
+        },
+        {
+          "source": "I especially like autumn.",
+          "target": "Ich mag den Herbst besonders."
         }
       ]
     },
@@ -3972,6 +4844,14 @@
         {
           "source": "That went quickly.",
           "target": "Das ging schnell."
+        },
+        {
+          "source": "Come quickly, it is starting!",
+          "target": "Komm schnell, es fängt an!"
+        },
+        {
+          "source": "Children learn quickly.",
+          "target": "Kinder lernen schnell."
         }
       ]
     },
@@ -4002,6 +4882,14 @@
         {
           "source": "Please speak slowly.",
           "target": "Bitte langsam sprechen."
+        },
+        {
+          "source": "Please drive slowly.",
+          "target": "Bitte langsam fahren."
+        },
+        {
+          "source": "We are walking home slowly.",
+          "target": "Wir gehen langsam nach Hause."
         }
       ]
     },
@@ -4036,6 +4924,14 @@
         {
           "source": "Excuse me, where is the station?",
           "target": "Entschuldigung, wo ist der Bahnhof?"
+        },
+        {
+          "source": "Excuse me, what time is it?",
+          "target": "Entschuldigung, wie spät ist es?"
+        },
+        {
+          "source": "Excuse me, is this seat free?",
+          "target": "Entschuldigung, ist der Platz frei?"
         }
       ]
     },
@@ -4066,6 +4962,14 @@
         {
           "source": "I would like a tea.",
           "target": "Ich möchte einen Tee."
+        },
+        {
+          "source": "I would like to pay.",
+          "target": "Ich möchte zahlen."
+        },
+        {
+          "source": "I would like a table for two.",
+          "target": "Ich möchte einen Tisch für zwei."
         }
       ]
     },
@@ -4098,6 +5002,14 @@
         {
           "source": "Good evening, everyone.",
           "target": "Guten Abend, alle zusammen."
+        },
+        {
+          "source": "Good evening, do come in.",
+          "target": "Guten Abend, kommen Sie herein."
+        },
+        {
+          "source": "Good evening, the table is ready.",
+          "target": "Guten Abend, der Tisch ist bereit."
         }
       ]
     },
@@ -4130,6 +5042,14 @@
         {
           "source": "Good night, sleep well.",
           "target": "Gute Nacht, schlaf gut."
+        },
+        {
+          "source": "Good night, see you tomorrow.",
+          "target": "Gute Nacht, bis morgen."
+        },
+        {
+          "source": "The children say good night.",
+          "target": "Die Kinder sagen gute Nacht."
         }
       ]
     },
@@ -4160,6 +5080,14 @@
         {
           "source": "See you later, then.",
           "target": "Bis später dann."
+        },
+        {
+          "source": "See you later at the park.",
+          "target": "Bis später im Park."
+        },
+        {
+          "source": "I have to go — see you later!",
+          "target": "Ich muss los — bis später!"
         }
       ]
     },
@@ -4190,6 +5118,14 @@
         {
           "source": "Monday is quiet.",
           "target": "Der Montag ist ruhig."
+        },
+        {
+          "source": "On Monday the week begins.",
+          "target": "Am Montag beginnt die Woche."
+        },
+        {
+          "source": "Monday is market day.",
+          "target": "Montag ist Markttag."
         }
       ]
     },
@@ -4220,6 +5156,14 @@
         {
           "source": "Tuesday works for me.",
           "target": "Dienstag passt mir."
+        },
+        {
+          "source": "On Tuesday I play football.",
+          "target": "Am Dienstag spiele ich Fußball."
+        },
+        {
+          "source": "Tuesday is training day.",
+          "target": "Dienstag ist Trainingstag."
         }
       ]
     },
@@ -4250,6 +5194,14 @@
         {
           "source": "Wednesday is the middle.",
           "target": "Mittwoch ist die Mitte."
+        },
+        {
+          "source": "On Wednesday we cook together.",
+          "target": "Am Mittwoch kochen wir zusammen."
+        },
+        {
+          "source": "Wednesday is almost the weekend.",
+          "target": "Mittwoch ist fast Wochenende."
         }
       ]
     },
@@ -4280,6 +5232,14 @@
         {
           "source": "Thursday evening, then.",
           "target": "Donnerstag Abend also."
+        },
+        {
+          "source": "On Thursday the market is open.",
+          "target": "Am Donnerstag ist der Markt offen."
+        },
+        {
+          "source": "Thursday suits everyone.",
+          "target": "Der Donnerstag passt allen."
         }
       ]
     },
@@ -4310,6 +5270,14 @@
         {
           "source": "Finally Friday!",
           "target": "Endlich Freitag!"
+        },
+        {
+          "source": "On Friday we celebrate.",
+          "target": "Am Freitag feiern wir."
+        },
+        {
+          "source": "Friday evening is free.",
+          "target": "Der Freitagabend ist frei."
         }
       ]
     },
@@ -4340,6 +5308,14 @@
         {
           "source": "Saturday we sleep in.",
           "target": "Samstag schlafen wir aus."
+        },
+        {
+          "source": "On Saturday we go to the market.",
+          "target": "Am Samstag gehen wir zum Markt."
+        },
+        {
+          "source": "Saturday is family day.",
+          "target": "Samstag ist Familientag."
         }
       ]
     },
@@ -4370,6 +5346,14 @@
         {
           "source": "Sunday is for resting.",
           "target": "Sonntag ist zum Ausruhen."
+        },
+        {
+          "source": "On Sunday everything is closed.",
+          "target": "Am Sonntag ist alles zu."
+        },
+        {
+          "source": "Sunday begins slowly.",
+          "target": "Der Sonntag beginnt langsam."
         }
       ]
     },
@@ -4416,6 +5400,14 @@
         {
           "source": "An hour later.",
           "target": "Eine Stunde später."
+        },
+        {
+          "source": "An hour has sixty minutes.",
+          "target": "Eine Stunde hat sechzig Minuten."
+        },
+        {
+          "source": "We are waiting one more hour.",
+          "target": "Wir warten noch eine Stunde."
         }
       ]
     },
@@ -4462,6 +5454,14 @@
         {
           "source": "One minute, please.",
           "target": "Eine Minute, bitte."
+        },
+        {
+          "source": "A minute goes by quickly.",
+          "target": "Eine Minute vergeht schnell."
+        },
+        {
+          "source": "Every minute counts.",
+          "target": "Jede Minute zählt."
         }
       ]
     },
@@ -4508,6 +5508,14 @@
         {
           "source": "A moment, please.",
           "target": "Einen Moment, bitte."
+        },
+        {
+          "source": "One moment, I am coming.",
+          "target": "Einen Moment, ich komme."
+        },
+        {
+          "source": "The moment was perfect.",
+          "target": "Der Moment war perfekt."
         }
       ]
     },
@@ -4574,6 +5582,14 @@
         {
           "source": "The colour is beautiful.",
           "target": "Die Farbe ist schön."
+        },
+        {
+          "source": "Which colour do you like?",
+          "target": "Welche Farbe magst du?"
+        },
+        {
+          "source": "The colour is too dark.",
+          "target": "Die Farbe ist zu dunkel."
         }
       ]
     },
@@ -4604,6 +5620,14 @@
         {
           "source": "A hundred words already.",
           "target": "Schon hundert Wörter."
+        },
+        {
+          "source": "A hundred people are waiting.",
+          "target": "Hundert Leute warten."
+        },
+        {
+          "source": "That costs a hundred euros.",
+          "target": "Das kostet hundert Euro."
         }
       ]
     },
@@ -4634,6 +5658,14 @@
         {
           "source": "A thousand thanks.",
           "target": "Tausend Dank."
+        },
+        {
+          "source": "A thousand lights in the city.",
+          "target": "Tausend Lichter in der Stadt."
+        },
+        {
+          "source": "A thousand questions at once.",
+          "target": "Tausend Fragen auf einmal."
         }
       ]
     },
@@ -4664,6 +5696,14 @@
         {
           "source": "Between two worlds.",
           "target": "Zwischen zwei Welten."
+        },
+        {
+          "source": "The café is between the bank and the park.",
+          "target": "Das Café liegt zwischen Bank und Park."
+        },
+        {
+          "source": "Between twelve and one we eat.",
+          "target": "Zwischen zwölf und eins essen wir."
         }
       ]
     },
@@ -4694,6 +5734,14 @@
         {
           "source": "Probably tomorrow.",
           "target": "Wahrscheinlich morgen."
+        },
+        {
+          "source": "It will probably rain.",
+          "target": "Wahrscheinlich regnet es."
+        },
+        {
+          "source": "She is probably right.",
+          "target": "Sie hat wahrscheinlich recht."
         }
       ]
     },
@@ -4724,6 +5772,14 @@
         {
           "source": "Suddenly it was quiet.",
           "target": "Plötzlich war es still."
+        },
+        {
+          "source": "Suddenly the light went out.",
+          "target": "Plötzlich ging das Licht aus."
+        },
+        {
+          "source": "Suddenly everything happened fast.",
+          "target": "Plötzlich ging alles schnell."
         }
       ]
     },
@@ -4758,6 +5814,14 @@
         {
           "source": "That happens rarely.",
           "target": "Das passiert selten."
+        },
+        {
+          "source": "He is rarely at home.",
+          "target": "Er ist selten zu Hause."
+        },
+        {
+          "source": "It rarely snows here.",
+          "target": "Hier schneit es selten."
         }
       ]
     },
@@ -4788,6 +5852,14 @@
         {
           "source": "The children are outside.",
           "target": "Die Kinder sind draußen."
+        },
+        {
+          "source": "It is cold outside.",
+          "target": "Draußen ist es kalt."
+        },
+        {
+          "source": "We are eating outside today.",
+          "target": "Wir essen heute draußen."
         }
       ]
     },
@@ -4818,6 +5890,14 @@
         {
           "source": "Less is more.",
           "target": "Weniger ist mehr."
+        },
+        {
+          "source": "Less noise, please.",
+          "target": "Weniger Lärm, bitte."
+        },
+        {
+          "source": "It costs less than ten euros.",
+          "target": "Es kostet weniger als zehn Euro."
         }
       ]
     },
@@ -4848,6 +5928,14 @@
         {
           "source": "No idea, honestly.",
           "target": "Keine Ahnung, ehrlich."
+        },
+        {
+          "source": "No idea where he is.",
+          "target": "Keine Ahnung, wo er ist."
+        },
+        {
+          "source": "No idea, ask Anna.",
+          "target": "Keine Ahnung, frag Anna."
         }
       ]
     },
@@ -4880,6 +5968,14 @@
         {
           "source": "Hi! How are you?",
           "target": "Hallo! Wie geht's?"
+        },
+        {
+          "source": "How are you today?",
+          "target": "Wie geht's dir heute?"
+        },
+        {
+          "source": "Hello Anna, how are you?",
+          "target": "Hallo Anna, wie geht's?"
         }
       ]
     },
@@ -4913,6 +6009,14 @@
         {
           "source": "See you tonight.",
           "target": "Bis heute Abend."
+        },
+        {
+          "source": "Tonight we are cooking pasta.",
+          "target": "Heute Abend kochen wir Nudeln."
+        },
+        {
+          "source": "What are you doing tonight?",
+          "target": "Was machst du heute Abend?"
         }
       ]
     },
@@ -4959,6 +6063,14 @@
         {
           "source": "The problem is small.",
           "target": "Das Problem ist klein."
+        },
+        {
+          "source": "We are solving the problem together.",
+          "target": "Wir lösen das Problem zusammen."
+        },
+        {
+          "source": "A problem with the car.",
+          "target": "Ein Problem mit dem Auto."
         }
       ]
     },
@@ -5005,6 +6117,14 @@
         {
           "source": "An idea is forming.",
           "target": "Eine Idee entsteht."
+        },
+        {
+          "source": "The idea is brilliant.",
+          "target": "Die Idee ist genial."
+        },
+        {
+          "source": "I have an idea!",
+          "target": "Ich habe eine Idee!"
         }
       ]
     },
@@ -5043,6 +6163,14 @@
         {
           "source": "Life is short.",
           "target": "Das Leben ist kurz."
+        },
+        {
+          "source": "Life goes on.",
+          "target": "Das Leben geht weiter."
+        },
+        {
+          "source": "A quiet life in the country.",
+          "target": "Ein ruhiges Leben auf dem Land."
         }
       ]
     },
@@ -5089,6 +6217,14 @@
         {
           "source": "The end is near.",
           "target": "Das Ende ist nah."
+        },
+        {
+          "source": "At the end everything turned out fine.",
+          "target": "Am Ende wurde alles gut."
+        },
+        {
+          "source": "The end of the street.",
+          "target": "Das Ende der Straße."
         }
       ]
     },
@@ -5135,6 +6271,14 @@
         {
           "source": "A good beginning.",
           "target": "Ein guter Anfang."
+        },
+        {
+          "source": "Every beginning is hard.",
+          "target": "Aller Anfang ist schwer."
+        },
+        {
+          "source": "At the beginning of the year.",
+          "target": "Am Anfang des Jahres."
         }
       ]
     },
@@ -5181,6 +6325,14 @@
         {
           "source": "The picture hangs crooked.",
           "target": "Das Bild hängt schief."
+        },
+        {
+          "source": "The picture shows the sea.",
+          "target": "Das Bild zeigt das Meer."
+        },
+        {
+          "source": "A picture of the family.",
+          "target": "Ein Bild von der Familie."
         }
       ]
     },
@@ -5247,6 +6399,14 @@
         {
           "source": "The film starts at eight.",
           "target": "Der Film beginnt um acht."
+        },
+        {
+          "source": "The film was exciting.",
+          "target": "Der Film war spannend."
+        },
+        {
+          "source": "We are watching a film tonight.",
+          "target": "Wir sehen heute Abend einen Film."
         }
       ]
     },
@@ -5293,6 +6453,14 @@
         {
           "source": "The game is over.",
           "target": "Das Spiel ist vorbei."
+        },
+        {
+          "source": "The game begins at three.",
+          "target": "Das Spiel beginnt um drei."
+        },
+        {
+          "source": "A game for two people.",
+          "target": "Ein Spiel für zwei Personen."
         }
       ]
     },
@@ -5339,6 +6507,14 @@
         {
           "source": "A friendly person.",
           "target": "Eine freundliche Person."
+        },
+        {
+          "source": "One person is still missing.",
+          "target": "Eine Person fehlt noch."
+        },
+        {
+          "source": "A table for one person.",
+          "target": "Ein Tisch für eine Person."
         }
       ]
     },
@@ -5373,6 +6549,14 @@
         {
           "source": "The people are waiting.",
           "target": "Die Leute warten."
+        },
+        {
+          "source": "Many people know that.",
+          "target": "Viele Leute wissen das."
+        },
+        {
+          "source": "The people here are friendly.",
+          "target": "Die Leute hier sind freundlich."
         }
       ]
     },
@@ -5419,6 +6603,14 @@
         {
           "source": "A new message arrived.",
           "target": "Eine neue Nachricht kam an."
+        },
+        {
+          "source": "The message was short.",
+          "target": "Die Nachricht war kurz."
+        },
+        {
+          "source": "Please send me a message.",
+          "target": "Schick mir bitte eine Nachricht."
         }
       ]
     },
@@ -5465,6 +6657,14 @@
         {
           "source": "The telephone is ringing.",
           "target": "Das Telefon klingelt."
+        },
+        {
+          "source": "The telephone will not stop ringing.",
+          "target": "Das Telefon klingelt ohne Pause."
+        },
+        {
+          "source": "My telephone is off.",
+          "target": "Mein Telefon ist aus."
         }
       ]
     },
@@ -5511,6 +6711,14 @@
         {
           "source": "The computer is slow today.",
           "target": "Der Computer ist heute langsam."
+        },
+        {
+          "source": "The computer needs an update.",
+          "target": "Der Computer braucht ein Update."
+        },
+        {
+          "source": "The new computer is quiet.",
+          "target": "Der neue Computer ist leise."
         }
       ]
     },
@@ -5541,6 +6749,14 @@
         {
           "source": "Somewhere in the city.",
           "target": "Irgendwo in der Stadt."
+        },
+        {
+          "source": "Somewhere a dog is barking.",
+          "target": "Irgendwo bellt ein Hund."
+        },
+        {
+          "source": "The key is somewhere here.",
+          "target": "Der Schlüssel ist irgendwo hier."
         }
       ]
     },
@@ -5571,6 +6787,14 @@
         {
           "source": "The bathroom is upstairs.",
           "target": "Das Bad ist oben."
+        },
+        {
+          "source": "The bedroom is upstairs.",
+          "target": "Das Schlafzimmer ist oben."
+        },
+        {
+          "source": "Upstairs it is warmer.",
+          "target": "Oben ist es wärmer."
         }
       ]
     },
@@ -5601,6 +6825,14 @@
         {
           "source": "The kitchen is downstairs.",
           "target": "Die Küche ist unten."
+        },
+        {
+          "source": "The cellar is downstairs.",
+          "target": "Der Keller ist unten."
+        },
+        {
+          "source": "We are waiting downstairs.",
+          "target": "Wir warten unten."
         }
       ]
     },
@@ -5631,6 +6863,14 @@
         {
           "source": "I was going anyway.",
           "target": "Ich wollte sowieso gehen."
+        },
+        {
+          "source": "It does not matter anyway.",
+          "target": "Das ist sowieso egal."
+        },
+        {
+          "source": "I am coming along anyway.",
+          "target": "Ich komme sowieso mit."
         }
       ]
     },
@@ -5663,6 +6903,14 @@
         {
           "source": "No problem at all.",
           "target": "Gar kein Problem."
+        },
+        {
+          "source": "No problem, I will help.",
+          "target": "Kein Problem, ich helfe."
+        },
+        {
+          "source": "That is no problem at all.",
+          "target": "Das ist gar kein Problem."
         }
       ]
     },
@@ -5693,6 +6941,14 @@
         {
           "source": "That is too much.",
           "target": "Das ist zu viel."
+        },
+        {
+          "source": "Too much sugar in the tea.",
+          "target": "Zu viel Zucker im Tee."
+        },
+        {
+          "source": "That is far too much.",
+          "target": "Das ist viel zu viel."
         }
       ]
     },
@@ -5739,6 +6995,14 @@
         {
           "source": "A good reason.",
           "target": "Ein guter Grund."
+        },
+        {
+          "source": "There is no reason to worry.",
+          "target": "Es gibt keinen Grund zur Sorge."
+        },
+        {
+          "source": "The reason is simple.",
+          "target": "Der Grund ist einfach."
         }
       ]
     },
@@ -5785,6 +7049,14 @@
         {
           "source": "An example helps.",
           "target": "Ein Beispiel hilft."
+        },
+        {
+          "source": "A good example helps a lot.",
+          "target": "Ein gutes Beispiel hilft viel."
+        },
+        {
+          "source": "Give me an example, please.",
+          "target": "Gib mir bitte ein Beispiel."
         }
       ]
     },
@@ -5843,6 +7115,14 @@
         {
           "source": "A long story.",
           "target": "Eine lange Geschichte."
+        },
+        {
+          "source": "The story ends well.",
+          "target": "Die Geschichte endet gut."
+        },
+        {
+          "source": "Grandpa is telling a story.",
+          "target": "Opa erzählt eine Geschichte."
         }
       ]
     },
@@ -5909,6 +7189,14 @@
         {
           "source": "The journey begins.",
           "target": "Die Reise beginnt."
+        },
+        {
+          "source": "The journey was long.",
+          "target": "Die Reise war lang."
+        },
+        {
+          "source": "A journey through Europe.",
+          "target": "Eine Reise durch Europa."
         }
       ]
     },
@@ -5955,6 +7243,14 @@
         {
           "source": "The goal is close.",
           "target": "Das Ziel ist nah."
+        },
+        {
+          "source": "We are almost at the goal.",
+          "target": "Wir sind fast am Ziel."
+        },
+        {
+          "source": "The goal motivates us.",
+          "target": "Das Ziel motiviert uns."
         }
       ]
     },
@@ -6001,6 +7297,14 @@
         {
           "source": "An email from Anna.",
           "target": "Eine E-Mail von Anna."
+        },
+        {
+          "source": "The email is important.",
+          "target": "Die E-Mail ist wichtig."
+        },
+        {
+          "source": "I am writing an email.",
+          "target": "Ich schreibe eine E-Mail."
         }
       ]
     },
@@ -6039,6 +7343,14 @@
         {
           "source": "The internet is down.",
           "target": "Das Internet ist weg."
+        },
+        {
+          "source": "The internet is slow today.",
+          "target": "Das Internet ist heute langsam."
+        },
+        {
+          "source": "No internet in the forest.",
+          "target": "Kein Internet im Wald."
         }
       ]
     },
@@ -6077,6 +7389,14 @@
         {
           "source": "Sport keeps you fit.",
           "target": "Sport hält fit."
+        },
+        {
+          "source": "Sport is good for the heart.",
+          "target": "Sport ist gut fürs Herz."
+        },
+        {
+          "source": "On Tuesdays we do sport.",
+          "target": "Dienstags machen wir Sport."
         }
       ]
     },
@@ -6107,6 +7427,14 @@
         {
           "source": "January is cold.",
           "target": "Der Januar ist kalt."
+        },
+        {
+          "source": "In January it often snows.",
+          "target": "Im Januar schneit es oft."
+        },
+        {
+          "source": "January begins quietly.",
+          "target": "Der Januar beginnt ruhig."
         }
       ]
     },
@@ -6137,6 +7465,14 @@
         {
           "source": "February is short.",
           "target": "Der Februar ist kurz."
+        },
+        {
+          "source": "In February it stays cold.",
+          "target": "Im Februar bleibt es kalt."
+        },
+        {
+          "source": "February is the shortest month.",
+          "target": "Der Februar ist der kürzeste Monat."
         }
       ]
     },
@@ -6167,6 +7503,14 @@
         {
           "source": "April does what it wants.",
           "target": "April macht, was er will."
+        },
+        {
+          "source": "In April everything blooms.",
+          "target": "Im April blüht alles."
+        },
+        {
+          "source": "April brings rain and sun.",
+          "target": "Der April bringt Regen und Sonne."
         }
       ]
     },
@@ -6197,6 +7541,14 @@
         {
           "source": "June is warm.",
           "target": "Der Juni ist warm."
+        },
+        {
+          "source": "In June the days are long.",
+          "target": "Im Juni sind die Tage lang."
+        },
+        {
+          "source": "June smells of summer.",
+          "target": "Der Juni riecht nach Sommer."
         }
       ]
     },
@@ -6227,6 +7579,14 @@
         {
           "source": "July is holiday time.",
           "target": "Der Juli ist Urlaubszeit."
+        },
+        {
+          "source": "In July we swim in the lake.",
+          "target": "Im Juli schwimmen wir im See."
+        },
+        {
+          "source": "July is warm and bright.",
+          "target": "Der Juli ist warm und hell."
         }
       ]
     },
@@ -6257,6 +7617,14 @@
         {
           "source": "August is the hottest.",
           "target": "Der August ist am heißesten."
+        },
+        {
+          "source": "In August we are travelling.",
+          "target": "Im August verreisen wir."
+        },
+        {
+          "source": "August is harvest time.",
+          "target": "Der August ist Erntezeit."
         }
       ]
     },
@@ -6287,6 +7655,14 @@
         {
           "source": "September feels new.",
           "target": "Der September fühlt sich neu an."
+        },
+        {
+          "source": "In September school starts.",
+          "target": "Im September beginnt die Schule."
+        },
+        {
+          "source": "September brings cool evenings.",
+          "target": "Der September bringt kühle Abende."
         }
       ]
     },
@@ -6317,6 +7693,14 @@
         {
           "source": "October is golden.",
           "target": "Der Oktober ist golden."
+        },
+        {
+          "source": "In October the leaves fall.",
+          "target": "Im Oktober fallen die Blätter."
+        },
+        {
+          "source": "October is colourful.",
+          "target": "Der Oktober ist bunt."
         }
       ]
     },
@@ -6347,6 +7731,14 @@
         {
           "source": "November is grey.",
           "target": "Der November ist grau."
+        },
+        {
+          "source": "In November it gets dark early.",
+          "target": "Im November wird es früh dunkel."
+        },
+        {
+          "source": "November is quiet and grey.",
+          "target": "Der November ist still und grau."
         }
       ]
     },
@@ -6377,6 +7769,14 @@
         {
           "source": "December smells of cinnamon.",
           "target": "Der Dezember riecht nach Zimt."
+        },
+        {
+          "source": "In December we bake cookies.",
+          "target": "Im Dezember backen wir Plätzchen."
+        },
+        {
+          "source": "December ends the year.",
+          "target": "Der Dezember beendet das Jahr."
         }
       ]
     },
@@ -6407,6 +7807,14 @@
         {
           "source": "During the week.",
           "target": "Während der Woche."
+        },
+        {
+          "source": "During the night it rained.",
+          "target": "Während der Nacht regnete es."
+        },
+        {
+          "source": "During the week I work.",
+          "target": "Während der Woche arbeite ich."
         }
       ]
     },
@@ -6441,6 +7849,14 @@
         {
           "source": "See you the day after tomorrow.",
           "target": "Bis übermorgen."
+        },
+        {
+          "source": "The day after tomorrow is a holiday.",
+          "target": "Übermorgen ist ein Feiertag."
+        },
+        {
+          "source": "We are meeting the day after tomorrow.",
+          "target": "Wir treffen uns übermorgen."
         }
       ]
     },
@@ -6475,6 +7891,14 @@
         {
           "source": "In any case, I am coming.",
           "target": "Auf jeden Fall komme ich."
+        },
+        {
+          "source": "In any case, take an umbrella.",
+          "target": "Nimm auf jeden Fall einen Schirm."
+        },
+        {
+          "source": "That helps in any case.",
+          "target": "Das hilft auf jeden Fall."
         }
       ]
     },
@@ -6509,6 +7933,14 @@
         {
           "source": "Luckily it stayed dry.",
           "target": "Zum Glück blieb es trocken."
+        },
+        {
+          "source": "Luckily nothing happened.",
+          "target": "Zum Glück ist nichts passiert."
+        },
+        {
+          "source": "Luckily we were early.",
+          "target": "Zum Glück waren wir früh dran."
         }
       ]
     },
@@ -6555,6 +7987,14 @@
         {
           "source": "The train station is central.",
           "target": "Der Bahnhof ist zentral."
+        },
+        {
+          "source": "The train station is old but beautiful.",
+          "target": "Der Bahnhof ist alt, aber schön."
+        },
+        {
+          "source": "We are meeting at the train station.",
+          "target": "Wir treffen uns am Bahnhof."
         }
       ]
     },
@@ -6601,6 +8041,14 @@
         {
           "source": "The airport is far away.",
           "target": "Der Flughafen ist weit weg."
+        },
+        {
+          "source": "The airport is huge.",
+          "target": "Der Flughafen ist riesig."
+        },
+        {
+          "source": "The bus drives to the airport.",
+          "target": "Der Bus fährt zum Flughafen."
         }
       ]
     },
@@ -6647,6 +8095,14 @@
         {
           "source": "The hotel is booked.",
           "target": "Das Hotel ist ausgebucht."
+        },
+        {
+          "source": "The hotel is by the sea.",
+          "target": "Das Hotel liegt am Meer."
+        },
+        {
+          "source": "A small hotel in the old town.",
+          "target": "Ein kleines Hotel in der Altstadt."
         }
       ]
     },
@@ -6693,6 +8149,14 @@
         {
           "source": "The restaurant is full.",
           "target": "Das Restaurant ist voll."
+        },
+        {
+          "source": "The restaurant opens at six.",
+          "target": "Das Restaurant öffnet um sechs."
+        },
+        {
+          "source": "We are eating at the restaurant today.",
+          "target": "Wir essen heute im Restaurant."
         }
       ]
     },
@@ -6739,6 +8203,14 @@
         {
           "source": "The market opens early.",
           "target": "Der Markt öffnet früh."
+        },
+        {
+          "source": "The market smells of fresh bread.",
+          "target": "Der Markt riecht nach frischem Brot."
+        },
+        {
+          "source": "Flowers from the market.",
+          "target": "Blumen vom Markt."
         }
       ]
     },
@@ -6785,6 +8257,14 @@
         {
           "source": "The church is old.",
           "target": "Die Kirche ist alt."
+        },
+        {
+          "source": "The church stands in the centre.",
+          "target": "Die Kirche steht im Zentrum."
+        },
+        {
+          "source": "An old church made of stone.",
+          "target": "Eine alte Kirche aus Stein."
         }
       ]
     },
@@ -6831,6 +8311,14 @@
         {
           "source": "The hospital is nearby.",
           "target": "Das Krankenhaus ist in der Nähe."
+        },
+        {
+          "source": "The hospital is new.",
+          "target": "Das Krankenhaus ist neu."
+        },
+        {
+          "source": "She works at the hospital.",
+          "target": "Sie arbeitet im Krankenhaus."
         }
       ]
     },
@@ -6877,6 +8365,14 @@
         {
           "source": "The library is quiet.",
           "target": "Die Bibliothek ist leise."
+        },
+        {
+          "source": "The library closes at eight.",
+          "target": "Die Bibliothek schließt um acht."
+        },
+        {
+          "source": "I am studying at the library.",
+          "target": "Ich lerne in der Bibliothek."
         }
       ]
     },
@@ -6923,6 +8419,14 @@
         {
           "source": "The garden is blooming.",
           "target": "Der Garten blüht."
+        },
+        {
+          "source": "The garden smells of roses.",
+          "target": "Der Garten duftet nach Rosen."
+        },
+        {
+          "source": "The children are playing in the garden.",
+          "target": "Die Kinder spielen im Garten."
         }
       ]
     },
@@ -6969,6 +8473,14 @@
         {
           "source": "The park is green.",
           "target": "Der Park ist grün."
+        },
+        {
+          "source": "We are walking through the park.",
+          "target": "Wir spazieren durch den Park."
+        },
+        {
+          "source": "The park is old and quiet.",
+          "target": "Der Park ist alt und still."
         }
       ]
     },
@@ -7007,6 +8519,14 @@
         {
           "source": "The weather is lovely.",
           "target": "Das Wetter ist herrlich."
+        },
+        {
+          "source": "The weather is changing quickly.",
+          "target": "Das Wetter wechselt schnell."
+        },
+        {
+          "source": "What will the weather be tomorrow?",
+          "target": "Wie wird das Wetter morgen?"
         }
       ]
     },
@@ -7045,6 +8565,14 @@
         {
           "source": "The sun is shining.",
           "target": "Die Sonne scheint."
+        },
+        {
+          "source": "The sun rises early.",
+          "target": "Die Sonne geht früh auf."
+        },
+        {
+          "source": "We are sitting in the sun.",
+          "target": "Wir sitzen in der Sonne."
         }
       ]
     },
@@ -7083,6 +8611,14 @@
         {
           "source": "Fresh snow everywhere.",
           "target": "Überall frischer Schnee."
+        },
+        {
+          "source": "The snow is melting already.",
+          "target": "Der Schnee schmilzt schon."
+        },
+        {
+          "source": "Children love snow.",
+          "target": "Kinder lieben Schnee."
         }
       ]
     },
@@ -7121,6 +8657,14 @@
         {
           "source": "The wind is strong.",
           "target": "Der Wind ist stark."
+        },
+        {
+          "source": "The wind is turning.",
+          "target": "Der Wind dreht sich."
+        },
+        {
+          "source": "A warm wind from the south.",
+          "target": "Ein warmer Wind aus dem Süden."
         }
       ]
     },
@@ -7155,6 +8699,14 @@
         {
           "source": "That was the day before yesterday.",
           "target": "Das war vorgestern."
+        },
+        {
+          "source": "The letter came the day before yesterday.",
+          "target": "Der Brief kam vorgestern."
+        },
+        {
+          "source": "The day before yesterday it snowed.",
+          "target": "Vorgestern hat es geschneit."
         }
       ]
     },
@@ -7201,6 +8753,14 @@
         {
           "source": "The mountain is high.",
           "target": "Der Berg ist hoch."
+        },
+        {
+          "source": "The mountain is covered in snow.",
+          "target": "Der Berg ist voller Schnee."
+        },
+        {
+          "source": "We are climbing the mountain.",
+          "target": "Wir steigen auf den Berg."
         }
       ]
     },
@@ -7247,6 +8807,14 @@
         {
           "source": "The river is wide.",
           "target": "Der Fluss ist breit."
+        },
+        {
+          "source": "The river flows to the sea.",
+          "target": "Der Fluss fließt zum Meer."
+        },
+        {
+          "source": "A bridge over the river.",
+          "target": "Eine Brücke über den Fluss."
         }
       ]
     },
@@ -7293,6 +8861,14 @@
         {
           "source": "The lake is calm.",
           "target": "Der See ist ruhig."
+        },
+        {
+          "source": "The lake glitters in the sun.",
+          "target": "Der See glitzert in der Sonne."
+        },
+        {
+          "source": "We are swimming in the lake.",
+          "target": "Wir schwimmen im See."
         }
       ]
     },
@@ -7339,6 +8915,14 @@
         {
           "source": "The sea is deep.",
           "target": "Das Meer ist tief."
+        },
+        {
+          "source": "The sea roars loudly.",
+          "target": "Das Meer rauscht laut."
+        },
+        {
+          "source": "A house by the sea.",
+          "target": "Ein Haus am Meer."
         }
       ]
     },
@@ -7385,6 +8969,14 @@
         {
           "source": "The forest is dark.",
           "target": "Der Wald ist dunkel."
+        },
+        {
+          "source": "The forest smells of rain.",
+          "target": "Der Wald riecht nach Regen."
+        },
+        {
+          "source": "We are hiking through the forest.",
+          "target": "Wir wandern durch den Wald."
         }
       ]
     },
@@ -7431,6 +9023,14 @@
         {
           "source": "The tree is ancient.",
           "target": "Der Baum ist uralt."
+        },
+        {
+          "source": "The tree loses its leaves.",
+          "target": "Der Baum verliert seine Blätter."
+        },
+        {
+          "source": "A bird sits in the tree.",
+          "target": "Ein Vogel sitzt im Baum."
         }
       ]
     },
@@ -7477,6 +9077,14 @@
         {
           "source": "A flower for you.",
           "target": "Eine Blume für dich."
+        },
+        {
+          "source": "The flower blooms red.",
+          "target": "Die Blume blüht rot."
+        },
+        {
+          "source": "A flower stands in the vase.",
+          "target": "Eine Blume steht in der Vase."
         }
       ]
     },
@@ -7523,6 +9131,14 @@
         {
           "source": "The bird is singing.",
           "target": "Der Vogel singt."
+        },
+        {
+          "source": "The bird flies south.",
+          "target": "Der Vogel fliegt nach Süden."
+        },
+        {
+          "source": "A small bird is singing.",
+          "target": "Ein kleiner Vogel singt."
         }
       ]
     },
@@ -7569,6 +9185,14 @@
         {
           "source": "The cat is sleeping.",
           "target": "Die Katze schläft."
+        },
+        {
+          "source": "The cat sleeps on the chair.",
+          "target": "Die Katze schläft auf dem Stuhl."
+        },
+        {
+          "source": "Our cat likes milk.",
+          "target": "Unsere Katze mag Milch."
         }
       ]
     },
@@ -7615,6 +9239,14 @@
         {
           "source": "The horse is fast.",
           "target": "Das Pferd ist schnell."
+        },
+        {
+          "source": "The horse eats an apple.",
+          "target": "Das Pferd frisst einen Apfel."
+        },
+        {
+          "source": "A horse stands in the field.",
+          "target": "Ein Pferd steht auf der Wiese."
         }
       ]
     },
@@ -7661,6 +9293,14 @@
         {
           "source": "The fish is fresh.",
           "target": "Der Fisch ist frisch."
+        },
+        {
+          "source": "The fish swims deep.",
+          "target": "Der Fisch schwimmt tief."
+        },
+        {
+          "source": "Fresh fish from the market.",
+          "target": "Frischer Fisch vom Markt."
         }
       ]
     },
@@ -7707,6 +9347,14 @@
         {
           "source": "My head is buzzing.",
           "target": "Mein Kopf brummt."
+        },
+        {
+          "source": "My head needs a break.",
+          "target": "Mein Kopf braucht eine Pause."
+        },
+        {
+          "source": "He nods his head.",
+          "target": "Er nickt mit dem Kopf."
         }
       ]
     },
@@ -7753,6 +9401,14 @@
         {
           "source": "An eye for detail.",
           "target": "Ein Auge fürs Detail."
+        },
+        {
+          "source": "My right eye itches.",
+          "target": "Mein rechtes Auge juckt."
+        },
+        {
+          "source": "The eye needs light.",
+          "target": "Das Auge braucht Licht."
         }
       ]
     },
@@ -7799,6 +9455,14 @@
         {
           "source": "An open ear.",
           "target": "Ein offenes Ohr."
+        },
+        {
+          "source": "My ear hurts.",
+          "target": "Mein Ohr tut weh."
+        },
+        {
+          "source": "He whispers in her ear.",
+          "target": "Er flüstert ihr ins Ohr."
         }
       ]
     },
@@ -7845,6 +9509,14 @@
         {
           "source": "The nose is cold.",
           "target": "Die Nase ist kalt."
+        },
+        {
+          "source": "My nose is running.",
+          "target": "Meine Nase läuft."
+        },
+        {
+          "source": "The dog has a fine nose.",
+          "target": "Der Hund hat eine feine Nase."
         }
       ]
     },
@@ -7891,6 +9563,14 @@
         {
           "source": "Open your mouth, please.",
           "target": "Den Mund öffnen, bitte."
+        },
+        {
+          "source": "The child opens its mouth.",
+          "target": "Das Kind öffnet den Mund."
+        },
+        {
+          "source": "He keeps his mouth shut.",
+          "target": "Er hält den Mund."
         }
       ]
     },
@@ -7937,6 +9617,14 @@
         {
           "source": "The heart beats faster.",
           "target": "Das Herz schlägt schneller."
+        },
+        {
+          "source": "My heart is beating calmly.",
+          "target": "Mein Herz schlägt ruhig."
+        },
+        {
+          "source": "A heart of gold.",
+          "target": "Ein Herz aus Gold."
         }
       ]
     },
@@ -7983,6 +9671,14 @@
         {
           "source": "The doctor is coming.",
           "target": "Der Arzt kommt."
+        },
+        {
+          "source": "The doctor is helping quickly.",
+          "target": "Der Arzt hilft schnell."
+        },
+        {
+          "source": "I have an appointment at the doctor's.",
+          "target": "Ich habe einen Termin beim Arzt."
         }
       ]
     }

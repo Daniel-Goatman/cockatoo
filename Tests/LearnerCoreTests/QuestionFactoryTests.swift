@@ -126,6 +126,30 @@ final class QuestionFactoryTests: XCTestCase {
         XCTAssertEqual(fallback?.mode, .recall)
     }
 
+    /// Rich examples (D-R4): cloze and rebuild rotate across an item's
+    /// examples instead of recycling the first forever.
+    func testClozeAndRebuildRotateAcrossExamples() {
+        var item = pack.items.first { $0.id == "de.word.haus" }!
+        item.examples = [
+            Example(source: "I see the house.", target: "Ich sehe das Haus."),
+            Example(source: "The house is very old.", target: "Das Haus ist sehr alt."),
+            Example(source: "We are buying a house.", target: "Wir kaufen ein Haus."),
+        ]
+        var clozeSentences = Set<String>(), rebuildSources = Set<String>()
+        for seed in 0..<60 {
+            var rng = SplitMix64(seed: UInt64(seed))
+            if case .cloze(_, let blanked, _)? = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng) {
+                clozeSentences.insert(blanked)
+            }
+            var rng2 = SplitMix64(seed: UInt64(seed) &+ 999)
+            if case .rebuild(_, let source, _, _)? = factory.question(item: item, mode: .rebuild, distractorPool: pack.items, sentence: nil, rng: &rng2) {
+                rebuildSources.insert(source)
+            }
+        }
+        XCTAssertGreaterThan(clozeSentences.count, 1, "cloze stuck on one example")
+        XCTAssertGreaterThan(rebuildSources.count, 1, "rebuild stuck on one example")
+    }
+
     /// Self-grade carries the word and its example for the reveal.
     func testSelfGradeCarriesPromptAndExample() {
         let item = pack.items.first { $0.id == "de.word.haus" }!

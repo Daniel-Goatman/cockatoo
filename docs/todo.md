@@ -16,11 +16,12 @@ docs/plan/10-learning-redesign.md; roadmap in docs/plan/08-roadmap.md.
 
 ## Outstanding
 
-- Learning-system redesign (docs/plan/10-learning-redesign.md): R1 engine,
-  R2 app, and R3's engine mechanics (deps at ≥ learning, reviewOnly intake,
-  sentence weighting, anchor flag) shipped 2026-07-14. Remaining from R3:
-  rich examples (3–5 per item) via the pack pipeline.
-- Daniel's spot review of pack 2026.08 (docs/pack-review-2026.08.md).
+- Learning-system redesign (docs/plan/10-learning-redesign.md): fully
+  shipped 2026-07-14 — R1 engine, R2 app, R3 including rich examples
+  (pack 2026.09: 3 authored examples per item, build-time guards, engine
+  rotates cloze/rebuild across them).
+- Daniel's spot review of pack 2026.08 (docs/pack-review-2026.08.md) —
+  now also covers the 424 new example sentences in 2026.09.
 - ~1000-item packtool author pipeline — now also carries 3–5 examples per
   item and anchor-word flags (redesign D-R3/D-R4).
 - P6 live LLM verification (needs API key).

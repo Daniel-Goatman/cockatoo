@@ -96,9 +96,10 @@ public struct QuestionFactory: Sendable {
             return recall(item: item)
         case .cloze:
             if let sentence, let q = cloze(item: item, sentence: sentence) { return q }
-            // Day-1 cloze source: the pack example's source sentence
+            // Day-1 cloze source: a pack example's source sentence, drawn
+            // at random so rich-example items don't recycle one sentence
             // (captured sentences win when they exist).
-            if let example = item.examples.first {
+            for example in item.examples.shuffled(using: &rng) {
                 let synthetic = CapturedSentence(itemId: item.id, text: example.source, capturedAt: .distantPast)
                 if let q = cloze(item: item, sentence: synthetic) { return q }
             }
@@ -115,7 +116,10 @@ public struct QuestionFactory: Sendable {
     }
 
     func rebuild(item: VocabItem, rng: inout some RandomNumberGenerator) -> Question? {
-        guard let example = Self.rebuildableExample(item),
+        // A random rebuildable example, not always the first — variety is
+        // the point of authoring several (D-R4 rich examples).
+        let rebuildable = item.examples.filter { Self.rebuildTokens($0) != nil }
+        guard let example = rebuildable.randomElement(using: &rng),
               let order = Self.rebuildTokens(example) else { return nil }
         var shuffled = order
         var attempts = 0
