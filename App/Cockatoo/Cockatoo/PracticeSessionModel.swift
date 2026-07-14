@@ -22,16 +22,15 @@ final class PracticeSessionModel: ObservableObject {
     @Published var answerTrail: [LedgerEntry.Outcome] = []
     /// The just-graded item's progress, for the post-answer micro chip.
     @Published var lastGraded: ItemProgress?
-    /// Set when this session's tier check passed and the unlock fired.
-    @Published var unlockedTier: Int?
+    /// Set when a band crossed its milestone during this session.
+    @Published var milestoneBand: Int?
     /// The recognition option the user picked (drives right/wrong outlines).
     @Published var lastChoice: Int?
-    /// True once the unlock celebration has been acknowledged — the ledger
-    /// shows after, not instead of, the celebration.
+    /// True once the milestone celebration has been acknowledged — the
+    /// ledger shows after, not instead of, the celebration.
     @Published var celebrationSeen = false
-
-    /// First-ask results for tier-check questions (repairs don't count).
-    private var tierCheckFirsts: [String: Bool] = [:]
+    /// Sessions completed in a row this sitting (drives "keep going" copy).
+    @Published var sessionsThisSitting = 0
 
     enum Feedback: Equatable {
         case correct
@@ -87,10 +86,9 @@ final class PracticeSessionModel: ObservableObject {
         ledger = []
         answerTrail = []
         lastGraded = nil
-        unlockedTier = nil
+        milestoneBand = nil
         lastChoice = nil
         celebrationSeen = false
-        tierCheckFirsts = [:]
         prepareCurrent()
     }
 
@@ -174,18 +172,20 @@ final class PracticeSessionModel: ObservableObject {
             engine.planner.requeueMissed(planned.question, into: &queue, afterIndex: index)
         }
 
-        // Tier check: pass = every check question correct on its first ask.
-        // The engine re-validates the unlock condition (P1), so this call
-        // can never skip ahead.
-        if planned.beat == .tierCheck, !planned.isRepair,
-           tierCheckFirsts[planned.question.itemId] == nil {
-            tierCheckFirsts[planned.question.itemId] = isCorrect
-            let total = queue.filter { $0.beat == .tierCheck && !$0.isRepair }.count
-            if tierCheckFirsts.count == total,
-               SessionPlanner.tierCheckPassed(firstResults: Array(tierCheckFirsts.values)) {
-                unlockedTier = try? engine.unlockNextTier(now: Date())
-            }
+        // Milestone check (non-gating, D-R3): a correct answer may tip a
+        // band over its completion fraction — celebrate at session end.
+        if isCorrect, milestoneBand == nil {
+            milestoneBand = try? engine.pendingMilestone(now: Date())
         }
+    }
+
+    /// Called from the celebration's Continue: record it so the same band
+    /// never celebrates twice.
+    func acknowledgeMilestone() {
+        if let band = milestoneBand {
+            try? engine.markMilestoneCelebrated(band: band, now: Date())
+        }
+        celebrationSeen = true
     }
 
     private func updateLedger(
@@ -265,6 +265,7 @@ final class PracticeSessionModel: ObservableObject {
         lastChoice = nil
         if index + 1 >= queue.count {
             sessionDone = true
+            sessionsThisSitting += 1
             queue = []
             index = 0
         } else {

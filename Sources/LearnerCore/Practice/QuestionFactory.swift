@@ -27,9 +27,9 @@ public struct QuestionFactory: Sendable {
         self.config = config
     }
 
-    /// Modes the session planner may offer this item, by stage/box — the
-    /// Core Five ladder (research/brainstorm-mockups 03). Rebuild joins at
-    /// the bottom of the ladder so day-1 sessions aren't recognition-only;
+    /// Modes the session planner may offer this item, by box — the Core
+    /// Five ladder (research/brainstorm-mockups 03). Rebuild joins at the
+    /// bottom of the ladder so day-1 sessions aren't recognition-only;
     /// cloze is available from pack examples before any sentence is
     /// captured. selfGrade is never offered here — it is the release beat.
     public func offerableModes(
@@ -37,26 +37,35 @@ public struct QuestionFactory: Sendable {
         hasSentence: Bool,
         hasExample: Bool = false
     ) -> [PracticeMode] {
-        switch progress.stage {
-        case .locked, .ambient:
-            return []
-        case .ready:
-            return [.recognition]
-        case .learning, .known, .mastered:
-            let clozeOK = hasSentence || hasExample
-            if progress.srsBox <= 1 {
-                return [.recognition] + (hasExample ? [.rebuild] : [])
-            }
-            if progress.srsBox <= 3 {
-                var modes: [PracticeMode] = [.recognition, .recall]
-                if clozeOK { modes.append(.cloze) }
-                if hasExample { modes.append(.rebuild) }
-                return modes
-            }
-            var modes: [PracticeMode] = [.recall]
+        let clozeOK = hasSentence || hasExample
+        if progress.srsBox <= 1 {
+            return [.recognition] + (hasExample ? [.rebuild] : [])
+        }
+        if progress.srsBox <= 3 {
+            var modes: [PracticeMode] = [.recognition, .recall]
             if clozeOK { modes.append(.cloze) }
             if hasExample { modes.append(.rebuild) }
             return modes
+        }
+        var modes: [PracticeMode] = [.recall]
+        if clozeOK { modes.append(.cloze) }
+        if hasExample { modes.append(.rebuild) }
+        return modes
+    }
+
+    /// offerableModes with sentence-context modes (cloze, rebuild) repeated
+    /// sentenceModeBias times, so a uniform pick lands in a phrase most of
+    /// the time once material exists (D-R4). The planner draws from this.
+    public func weightedModes(
+        progress: ItemProgress,
+        hasSentence: Bool,
+        hasExample: Bool = false
+    ) -> [PracticeMode] {
+        let modes = offerableModes(progress: progress, hasSentence: hasSentence, hasExample: hasExample)
+        return modes.flatMap { mode in
+            mode == .cloze || mode == .rebuild
+                ? Array(repeating: mode, count: max(1, config.sentenceModeBias))
+                : [mode]
         }
     }
 

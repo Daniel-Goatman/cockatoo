@@ -66,10 +66,10 @@ enum Theme {
     static let outcomeAlmost = dynamic(0xD9906F, 0xBC6F4C)
     static let outcomeMissed = dynamic(0xCE6C54, 0xB14A31)
 
-    static func stageColor(_ stage: Stage) -> Color {
+    /// nil = not in the library yet (upcoming).
+    static func stageColor(_ stage: Stage?) -> Color {
         switch stage {
-        case .locked: return stageUpcoming
-        case .ambient, .ready: return stageOnPages
+        case nil: return stageUpcoming
         case .learning: return stagePracticing
         case .known, .mastered: return stageKnown
         }

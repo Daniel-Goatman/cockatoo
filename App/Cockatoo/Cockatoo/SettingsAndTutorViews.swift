@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var testResult: String?
     @State private var launchAtLogin = false
     @State private var launchAtLoginError: String?
+    @State private var newPerDay = EngineConfig.default.newPerDay
 
     var body: some View {
         ScrollView {
@@ -43,6 +44,28 @@ struct SettingsView: View {
                     Button("Import language pack…", action: pickPack)
                         .buttonStyle(.pill)
                     caption("Re-importing a newer pack version keeps all your progress — items match by stable ID.")
+                }
+
+                settingSection("PRACTICE") {
+                    HStack(spacing: 12) {
+                        Text("New words per day")
+                            .font(.system(size: 13))
+                        Stepper(value: $newPerDay, in: 1...20) {
+                            Text("\(newPerDay)")
+                                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                                .frame(width: 26, alignment: .trailing)
+                        }
+                        .onChange(of: newPerDay) {
+                            try? model.engine.store.setSetting(SettingsKey.newPerDay, String(newPerDay))
+                        }
+                    }
+                    caption("""
+                    How many new words practice sessions introduce per day. Practice \
+                    itself is unlimited — extra sessions re-run due reviews and \
+                    reinforcement reps; a word's strength only climbs once per day, \
+                    so volume never inflates progress. Introductions pause \
+                    automatically while many reviews are due.
+                    """)
                 }
 
                 settingSection("LANGUAGE MODEL · OPENAI-COMPATIBLE") {
@@ -157,6 +180,8 @@ struct SettingsView: View {
         pageContextOptIn = (try? model.engine.store.setting(SettingsKey.pageContextOptIn)) == "true"
         blockedHostsText = ((try? model.engine.store.blockedHosts()) ?? []).joined(separator: ", ")
         launchAtLogin = SMAppService.mainApp.status == .enabled
+        newPerDay = (try? model.engine.store.setting(SettingsKey.newPerDay))
+            .flatMap { Int($0) } ?? EngineConfig.default.newPerDay
     }
 
     /// SMAppService requires a stable bundle path — effectively the
@@ -232,10 +257,11 @@ struct HowSwappingWorksView: View {
                 }
             }
             Text("""
-            Exposure is deliberately rate-limited: a word earns credit for at most \
-            3 sightings and 2 hovers per day, because spaced encounters build memory \
-            and cramming doesn't. When a word shows "done today", more looking won't \
-            move it until tomorrow — that's the spacing working, not a bug.
+            New words enter through practice sessions, not through browsing — pages \
+            then reinforce what you're learning. A word's strength climbs at most \
+            once per calendar day and "known" takes correct answers on three \
+            different days, so practicing a lot in one sitting sharpens words \
+            without ever faking mastery. That's the spacing working, not a bug.
             """)
             Text("Words and genders first; grammar later — that's the deal, stated plainly.")
                 .italic()

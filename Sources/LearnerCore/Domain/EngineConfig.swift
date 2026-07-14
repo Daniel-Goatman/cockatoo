@@ -1,32 +1,28 @@
 import Foundation
 
 /// All pedagogical tunables in one place. Values from
-/// docs/plan/04-learning-engine.md; tests use the defaults.
+/// docs/plan/04-learning-engine.md + docs/plan/10-learning-redesign.md;
+/// tests use the defaults.
 public struct EngineConfig: Sendable {
-    // Exposure crediting
-    public var seenCreditDailyCap: Int = 3
-    public var engagedCreditDailyCap: Int = 2
-    // ambient → ready (transition b): seen alone is enough; engagement is an
-    // accelerant, never a gate — a reader who never hovers still progresses.
-    public var readySeenThreshold: Int = 6
-    /// Fast path: this many seen credits suffice when the learner has also
-    /// engaged (hover/pin) at least readyEngagedThreshold times.
-    public var readySeenWithEngagementThreshold: Int = 3
-    public var readyEngagedThreshold: Int = 1
-
-    // ActivationEngine
-    public var ambientSetMin: Int = 8
-    public var ambientSetMax: Int = 15
-    /// Tier N+1 unlocks when this fraction of tier N items are ≥ known...
-    public var tierUnlockFraction: Double = 0.7
-    /// ...and at least this long has passed since tier N unlocked.
-    public var tierUnlockMinInterval: TimeInterval = 7 * 24 * 3600
+    // Intake drip (D-R1/D-R3): new words enter via practice sessions.
+    /// New introductions allowed per calendar day.
+    public var newPerDay: Int = 5
+    /// Introductions pause while this many reviews are due — reviews never
+    /// drown under intake.
+    public var introDuePauseThreshold: Int = 12
 
     // learning → known (transition d)
     public var knownMinBox: Int = 4
+    /// Correct answers on at least this many distinct calendar days before
+    /// a word can be `known` (D-R2 — multi-day evidence).
+    public var knownDistinctDays: Int = 3
     // known → mastered (transition e)
     public var masteredClozeCorrect: Int = 2
     public var masteredMinBox: Int = 5
+
+    // Milestones (non-gating, D-R3): a band "completes" at this fraction
+    // ≥ known — a celebration, never a gate on intake.
+    public var milestoneFraction: Double = 0.7
 
     // Lapse (edge f)
     public var lapseBoxDrop: Int = 2
@@ -35,19 +31,18 @@ public struct EngineConfig: Sendable {
     // Sessions
     public var sessionQuestionTarget: Int = 10
     public var sessionDueLimit: Int = 7
-    public var sessionReadyLimit: Int = 3
-    /// Ambient items introduced per session when due+ready leave room, so a
-    /// fresh install can practice immediately (cold start, transition c').
+    /// New introductions per session (bounded further by the daily budget).
     public var sessionIntroLimit: Int = 3
     public var sessionMasteredLimit: Int = 1
-    /// Warm-up questions at the session start: easiest due items, forced
-    /// recognition (session arc, docs/plan/04 §Session planner).
+    /// Warm-up questions at the session start: easiest due items (ordering
+    /// only; modes untouched).
     public var sessionWarmupLimit: Int = 2
-    /// Tier-check burst size. The check rides on top of the session target
-    /// and only appears when the tier-unlock condition is met.
-    public var tierCheckQuestionCount: Int = 3
     /// A missed question re-enters the same session this many positions later.
     public var repairOffset: Int = 3
+    /// Sentence-context modes (cloze, rebuild) are offered this many times
+    /// for every one slot a bare-word mode gets, once material exists
+    /// (D-R4 — most reps happen inside a phrase).
+    public var sentenceModeBias: Int = 2
 
     // Retention
     public var sentencesPerItemCap: Int = 5

@@ -1,19 +1,24 @@
 import Foundation
 
-/// Plans a short review session (~10 questions, never padded, never
-/// advertised longer than it is — principle P4) with a visible arc:
-/// warm-up → new words → mix → tier check (docs/plan/04-learning-engine.md
-/// §Session planner). Also manages the in-session repair queue: a missed
-/// item re-enters once, repairOffset positions later.
+/// Plans a review session (~10 questions) with a visible arc:
+/// warm-up → new words → mix → release. Sessions are never empty while the
+/// library has items (docs/plan/10-learning-redesign.md): due reviews come
+/// first, then new introductions within the daily budget, then
+/// reinforcement reps of non-due items — which the scheduler guarantees
+/// cannot advance a box, so "practice as much as you want" is safe by
+/// construction. Also manages the in-session repair queue: a missed item
+/// re-enters once, repairOffset positions later.
 public struct SessionPlanner: Sendable {
     public var config: EngineConfig
     public var factory: QuestionFactory
     public var scheduler: any ReviewScheduler
+    public var intake: IntakeEngine
 
     public init(config: EngineConfig = .default, scheduler: (any ReviewScheduler)? = nil) {
         self.config = config
         self.factory = QuestionFactory(config: config)
         self.scheduler = scheduler ?? LeitnerScheduler(config: config)
+        self.intake = IntakeEngine(config: config)
     }
 
     /// The session arc position of a question. Repairs keep their original
@@ -22,7 +27,6 @@ public struct SessionPlanner: Sendable {
         case warmup
         case newWords
         case mix
-        case tierCheck
         /// One light self-grade production card to close the session
         /// (research/brainstorm 03: "release — self-grade or quick win").
         case release
@@ -32,8 +36,8 @@ public struct SessionPlanner: Sendable {
         public var question: Question
         /// True if this entry is a repair re-ask of a missed question.
         public var isRepair: Bool
-        /// True if this question introduces an ambient item the learner has
-        /// never practiced (cold-start path c'). The UI shows the word first.
+        /// True if this question introduces a word into the library — the
+        /// UI shows the word first, marked as new.
         public var isIntro: Bool
         public var beat: Beat
 
@@ -50,30 +54,27 @@ public struct SessionPlanner: Sendable {
         public var warmup: [VocabItem] = []
         public var newWords: [VocabItem] = []
         public var mix: [VocabItem] = []
-        public var tierCheck: [VocabItem] = []
         public var release: [VocabItem] = []
 
         public var isEmpty: Bool {
             // Release never carries a session on its own — it's a closing
             // beat, so it doesn't count toward "is there anything to do".
-            warmup.isEmpty && newWords.isEmpty && mix.isEmpty && tierCheck.isEmpty
+            warmup.isEmpty && newWords.isEmpty && mix.isEmpty
         }
     }
 
-    /// Selection (docs/plan/04-learning-engine.md), in priority order:
+    /// Selection (docs/plan/10-learning-redesign.md), in priority order:
     /// 1. due learning/known items (≤ sessionDueLimit) — the easiest 1–2
     ///    open as the warm-up beat, the rest land in the mix
-    /// 2. ready items awaiting their first question (≤ sessionReadyLimit)
-    /// 3. ambient introductions filling leftover room (≤ sessionIntroLimit)
-    /// 4. ≤ sessionMasteredLimit sampled mastered item
-    /// 5. when the tier-unlock condition holds, a tier-check burst of the
-    ///    weakest current-tier items rides on top of the session target
+    /// 2. new introductions: intake candidates within today's remaining
+    ///    budget (≤ sessionIntroLimit per session)
+    /// 3. ≤ sessionMasteredLimit due mastered item
+    /// 4. reinforcement reps of non-due library items fill the session to
+    ///    its target — weakest and least-recently-practiced first
     public func select(
         items: [VocabItem],
         progress: [String: ItemProgress],
-        now: Date,
-        currentTier: Int,
-        tierCheckReady: Bool
+        now: Date
     ) -> Selection {
         let byId = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
 
@@ -85,10 +86,10 @@ public struct SessionPlanner: Sendable {
             }
         }
 
-        let due = Array(sortedByDue(progress.values
+        let dueAll = progress.values
             .filter { ($0.stage == .learning || $0.stage == .known) && scheduler.isDue($0, now: now) }
-            .map(\.itemId))
-            .prefix(config.sessionDueLimit))
+            .map(\.itemId)
+        let due = Array(sortedByDue(dueAll).prefix(config.sessionDueLimit))
 
         // Warm-up: the easiest (lowest-box) due items open the session —
         // an ordering/framing beat; question modes are untouched.
@@ -101,72 +102,64 @@ public struct SessionPlanner: Sendable {
             .prefix(config.sessionWarmupLimit)
         let warmupSet = Set(warmupIds)
 
-        let ready = progress.values
-            .filter { $0.stage == .ready }
-            .map(\.itemId)
-            .sorted()
-            .prefix(config.sessionReadyLimit)
-
-        // Introductions: ambient items in admission order (band, then id),
-        // only when due + ready leave room — reviews always come first.
+        // Introductions: intake order, bounded by the per-session cap,
+        // today's remaining daily budget (which pauses under review debt),
+        // and the room due reviews leave — reviews always come first.
         let introRoom = min(
             config.sessionIntroLimit,
-            max(0, config.sessionQuestionTarget - due.count - ready.count)
+            intake.budget(progress: progress, dueNow: dueAll.count, now: now),
+            max(0, config.sessionQuestionTarget - due.count)
         )
-        let intro = items
-            .filter { progress[$0.id]?.stage == .ambient }
-            .sorted { ($0.frequencyBand, $0.id) < ($1.frequencyBand, $1.id) }
-            .map(\.id)
+        let intro = intake.candidates(items: items, progress: progress)
             .prefix(introRoom)
+            .map(\.id)
 
         let mastered = sortedByDue(progress.values
             .filter { $0.stage == .mastered && scheduler.isDue($0, now: now) }
             .map(\.itemId))
             .prefix(config.sessionMasteredLimit)
 
-        // Cap the core session at the target; the tier check rides on top.
-        var core: [String] = due.filter { !warmupSet.contains($0) } + Array(ready) + Array(mastered)
+        var core: [String] = due.filter { !warmupSet.contains($0) } + Array(mastered)
         let coreRoom = max(0, config.sessionQuestionTarget - warmupSet.count - intro.count)
         core = Array(core.prefix(coreRoom))
+
+        // Reinforcement fill: non-due library items round the session out to
+        // the target. The scheduler holds their boxes (not due), so these
+        // reps add practice volume without inflating mastery — wrong
+        // answers still lapse, as they should.
+        let taken = warmupSet.union(intro).union(core)
+        let fillRoom = max(0, config.sessionQuestionTarget - warmupSet.count - intro.count - core.count)
+        let reinforcement = progress.values
+            .filter { p in
+                (p.stage == .learning || p.stage == .known) && !taken.contains(p.itemId)
+            }
+            .sorted { a, b in
+                if a.srsBox != b.srsBox { return a.srsBox < b.srsBox }
+                let ra = a.lastResultAt ?? .distantPast
+                let rb = b.lastResultAt ?? .distantPast
+                return ra == rb ? a.itemId < b.itemId : ra < rb
+            }
+            .prefix(fillRoom)
+            .map(\.itemId)
 
         var selection = Selection()
         selection.warmup = warmupIds.compactMap { byId[$0] }
         selection.newWords = intro.compactMap { byId[$0] }
-        selection.mix = core.compactMap { byId[$0] }
-
-        if tierCheckReady {
-            let taken = warmupSet.union(intro).union(core)
-            selection.tierCheck = items
-                .filter { item in
-                    item.frequencyBand == currentTier
-                        && !taken.contains(item.id)
-                        && (progress[item.id]?.stage ?? .locked) >= .learning
-                }
-                .sorted { a, b in
-                    let ba = progress[a.id]?.srsBox ?? 0
-                    let bb = progress[b.id]?.srsBox ?? 0
-                    return ba == bb ? a.id < b.id : ba < bb   // weakest first
-                }
-                .prefix(config.tierCheckQuestionCount)
-                .map { $0 }
-        }
+        selection.mix = (core + reinforcement).compactMap { byId[$0] }
 
         // Release: one light production card (self-grade) on the strongest
         // word NOT already in this session — a quick win, and no double SRS
         // credit for a word answered minutes earlier. Skipped when the
         // session is otherwise empty or nothing qualifies (never padded).
         if !selection.isEmpty {
-            let taken = warmupSet
-                .union(intro)
-                .union(core)
-                .union(selection.tierCheck.map(\.id))
+            let allTaken = taken.union(reinforcement)
             // srsBox ≥ 2: a word with some standing — never a box-0/1 item
             // that was introduced minutes ago and isn't due yet.
             selection.release = progress.values
                 .filter { p in
                     (p.stage == .learning || p.stage == .known)
                         && p.srsBox >= 2
-                        && !taken.contains(p.itemId)
+                        && !allTaken.contains(p.itemId)
                 }
                 .sorted { a, b in
                     a.srsBox == b.srsBox ? a.itemId < b.itemId : a.srsBox > b.srsBox
@@ -178,7 +171,7 @@ public struct SessionPlanner: Sendable {
     }
 
     /// Materialize the selection into the session queue, arc-ordered:
-    /// warm-up → new words → mix → tier check.
+    /// warm-up → new words → mix → release.
     public func plan(
         selection: Selection,
         allItems: [VocabItem],
@@ -191,21 +184,21 @@ public struct SessionPlanner: Sendable {
 
         func append(_ items: [VocabItem], beat: Beat) throws {
             for item in items {
-                guard let p = progress[item.id] else { continue }
                 let itemSentences = try sentences(item.id)
-                // Introductions (ambient, c') are recognition — the
-                // gentlest generatable mode. Every other beat follows the
-                // stage/box mode ladder: the warm-up is "easiest items
-                // first" (ordering), never a distorted mode — forcing
-                // recognition would starve recall and stall learning→known.
                 let isIntro = beat == .newWords
-                let modes = isIntro
-                    ? [PracticeMode.recognition]
-                    : factory.offerableModes(
+                let modes: [PracticeMode]
+                if isIntro {
+                    // Introductions have no progress row yet and are always
+                    // recognition — the gentlest generatable mode.
+                    modes = [.recognition]
+                } else {
+                    guard let p = progress[item.id] else { continue }
+                    modes = factory.weightedModes(
                         progress: p,
                         hasSentence: !itemSentences.isEmpty,
                         hasExample: QuestionFactory.rebuildableExample(item) != nil
                     )
+                }
                 guard let mode = modes.randomElement(using: &rng) else { continue }
                 if let q = factory.question(
                     item: item,
@@ -222,7 +215,6 @@ public struct SessionPlanner: Sendable {
         try append(selection.warmup, beat: .warmup)
         try append(selection.newWords, beat: .newWords)
         try append(selection.mix, beat: .mix)
-        try append(selection.tierCheck, beat: .tierCheck)
         // Release is always self-grade — the one fixed-mode beat.
         for item in selection.release {
             if let q = factory.question(
@@ -236,13 +228,6 @@ public struct SessionPlanner: Sendable {
             }
         }
         return planned
-    }
-
-    /// The tier check passes only when every check question was answered
-    /// correctly on its first ask (repairs don't count — P1: the rule lives
-    /// here, not in the UI).
-    public static func tierCheckPassed(firstResults: [Bool]) -> Bool {
-        !firstResults.isEmpty && firstResults.allSatisfy { $0 }
     }
 
     /// Called after a wrong answer: re-insert the same question once,

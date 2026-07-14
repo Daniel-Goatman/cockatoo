@@ -85,16 +85,24 @@ public struct Grader: Sendable {
     public func apply(result: PracticeResult, progress: ItemProgress, now: Date) -> ItemProgress {
         var p = progress
         let nearMiss = result.nearMiss && !result.correct
+        let previousBox = p.srsBox
         let (box, dueAt) = nearMiss
             ? scheduler.hold(progress: p, now: now)
             : scheduler.next(after: result.correct, progress: p, now: now)
         p.srsBox = box
         p.dueAt = dueAt
+        if box > previousBox { p.lastAdvancedAt = now }
         p.lastResultAt = now
         p.updatedAt = now
 
         if result.correct {
             p.correctStreak += 1
+            // Distinct-day evidence (D-R2): the first correct answer of a
+            // calendar day counts, every further same-day rep doesn't.
+            if !LearningCalendar.sameDay(p.lastCorrectAt, now) {
+                p.distinctCorrectDays += 1
+            }
+            p.lastCorrectAt = now
             switch result.mode {
             case .recognition: p.recognitionCorrect += 1
             case .recall: p.recallCorrect += 1
@@ -110,18 +118,13 @@ public struct Grader: Sendable {
             if !nearMiss { p.lapses += 1 }
         }
 
-        // Transition c: first answer (right or wrong) enters learning.
-        // Ambient items reach here through introduction questions (c'), so a
-        // fresh install can start practicing before exposure accrues.
-        if p.stage == .ready || p.stage == .ambient {
-            p.stage = .learning
-        }
-
         if result.correct {
-            // Transition d: learning → known.
+            // Transition d: learning → known — box height AND mode breadth
+            // AND multi-day evidence (D-R2).
             if p.stage == .learning,
                p.srsBox >= config.knownMinBox,
-               p.recognitionCorrect >= 1, p.recallCorrect >= 1 {
+               p.recognitionCorrect >= 1, p.recallCorrect >= 1,
+               p.distinctCorrectDays >= config.knownDistinctDays {
                 p.stage = .known
             }
             // Transition e: known → mastered (cloze passes at high box).

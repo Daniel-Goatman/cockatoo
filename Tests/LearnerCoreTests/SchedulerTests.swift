@@ -40,6 +40,42 @@ final class SchedulerTests: XCTestCase {
         XCTAssertEqual(box, 3)
     }
 
+    // MARK: - Distinct-day advance gate (D-R2)
+
+    func testSameDayCorrectAfterAdvanceHoldsBox() {
+        // Advanced 2 hours ago (same calendar day), due again now: correct
+        // holds the box — one advance per word per day.
+        var p = progress(box: 1, dueAt: now.addingTimeInterval(-60))
+        p.lastAdvancedAt = now.addingTimeInterval(-2 * 3600)
+        let (box, dueAt) = scheduler.next(after: true, progress: p, now: now)
+        XCTAssertEqual(box, 1, "same-day rep must not climb the ladder")
+        XCTAssertGreaterThan(dueAt, now, "but it still reschedules")
+    }
+
+    func testNextDayCorrectAdvances() {
+        var p = progress(box: 1, dueAt: now.addingTimeInterval(-60))
+        p.lastAdvancedAt = now.addingTimeInterval(-25 * 3600)
+        let (box, _) = scheduler.next(after: true, progress: p, now: now)
+        XCTAssertEqual(box, 2)
+    }
+
+    func testIntroductionAdvanceExemptFromDayGate() {
+        // Box 0 → 1 is the introduction, not retention evidence — it is
+        // allowed even if some advance already happened today (fresh rows
+        // have lastAdvancedAt nil anyway; this guards the definition).
+        var p = progress(box: 0, dueAt: nil)
+        p.lastAdvancedAt = now.addingTimeInterval(-3600)
+        let (box, _) = scheduler.next(after: true, progress: p, now: now)
+        XCTAssertEqual(box, 1)
+    }
+
+    func testWrongAlwaysLapsesRegardlessOfDayGate() {
+        var p = progress(box: 4, dueAt: now.addingTimeInterval(3600))
+        p.lastAdvancedAt = now.addingTimeInterval(-60)
+        let (box, _) = scheduler.next(after: false, progress: p, now: now)
+        XCTAssertEqual(box, 2, "evidence of not-knowing is valid anytime")
+    }
+
     func testWrongDropsTwoBoxesWithFloor() {
         let high = progress(box: 5, dueAt: now.addingTimeInterval(-60))
         XCTAssertEqual(scheduler.next(after: false, progress: high, now: now).box, 3)

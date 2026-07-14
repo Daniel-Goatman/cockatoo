@@ -48,13 +48,12 @@ final class QuestionFactoryTests: XCTestCase {
     /// reachable (stage, box) state can produce every mode the planner offers.
     func testEveryOfferedModeIsGeneratableForEveryItem() throws {
         for item in pack.items {
-            for stage in [Stage.ready, .learning, .known, .mastered] {
+            for stage in Stage.allCases {
                 for box in 0...6 {
                     for hasSentence in [false, true] {
                         var p = ItemProgress(itemId: item.id, now: now)
                         p.stage = stage
                         p.srsBox = box
-                        p.dueAt = stage >= .learning ? now : nil
 
                         let sentence = hasSentence
                             ? CapturedSentence(itemId: item.id, text: "Yesterday I saw the \(item.sourceForms.last!.form) again.", capturedAt: now)
@@ -161,22 +160,37 @@ final class QuestionFactoryTests: XCTestCase {
         )
     }
 
-    func testOfferableModesByStageAndBox() {
+    func testOfferableModesByBox() {
         var p = ItemProgress(itemId: "de.word.haus", now: now)
 
-        p.stage = .ambient
-        XCTAssertTrue(factory.offerableModes(progress: p, hasSentence: true).isEmpty)
-
-        p.stage = .ready
+        p.stage = .learning
+        p.srsBox = 1
         XCTAssertEqual(factory.offerableModes(progress: p, hasSentence: true), [.recognition])
 
-        p.stage = .learning
         p.srsBox = 2
         XCTAssertEqual(factory.offerableModes(progress: p, hasSentence: false), [.recognition, .recall])
 
         p.srsBox = 5
         XCTAssertEqual(factory.offerableModes(progress: p, hasSentence: true), [.recall, .cloze])
         XCTAssertEqual(factory.offerableModes(progress: p, hasSentence: false), [.recall])
+    }
+
+    /// D-R4: once sentence material exists, cloze/rebuild dominate the draw —
+    /// most reps happen inside a phrase.
+    func testWeightedModesBiasSentenceContexts() {
+        var p = ItemProgress(itemId: "de.word.haus", now: now)
+        p.stage = .learning
+        p.srsBox = 3
+        let weighted = factory.weightedModes(progress: p, hasSentence: true, hasExample: true)
+        let sentenceSlots = weighted.filter { $0 == .cloze || $0 == .rebuild }.count
+        let bareSlots = weighted.filter { $0 == .recognition || $0 == .recall }.count
+        XCTAssertEqual(sentenceSlots, 4, "cloze + rebuild, each ×sentenceModeBias(2)")
+        XCTAssertEqual(bareSlots, 2)
+        XCTAssertGreaterThan(sentenceSlots, bareSlots)
+
+        // No material → no phantom sentence slots.
+        let bare = factory.weightedModes(progress: p, hasSentence: false, hasExample: false)
+        XCTAssertEqual(bare, [.recognition, .recall])
     }
 
     func testSessionRepairRequeuesOnce() {

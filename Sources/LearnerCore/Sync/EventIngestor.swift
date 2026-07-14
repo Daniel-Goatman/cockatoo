@@ -2,16 +2,18 @@ import Foundation
 import GRDB
 
 /// Ingests exposure event batches in one transaction: insert (ignoring
-/// duplicate UUIDs — idempotency, R5), fold into item_progress with daily
-/// caps, fire ambient → ready transitions, run activation, bump the
-/// snapshot version.
+/// duplicate UUIDs — idempotency, R5), fold sightings into item_progress
+/// counters, bump the snapshot version.
+///
+/// Exposure is display-only ("seen in the wild") since the practice-first
+/// redesign (docs/plan/10-learning-redesign.md D-R1): sightings never
+/// change stage, box, or scheduling. Sentence captures still store cloze
+/// material.
 public struct EventIngestor: Sendable {
     public var config: EngineConfig
-    public var activation: ActivationEngine
 
     public init(config: EngineConfig = .default) {
         self.config = config
-        self.activation = ActivationEngine(config: config)
     }
 
     public struct Outcome: Equatable, Sendable {
@@ -25,7 +27,6 @@ public struct EventIngestor: Sendable {
         try store.db.writer.write { dbc in
             var accepted = 0
             var duplicates = 0
-            var touchedProgress = false
 
             for event in events {
                 let exists = try ExposureEventRecord.fetchOne(dbc, key: event.id) != nil
@@ -43,13 +44,7 @@ public struct EventIngestor: Sendable {
                 ).insert(dbc)
                 accepted += 1
 
-                if try apply(event: event, dbc: dbc, now: now) {
-                    touchedProgress = true
-                }
-            }
-
-            if touchedProgress {
-                try runActivation(dbc: dbc, now: now)
+                try apply(event: event, dbc: dbc, now: now)
             }
 
             let version: Int
@@ -62,10 +57,9 @@ public struct EventIngestor: Sendable {
         }
     }
 
-    /// Returns true if progress changed.
-    func apply(event: ExposureEvent, dbc: Database, now: Date) throws -> Bool {
+    func apply(event: ExposureEvent, dbc: Database, now: Date) throws {
         if event.type == .sentenceCaptured {
-            guard let text = event.sentence, !text.isEmpty else { return false }
+            guard let text = event.sentence, !text.isEmpty else { return }
             try CapturedSentence(
                 id: event.id,
                 itemId: event.itemId,
@@ -73,70 +67,21 @@ public struct EventIngestor: Sendable {
                 sourceHost: event.host,
                 capturedAt: event.occurredAt
             ).insert(dbc)
-            return false // no progress credit for sentence capture
+            return
         }
 
-        guard var p = try ItemProgress.fetchOne(dbc, key: event.itemId) else { return false }
-        // Exposure only credits items in the ambient window.
-        guard p.stage == .ambient || p.stage == .ready else { return false }
-
-        let dayStart = Calendar(identifier: .gregorian).startOfDay(for: event.occurredAt)
+        // Sightings only count for library items (the swap set); an item
+        // without a progress row hasn't been introduced yet.
+        guard var p = try ItemProgress.fetchOne(dbc, key: event.itemId) else { return }
         switch event.type {
         case .seen:
-            let todayCount = try creditedCount(dbc: dbc, itemId: event.itemId, types: ["seen"], since: dayStart, excluding: event.id)
-            guard todayCount < config.seenCreditDailyCap else { return false }
             p.seenCount += 1
         case .engaged, .pinned:
-            let todayCount = try creditedCount(dbc: dbc, itemId: event.itemId, types: ["engaged", "pinned"], since: dayStart, excluding: event.id)
-            guard todayCount < config.engagedCreditDailyCap else { return false }
             p.engagedCount += 1
         case .sentenceCaptured:
-            return false
-        }
-
-        // Transition b: ambient → ready. Seen alone suffices; engagement is
-        // a fast path, never a gate (a reader who never hovers still gets
-        // practice — the cold-start fix).
-        if p.stage == .ambient,
-           p.seenCount >= config.readySeenThreshold
-               || (p.seenCount >= config.readySeenWithEngagementThreshold
-                   && p.engagedCount >= config.readyEngagedThreshold) {
-            p.stage = .ready
+            return
         }
         p.updatedAt = now
         try p.save(dbc)
-        return true
-    }
-
-    /// Events already credited today for the item (the current event is
-    /// already inserted, so exclude it from the count).
-    func creditedCount(dbc: Database, itemId: String, types: [String], since: Date, excluding eventId: String) throws -> Int {
-        try Int.fetchOne(dbc, sql: """
-            SELECT COUNT(*) FROM exposure_event
-            WHERE itemId = ? AND type IN (\(types.map { "'\($0)'" }.joined(separator: ",")))
-              AND occurredAt >= ? AND id != ?
-            """, arguments: [itemId, since, eventId]) ?? 0
-    }
-
-    /// Promote locked → ambient per ActivationEngine. Tier unlocking is NOT
-    /// automatic: it happens through the tier-check beat in practice
-    /// sessions (LearnerEngine.unlockNextTier) — an earned, visible moment,
-    /// never a background flip.
-    func runActivation(dbc: Database, now: Date) throws {
-        let language = try SettingRecord.fetchOne(dbc, key: SettingsKey.activeLanguage)?.value ?? "de"
-        let itemRecords = try VocabItemRecord.filter(Column("language") == language).fetchAll(dbc)
-        let items = try itemRecords.map { try $0.item() }
-        var progress = Dictionary(uniqueKeysWithValues: try ItemProgress.fetchAll(dbc).map { ($0.itemId, $0) })
-
-        let unlockedTier = Int(try SettingRecord.fetchOne(dbc, key: SettingsKey.unlockedTier)?.value ?? "1") ?? 1
-
-        for id in activation.admissions(items: items, progress: progress, unlockedTier: unlockedTier) {
-            var p = progress[id] ?? ItemProgress(itemId: id, now: now)
-            p.stage = .ambient
-            p.activatedAt = now
-            p.updatedAt = now
-            try p.save(dbc)
-            progress[id] = p
-        }
     }
 }

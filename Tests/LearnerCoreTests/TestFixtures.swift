@@ -103,4 +103,31 @@ enum Fixtures {
     static func progress(_ engine: LearnerEngine, _ itemId: String) throws -> ItemProgress {
         try engine.store.progress(itemId: itemId)!
     }
+
+    /// Put an item into the library with the given state (rows only exist
+    /// once introduced under practice-first intake). Backdates the
+    /// introduction a week so seeded history doesn't eat today's intake
+    /// budget; override activatedAt in `mutate` when a test needs it fresh.
+    @discardableResult
+    static func seed(
+        _ engine: LearnerEngine,
+        _ itemId: String,
+        at now: Date = t0,
+        _ mutate: (inout ItemProgress) -> Void = { _ in }
+    ) throws -> ItemProgress {
+        var p = try engine.store.progress(itemId: itemId) ?? ItemProgress(itemId: itemId, now: now)
+        p.activatedAt = now.addingTimeInterval(-7 * 86_400)
+        mutate(&p)
+        try engine.store.saveProgress(p)
+        return p
+    }
+
+    /// Introduce an item the real way: grade a first (correct) recognition
+    /// answer, which creates the progress row.
+    @discardableResult
+    static func introduce(_ engine: LearnerEngine, _ itemId: String, at now: Date = t0) throws -> ItemProgress {
+        try engine.grade(result: PracticeResult(
+            itemId: itemId, mode: .recognition, correct: true, answeredAt: now
+        ), now: now)
+    }
 }

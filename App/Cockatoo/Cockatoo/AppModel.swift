@@ -89,10 +89,10 @@ final class AppModel: ObservableObject {
         if practiceInspectorOpen { sidebarCollapsed = true }
     }
 
-    /// Menu bar badge: actionable reviews (due + ready). Introductions are
-    /// deliberately excluded — an always-on badge is nagging, not a signal.
+    /// Menu bar badge: due reviews only. Introductions are deliberately
+    /// excluded — an always-on badge is nagging, not a signal.
     var dueBadge: String {
-        let actionable = (overview?.dueNow ?? 0) + (overview?.readyCount ?? 0)
+        let actionable = overview?.dueNow ?? 0
         guard actionable > 0 else { return "" }
         return "\(actionable)"
     }

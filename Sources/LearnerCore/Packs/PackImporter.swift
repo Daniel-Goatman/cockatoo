@@ -67,13 +67,6 @@ public struct PackImporter: Sendable {
             if try SettingRecord.fetchOne(dbc, key: SettingsKey.activeLanguage) == nil {
                 try SettingRecord(key: SettingsKey.activeLanguage, value: pack.language).save(dbc)
             }
-            if try SettingRecord.fetchOne(dbc, key: SettingsKey.unlockedTier) == nil {
-                try SettingRecord(key: SettingsKey.unlockedTier, value: "1").save(dbc)
-                try SettingRecord(
-                    key: SettingsKey.tierUnlockedAt(1),
-                    value: ISO8601DateFormatter().string(from: now)
-                ).save(dbc)
-            }
 
             try LearnerStore(db: store.db).bumpSnapshotVersion(dbc)
             return pack.items.count

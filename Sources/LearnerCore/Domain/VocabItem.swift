@@ -72,10 +72,15 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
     public var frequencyBand: Int
     public var replacementPolicy: ReplacementPolicy
     public var fidelityTier: FidelityTier
-    /// Item IDs that must be ≥ .known before this item can activate.
+    /// Item IDs that must be in the library (≥ .learning) before this item
+    /// can be introduced.
     public var dependencies: [String]
     public var explanation: String
     public var examples: [Example]
+    /// Pack-flagged "fun anchor" — jumps the intake queue (boosted two
+    /// bands) so sentences and phrases can be built around it early.
+    /// Optional for backward compatibility with schema-1 packs.
+    public var anchor: Bool?
 
     public init(
         id: String,
@@ -90,7 +95,8 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
         fidelityTier: FidelityTier,
         dependencies: [String] = [],
         explanation: String,
-        examples: [Example] = []
+        examples: [Example] = [],
+        anchor: Bool? = nil
     ) {
         self.id = id
         self.language = language
@@ -105,10 +111,13 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
         self.dependencies = dependencies
         self.explanation = explanation
         self.examples = examples
+        self.anchor = anchor
     }
 }
 
 public extension VocabItem {
+    var isAnchor: Bool { anchor ?? false }
+
     /// The bare (non-determiner) source form for display: "book", not
     /// "the book" — determiner variants exist for the matcher, not lists.
     var bareSourceForm: String? {

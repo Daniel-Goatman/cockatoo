@@ -1,15 +1,15 @@
 import SwiftUI
 import LearnerCore
 
-/// The one review engine's UI: recognition, recall, cloze — plus
-/// introduction cards for new words (cold start) and the in-session repair
-/// lane. Session state lives in PracticeSessionModel so leaving the tab
-/// mid-session doesn't discard it.
+/// The one review engine's UI: recognition, recall, cloze, rebuild — plus
+/// introduction cards for new words and the in-session repair lane. Session
+/// state lives in PracticeSessionModel so leaving the tab mid-session
+/// doesn't discard it.
 ///
 /// Layout follows research/prototype-v2/practice-session.html: a flush arc
 /// row (phase · outcome strip · count · End session), a centered question
-/// card, the collapsible inspector (tier ring + done-stack) that auto-tucks
-/// during the tier check, the ring-draw unlock celebration, and the ledger.
+/// card, the collapsible inspector (milestone ring + done-stack), the
+/// ring-draw milestone celebration, and the ledger.
 struct PracticeView: View {
     @EnvironmentObject var model: AppModel
 
@@ -28,16 +28,15 @@ struct PracticeSessionView: View {
             if let planned = session.currentQuestion {
                 HStack(spacing: 0) {
                     mainColumn(planned)
-                    // Focus narrows for the check; the inspector returns after.
-                    if model.practiceInspectorOpen, planned.beat != .tierCheck {
+                    if model.practiceInspectorOpen {
                         PracticeInspector(session: session)
                             .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                     }
                 }
                 .animation(cardAnimation, value: model.practiceInspectorOpen)
             } else if !session.ledger.isEmpty {
-                if let unlocked = session.unlockedTier, !session.celebrationSeen {
-                    CelebrationView(tier: unlocked) { session.celebrationSeen = true }
+                if let band = session.milestoneBand, !session.celebrationSeen {
+                    CelebrationView(band: band) { session.acknowledgeMilestone() }
                 } else {
                     summaryColumn
                 }
@@ -102,7 +101,7 @@ struct PracticeSessionView: View {
             Text(phaseName(planned.beat).uppercased())
                 .font(Theme.monoLabel())
                 .kerning(0.6)
-                .foregroundStyle(planned.beat == .tierCheck ? Theme.goldDeep : Theme.inkFaint)
+                .foregroundStyle(Theme.inkFaint)
             progressStrip
             Text("\(min(session.index + 1, session.queue.count)) / \(session.queue.count)")
                 .font(.system(size: 10.5, design: .monospaced))
@@ -123,7 +122,6 @@ struct PracticeSessionView: View {
         case .warmup: return "Warm-up"
         case .newWords: return "New words"
         case .mix: return "Mix"
-        case .tierCheck: return "Tier check"
         case .release: return "Release"
         }
     }
@@ -201,7 +199,7 @@ struct PracticeSessionView: View {
             Text(beatCaption(planned))
                 .font(Theme.monoLabel())
                 .kerning(0.8)
-                .foregroundStyle(planned.beat == .tierCheck && !planned.isRepair ? Theme.goldDeep : Theme.inkFaint)
+                .foregroundStyle(Theme.inkFaint)
                 .padding(.bottom, 12)
             questionView(planned.question)
             if let feedback = session.feedback {
@@ -221,7 +219,6 @@ struct PracticeSessionView: View {
         case .warmup: return "WARM-UP"
         case .newWords: return "NEW WORD"
         case .mix: return "MIX"
-        case .tierCheck: return "TIER CHECK · FIRST ANSWERS COUNT"
         case .release: return "RELEASE · LAST ONE, NO GRADING"
         }
     }
@@ -396,9 +393,7 @@ struct PracticeSessionView: View {
         }
         switch feedback {
         case .correct:
-            return planned.beat == .tierCheck && !planned.isRepair
-                ? "Correct — counts toward the check"
-                : "Correct"
+            return "Correct"
         case .nearMiss(let expected):
             return "Almost — \(expected)"
         case .wrong(let expected):
@@ -423,9 +418,7 @@ struct PracticeSessionView: View {
         case .nearMiss:
             return "Held, not dropped — it won't re-queue."
         case .wrong:
-            return planned.beat == .tierCheck && !planned.isRepair
-                ? "First answer counts for the check; the repair still teaches."
-                : "It comes back for a repair in a moment."
+            return "It comes back for a repair in a moment."
         }
     }
 
@@ -444,8 +437,8 @@ struct PracticeSessionView: View {
             Text("Session ledger")
                 .font(Theme.serif(24, weight: .medium))
             HStack(spacing: 6) {
-                if let unlocked = session.unlockedTier {
-                    Text("Tier \(unlocked) unlocked ·")
+                if let band = session.milestoneBand {
+                    Text("Band \(band) milestone ·")
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(Theme.goldDeep)
                 }
@@ -473,15 +466,32 @@ struct PracticeSessionView: View {
                     }
                 }
             }
-            Button("Start another") { session.startSession() }
-                .buttonStyle(.pillProminent)
-                .keyboardShortcut(.return, modifiers: [])
-                .padding(.top, 16)
+            HStack(spacing: 12) {
+                Button("Keep going") { session.startSession() }
+                    .buttonStyle(.pillProminent)
+                    .keyboardShortcut(.return, modifiers: [])
+                Text(keepGoingSubtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.inkFaint)
+            }
+            .padding(.top, 16)
             Spacer(minLength: 24)
         }
         .frame(maxWidth: 560, alignment: .leading)
         .padding(.horizontal, 34)
         .frame(maxWidth: .infinity)
+    }
+
+    /// Honest about what another round contains — and that extra reps are
+    /// safe: strength climbs across days, not within one.
+    var keepGoingSubtitle: String {
+        guard let o = model.overview else { return "" }
+        var parts: [String] = []
+        if o.dueNow > 0 { parts.append("\(o.dueNow) due") }
+        let newAvailable = min(o.newRemainingToday, o.introAvailable)
+        if newAvailable > 0 { parts.append("\(newAvailable) new available") }
+        if parts.isEmpty { return "extra reps — they sharpen, without rushing the schedule" }
+        return parts.joined(separator: " · ")
     }
 
     func ledgerText(_ entry: PracticeSessionModel.LedgerEntry) -> String {
@@ -515,22 +525,6 @@ struct PracticeSessionView: View {
                 .foregroundStyle(Theme.inkMuted)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 380)
-            if let almost = model.overview?.almostReady, !almost.isEmpty {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("ALMOST READY")
-                        .font(Theme.monoLabel())
-                        .kerning(0.6)
-                        .foregroundStyle(Theme.inkFaint)
-                    ForEach(almost, id: \.itemId) { need in
-                        (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
-                            + Text(" — \(ExposureHint.text(for: need))"))
-                            .font(.callout)
-                            .foregroundStyle(Theme.inkMuted)
-                    }
-                }
-                .themeCard(padding: 12)
-                .padding(.top, 6)
-            }
             Button("Check again") { session.startSession() }
                 .buttonStyle(.pill)
                 .padding(.top, 4)
@@ -538,15 +532,20 @@ struct PracticeSessionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// With never-empty sessions this only shows before a pack is imported
+    /// (or with a truly empty library and spent intake) — say which.
     var emptyReason: String {
-        guard let o = model.overview else {
-            return "Browse with the Safari extension to meet new words, then come back."
+        guard let o = model.overview, o.totalItems > 0 else {
+            return "Import a language pack to start — your first words arrive in the very first session."
+        }
+        if o.libraryCount == 0, o.newRemainingToday == 0 {
+            return "Today's \(o.newPerDay) new words are done and nothing is in the library yet — more arrive tomorrow."
         }
         if let nextDue = o.nextDueAt {
             let when = RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())
-            return "Nothing is due right now — your next review is \(when)."
+            return "Nothing to practice right now — your next review is \(when)."
         }
-        return "Nothing is due right now. Keep reading with the Safari extension to meet new words."
+        return "Nothing to practice right now."
     }
 }
 
@@ -726,15 +725,15 @@ struct PracticeInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            if let tier = model.overview?.tierProgress {
+            if let m = model.overview?.nextMilestone {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("TIER \(tier.currentTier) → \(tier.nextTier) · EARNED UNLOCK")
+                    Text("BAND \(m.band) · MILESTONE")
                         .font(Theme.monoLabel())
                         .kerning(0.5)
                         .foregroundStyle(Theme.inkFaint)
-                    TierRing(known: tier.knownInCurrentTier, needed: tier.neededInCurrentTier)
+                    ProgressRing(known: m.known, needed: m.needed)
                         .frame(maxWidth: .infinity)
-                    Text(ringCaption(tier))
+                    Text(ringCaption(m))
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.inkMuted)
                         .multilineTextAlignment(.center)
@@ -762,12 +761,9 @@ struct PracticeInspector: View {
         .background(Theme.inspBg)
     }
 
-    func ringCaption(_ tier: LearnerEngine.TierProgress) -> String {
-        if model.overview?.tierCheckReady == true {
-            return "Ready — this session ends with the \(EngineConfig.default.tierCheckQuestionCount)-question check."
-        }
-        let togo = max(0, tier.neededInCurrentTier - tier.knownInCurrentTier)
-        return "\(togo) to go, then a short check opens tier \(tier.nextTier)."
+    func ringCaption(_ m: LearnerEngine.MilestoneProgress) -> String {
+        let togo = max(0, m.needed - m.known)
+        return "\(togo) to go — a milestone, not a gate; new words keep flowing."
     }
 
     var doneStack: some View {
@@ -836,8 +832,9 @@ struct DoneCard: View {
     }
 }
 
-/// The tier ring: fills toward the unlock threshold (needed, not tier size).
-struct TierRing: View {
+/// The milestone ring: fills toward the band-completion threshold (needed,
+/// not band size).
+struct ProgressRing: View {
     let known: Int
     let needed: Int
     var diameter: CGFloat = 132
@@ -873,14 +870,14 @@ struct TierRing: View {
                 withAnimation(.spring(response: 0.9, dampingFraction: 0.9)) { shown = true }
             }
         }
-        .accessibilityLabel("\(known) of \(needed) words needed for the tier check")
+        .accessibilityLabel("\(known) of \(needed) words needed for the band milestone")
     }
 }
 
-// MARK: - Unlock celebration (one ring-draw + one bloom — no confetti)
+// MARK: - Milestone celebration (one ring-draw + one bloom — no confetti)
 
 struct CelebrationView: View {
-    let tier: Int
+    let band: Int
     let onContinue: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drawn = false
@@ -905,9 +902,9 @@ struct CelebrationView: View {
             .frame(width: 172, height: 172)
             .padding(.bottom, 26)
             Group {
-                Text("Tier \(tier) unlocked")
+                Text("Band \(band) complete")
                     .font(Theme.serif(30, weight: .medium))
-                Text("New words will begin appearing on pages you read. Nothing else changes — keep reading, and they'll ripen like the rest.")
+                Text("Most of this band is now known — a milestone, earned by remembering across days. New words keep flowing like always.")
                     .font(.system(size: 13.5))
                     .foregroundStyle(Theme.inkMuted)
                     .multilineTextAlignment(.center)
@@ -935,36 +932,3 @@ struct CelebrationView: View {
     }
 }
 
-/// Turns an ExposureNeed into the one-line human hint used by Practice and
-/// the dashboard: what would make this word practicable. Cap-aware — the
-/// hint never suggests an action that won't credit today (P4: a hint on
-/// screen must be true).
-enum ExposureHint {
-    static func text(for need: LearnerEngine.ExposureNeed) -> String {
-        let seenRemaining = max(0, need.seenForReady - need.seenCount)
-        let fastRemaining = max(0, need.seenForFastReady - need.seenCount)
-        let hasEngagement = need.engagedCount >= need.engagedForFastReady
-        // A hover helps only if it completes the fast path and can still
-        // credit today.
-        let hoverHelpsNow = !hasEngagement && !need.engagedCappedToday && fastRemaining == 0
-
-        if need.seenCappedToday {
-            if hoverHelpsNow {
-                return "hover it once on a page — sightings are done for today"
-            }
-            return "done for today — sightings count again tomorrow"
-        }
-        if hasEngagement, fastRemaining > 0 {
-            return "\(fastRemaining) more sighting\(fastRemaining == 1 ? "" : "s") on pages"
-        }
-        if hoverHelpsNow {
-            return "hover it once on a page — or \(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s")"
-        }
-        if fastRemaining == 0 {
-            // Fast path blocked (hover capped today, none banked yet).
-            return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s") — hovers count again tomorrow"
-        }
-        let hoverNote = need.engagedCappedToday ? "" : " — hovering speeds this up"
-        return "\(seenRemaining) more sighting\(seenRemaining == 1 ? "" : "s")\(hoverNote)"
-    }
-}

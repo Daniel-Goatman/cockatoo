@@ -8,8 +8,11 @@ public enum SettingsKey {
     public static let enabled = "enabled"
     public static let blockedHosts = "blockedHosts" // JSON array of strings
     public static let pageContextOptIn = "pageContextOptIn"
-    public static let unlockedTier = "unlockedTier"
-    public static func tierUnlockedAt(_ tier: Int) -> String { "tierUnlockedAt.\(tier)" }
+    /// User-tunable intake appetite; overrides EngineConfig.newPerDay.
+    public static let newPerDay = "newPerDay"
+    /// Set (to an ISO-8601 date) once band N's completion has been shown —
+    /// milestones celebrate once, never gate (D-R3).
+    public static func milestoneCelebrated(_ band: Int) -> String { "milestoneCelebrated.\(band)" }
 }
 
 /// Data-access facade over the database. All engine components go through
@@ -137,26 +140,6 @@ public struct LearnerStore: Sendable {
         try db.writer.read { dbc in
             try Date.fetchOne(dbc, sql: "SELECT MAX(processedAt) FROM exposure_event")
         }
-    }
-
-    /// Today's raw exposure events per item — what the daily crediting caps
-    /// compare against. Lets the UI say "done for today" instead of
-    /// promising sightings that won't credit.
-    public func exposureCountsToday(now: Date) throws -> [String: (seen: Int, engaged: Int)] {
-        let dayStart = Calendar(identifier: .gregorian).startOfDay(for: now)
-        let rows = try db.writer.read { dbc in
-            try Row.fetchAll(dbc, sql: """
-                SELECT itemId,
-                       SUM(CASE WHEN type = 'seen' THEN 1 ELSE 0 END) AS seen,
-                       SUM(CASE WHEN type IN ('engaged', 'pinned') THEN 1 ELSE 0 END) AS engaged
-                FROM exposure_event
-                WHERE occurredAt >= ?
-                GROUP BY itemId
-                """, arguments: [dayStart])
-        }
-        return Dictionary(uniqueKeysWithValues: rows.map {
-            ($0["itemId"] as String, (seen: $0["seen"] as Int, engaged: $0["engaged"] as Int))
-        })
     }
 
     // MARK: - Maintenance

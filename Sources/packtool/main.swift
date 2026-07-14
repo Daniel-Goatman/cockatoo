@@ -96,7 +96,7 @@ case "import-test":
         let overview = try engine.overview(now: Date())
         guard case .snapshot(let snap) = try engine.snapshot() else { fail("no snapshot") }
         let size = try engine.snapshotBuilder.encodedSize(snap)
-        print("imported \(count) items; ambient bootstrap: \(overview.countsByStage[.ambient] ?? 0); snapshot \(snap.items.count) items, \(size) bytes")
+        print("imported \(count) items; intake candidates: \(overview.introAvailable); snapshot \(snap.items.count) items, \(size) bytes")
     } catch {
         fail("import failed: \(error)")
     }

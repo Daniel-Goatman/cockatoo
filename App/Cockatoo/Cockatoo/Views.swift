@@ -11,10 +11,10 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Welcome to Cockatoo").font(.largeTitle.bold())
             Text("""
-            Cockatoo teaches you German while you read the web. A few words on each \
-            page are quietly swapped into German — hover any marked word to see the \
-            original English, always. Hovering also tells Cockatoo you're curious, \
-            which brings a word into practice sooner.
+            Cockatoo teaches you German while you read the web. New words arrive in \
+            short practice sessions — a few per day, marked as new — and then start \
+            appearing swapped into German on pages you read. Hover any marked word \
+            to see the original English, always.
 
             **Words and genders come first; grammar comes later.** Swapped words show \
             their dictionary form with the correct article ("the house" becomes \
@@ -85,8 +85,8 @@ struct DashboardView: View {
         .navigationTitle("Overview")
     }
 
-    // The hub's first job: say what to do next — with the tier ring as the
-    // one piece of ambient progress, not a wall of stat cards.
+    // The hub's first job: say what to do next — with the milestone ring as
+    // the one piece of ambient progress, not a wall of stat cards.
     @ViewBuilder
     func heroCard(_ o: LearnerEngine.Overview) -> some View {
         HStack(alignment: .top, spacing: 24) {
@@ -99,6 +99,9 @@ struct DashboardView: View {
                             .font(.system(size: 13))
                             .foregroundStyle(Theme.inkMuted)
                     }
+                    Text("Practice as much as you like — extra reps sharpen words without rushing them; strength only climbs across days.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.inkFaint)
                 } else {
                     Label("All caught up", systemImage: "checkmark.circle")
                         .font(.headline)
@@ -108,43 +111,20 @@ struct DashboardView: View {
                             .foregroundStyle(Theme.inkMuted)
                     }
                 }
-                if !o.almostReady.isEmpty {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("ALMOST READY — KEEP READING IN SAFARI")
-                            .font(Theme.monoLabel())
-                            .foregroundStyle(Theme.inkFaint)
-                            .padding(.top, 6)
-                            .padding(.bottom, 3)
-                        ForEach(o.almostReady, id: \.itemId) { need in
-                            (Text(need.target).font(Theme.serif(13.5, weight: .semibold))
-                                + Text(" — \(ExposureHint.text(for: need))"))
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(Theme.inkMuted)
-                        }
-                    }
-                }
             }
             Spacer(minLength: 0)
-            if let tier = o.tierProgress {
+            if let m = o.nextMilestone {
                 VStack(spacing: 8) {
-                    Text("TIER \(tier.nextTier)")
+                    Text("BAND \(m.band)")
                         .font(Theme.monoLabel())
                         .kerning(0.6)
                         .foregroundStyle(Theme.inkFaint)
-                    TierRing(known: tier.knownInCurrentTier, needed: tier.neededInCurrentTier, diameter: 104)
-                    if o.tierCheckReady {
-                        Text("check ready")
-                            .font(.system(size: 10, weight: .semibold))
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Theme.gold.opacity(0.16), in: Capsule())
-                            .foregroundStyle(Theme.goldDeep)
-                    } else {
-                        Text("opens with a short check")
-                            .font(.system(size: 10.5))
-                            .foregroundStyle(Theme.inkFaint)
-                    }
+                    ProgressRing(known: m.known, needed: m.needed, diameter: 104)
+                    Text("milestone")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Theme.inkFaint)
                 }
-                .help("Unlocks through a short tier check once \(tier.neededInCurrentTier) of the \(tier.currentTierTotal) tier-\(tier.currentTier) words are known (and tier \(tier.currentTier) has had a week to settle).")
+                .help("Band \(m.band) completes when \(m.needed) of its \(m.total) words are known — a milestone, not a gate; new words keep flowing regardless.")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -154,9 +134,9 @@ struct DashboardView: View {
     func practiceSubtitle(_ o: LearnerEngine.Overview) -> String {
         var parts: [String] = []
         if o.dueNow > 0 { parts.append("\(o.dueNow) due") }
-        if o.readyCount > 0 { parts.append("\(o.readyCount) ready") }
-        if o.introAvailable > 0 { parts.append("\(o.introAvailable) new word\(o.introAvailable == 1 ? "" : "s")") }
-        if o.tierCheckReady { parts.append("tier check") }
+        let newAvailable = min(o.newRemainingToday, o.introAvailable)
+        if newAvailable > 0 { parts.append("\(newAvailable) new word\(newAvailable == 1 ? "" : "s") today") }
+        if parts.isEmpty { parts.append("reinforcement reps") }
         return parts.joined(separator: " · ")
     }
 
@@ -174,13 +154,13 @@ struct DashboardView: View {
                         .foregroundStyle(Theme.inkFaint)
                 }
                 .padding(.bottom, 8)
-                Text("\(o.dueNow + o.readyCount)")
+                Text("\(o.dueNow)")
                     .font(.system(size: 27, weight: .bold))
                     .monospacedDigit()
-                Text("to practice")
+                Text("due to review")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.inkFaint)
-                Text("\(o.dueNow) due · \(o.introAvailable) new")
+                Text("new today \(o.newToday)/\(o.newPerDay)")
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Theme.inkFaint)
                     .padding(.top, 5)
@@ -194,7 +174,6 @@ struct DashboardView: View {
 
     func libraryTile(_ o: LearnerEngine.Overview) -> some View {
         let known = (o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0)
-        let onPages = (o.countsByStage[.ambient] ?? 0) + (o.countsByStage[.ready] ?? 0)
         return Button { model.section = .library } label: {
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
@@ -207,13 +186,13 @@ struct DashboardView: View {
                         .foregroundStyle(Theme.inkFaint)
                 }
                 .padding(.bottom, 8)
-                Text("\(o.totalItems)")
+                Text("\(o.libraryCount)")
                     .font(.system(size: 27, weight: .bold))
                     .monospacedDigit()
-                Text("words in your pack")
+                Text("words in your library")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.inkFaint)
-                Text("\(known) known · \(onPages) on pages")
+                Text("\(known) known · \(o.totalItems) in pack")
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Theme.inkFaint)
                     .padding(.top, 5)
@@ -235,7 +214,7 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Safari extension connected — last synced \(formatter.localizedString(for: contact, relativeTo: Date())).")
                     if let event = model.overview?.lastEventAt {
-                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())). Sightings credit up to 3 per word per day, hovers 2 — spacing beats cramming.")
+                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())). Pages reinforce the words you're learning — sightings show up in your library.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -255,17 +234,16 @@ struct DashboardView: View {
         .themeCard(padding: 12)
     }
 
-    // The four user-facing stages as ONE stacked ramp bar (cold→gold),
+    // The user-facing stages as ONE stacked ramp bar (cold→gold),
     // upcoming last and muted — motion, not a wall of rows.
     func stageStripCard(_ o: LearnerEngine.Overview) -> some View {
         func count(_ stages: Stage...) -> Int {
             stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
         }
         let groups: [(label: String, count: Int, color: Color, muted: Bool)] = [
-            ("on pages", count(.ambient, .ready), Theme.stageOnPages, false),
             ("practicing", count(.learning), Theme.stagePracticing, false),
             ("known", count(.known, .mastered), Theme.stageKnown, false),
-            ("upcoming", count(.locked), Theme.stageUpcoming, true),
+            ("upcoming", max(0, o.totalItems - o.libraryCount), Theme.stageUpcoming, true),
         ]
         let total = CGFloat(max(1, o.totalItems))
         return VStack(alignment: .leading, spacing: 11) {
@@ -314,36 +292,40 @@ struct DashboardView: View {
 
 struct LibraryView: View {
     @EnvironmentObject var model: AppModel
-    @State private var tiers: [TierGroup] = []
-    @State private var unlockedTier = 1
+    @State private var bands: [BandGroup] = []
 
-    struct TierGroup: Identifiable {
+    struct BandGroup: Identifiable {
         let id: Int
         let rows: [LibraryRow]
-        var knownCount: Int { rows.filter { $0.stage >= .known }.count }
+        var knownCount: Int { rows.filter { ($0.stage ?? .learning) >= .known && $0.stage != nil }.count }
+        var inLibraryCount: Int { rows.filter { $0.stage != nil }.count }
+        /// Milestone reached (non-gating celebration threshold).
+        var complete: Bool {
+            !rows.isEmpty && Double(knownCount) / Double(rows.count) >= EngineConfig.default.milestoneFraction
+        }
     }
 
     struct LibraryRow: Identifiable {
         let id: String
         let source: String
         let target: String
-        let stage: Stage
+        /// nil = not introduced yet (upcoming).
+        let stage: Stage?
         let box: Int
         let due: String
+        /// Page sightings since introduction — display-only.
         let seenCount: Int
-        let engagedCount: Int
-        /// Today's sighting credit is exhausted — show it, don't imply
-        /// more looking would help today.
-        let seenCappedToday: Bool
+        /// Introduced today — the "new" highlight.
+        let isNew: Bool
     }
 
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                 Section {
-                    ForEach(tiers) { tier in
-                        tierHeader(tier)
-                        ForEach(tier.rows, content: row)
+                    ForEach(bands) { band in
+                        bandHeader(band)
+                        ForEach(band.rows, content: row)
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: 12) {
@@ -390,24 +372,24 @@ struct LibraryView: View {
         .padding(.horizontal, 10)
     }
 
-    func tierHeader(_ tier: TierGroup) -> some View {
+    func bandHeader(_ band: BandGroup) -> some View {
         HStack(spacing: 9) {
-            Text("Tier \(tier.id)").font(.system(size: 13.5, weight: .semibold))
-            if tier.id <= unlockedTier {
-                Text("unlocked")
+            Text("Band \(band.id)").font(.system(size: 13.5, weight: .semibold))
+            if band.complete {
+                Label("milestone", systemImage: "star.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Theme.gold.opacity(0.16), in: Capsule())
+                    .foregroundStyle(Theme.goldDeep)
+            } else if band.inLibraryCount > 0 {
+                Text("\(band.inLibraryCount) in library")
                     .font(.system(size: 10, weight: .semibold))
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Theme.live.opacity(0.15), in: Capsule())
                     .foregroundStyle(Theme.live)
-            } else {
-                Label("locked", systemImage: "lock.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Theme.surface, in: Capsule())
-                    .foregroundStyle(Theme.inkFaint)
             }
             Spacer()
-            Text("\(tier.knownCount) of \(tier.rows.count) known")
+            Text("\(band.knownCount) of \(band.rows.count) known")
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(Theme.inkFaint)
         }
@@ -420,35 +402,26 @@ struct LibraryView: View {
         LibraryRowView(row: row) { progressCell(row) }
     }
 
-    /// Ambient rows show exposure progress (the invisible waiting period,
-    /// made visible); scheduled rows show SRS strength.
+    /// Library rows show SRS strength plus wild sightings; upcoming rows
+    /// wait for the intake drip.
     @ViewBuilder
     func progressCell(_ row: LibraryRow) -> some View {
-        switch row.stage {
-        case .locked:
+        if row.stage == nil {
             Text("—").foregroundStyle(.tertiary)
-        case .ambient:
-            HStack(spacing: 5) {
-                Text("\(row.seenCount)/6 seen").font(.caption.monospacedDigit())
-                if row.engagedCount > 0 {
-                    Image(systemName: "cursorarrow.rays")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.stageOnPages)
-                }
-                if row.seenCappedToday {
-                    Text("· done today")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                .help("Not in your library yet — new words arrive in practice sessions, a few per day.")
+        } else {
+            HStack(spacing: 6) {
+                StrengthDots(box: row.box)
+                if row.seenCount > 0 {
+                    Image(systemName: "eye")
+                        .font(.system(size: 8.5))
+                        .foregroundStyle(Theme.inkFaint)
+                    Text("\(row.seenCount)")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Theme.inkFaint)
                 }
             }
-            .foregroundStyle(.secondary)
-            .help("Sightings credit up to 3 per word per day (hovers 2) — spaced encounters beat cramming. A hover halves the sightings needed. \"Done today\" means today's credit is banked; counts resume tomorrow.")
-        case .ready:
-            Text("practice now")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(Theme.goldDeep)
-        case .learning, .known, .mastered:
-            StrengthDots(box: row.box)
+            .help(row.seenCount > 0 ? "Seen \(row.seenCount)× in the wild on pages you've read." : "")
         }
     }
 
@@ -457,9 +430,7 @@ struct LibraryView: View {
         let language = (try? model.engine.store.setting(SettingsKey.activeLanguage) ?? "de") ?? "de"
         guard let items = try? model.engine.store.items(language: language),
               let progress = try? model.engine.store.allProgress() else { return }
-        let countsToday = (try? model.engine.store.exposureCountsToday(now: Date())) ?? [:]
-        let seenCap = EngineConfig.default.seenCreditDailyCap
-        unlockedTier = model.overview?.unlockedTier ?? 1
+        let dayStart = Calendar(identifier: .gregorian).startOfDay(for: Date())
 
         let rows = items.map { item -> (Int, LibraryRow) in
             let p = progress[item.id]
@@ -467,17 +438,16 @@ struct LibraryView: View {
                 id: item.id,
                 source: item.bareSourceForm ?? item.id,
                 target: item.displayTarget,
-                stage: p?.stage ?? .locked,
+                stage: p?.stage,
                 box: p?.srsBox ?? 0,
                 due: p?.dueAt.map { formatter.localizedString(for: $0, relativeTo: Date()) } ?? "—",
                 seenCount: p?.seenCount ?? 0,
-                engagedCount: p?.engagedCount ?? 0,
-                seenCappedToday: (countsToday[item.id]?.seen ?? 0) >= seenCap
+                isNew: (p?.activatedAt).map { $0 >= dayStart } ?? false
             ))
         }
-        tiers = Dictionary(grouping: rows, by: \.0)
+        bands = Dictionary(grouping: rows, by: \.0)
             .sorted { $0.key < $1.key }
-            .map { TierGroup(id: $0.key, rows: $0.value.map(\.1).sorted { $0.source < $1.source }) }
+            .map { BandGroup(id: $0.key, rows: $0.value.map(\.1).sorted { $0.source < $1.source }) }
     }
 }
 
@@ -489,11 +459,20 @@ struct LibraryRowView<Progress: View>: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(row.source)
-                .font(.system(size: 13))
-                .foregroundStyle(Theme.inkMuted)
-                .lineLimit(1)
-                .frame(width: LibraryView.colEnglish, alignment: .leading)
+            HStack(spacing: 6) {
+                Text(row.source)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.inkMuted)
+                    .lineLimit(1)
+                if row.isNew {
+                    Text("new")
+                        .font(.system(size: 8.5, weight: .bold))
+                        .padding(.horizontal, 5).padding(.vertical, 1.5)
+                        .background(Theme.outcomeIntroduced.opacity(0.18), in: Capsule())
+                        .foregroundStyle(Theme.outcomeIntroduced)
+                }
+            }
+            .frame(width: LibraryView.colEnglish, alignment: .leading)
             Text(row.target)
                 .font(Theme.serif(14.5, weight: .medium))
                 .lineLimit(1)
@@ -510,22 +489,19 @@ struct LibraryRowView<Progress: View>: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
-        .opacity(row.stage == .locked ? 0.55 : 1)
+        .opacity(row.stage == nil ? 0.55 : 1)
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: hovering)
     }
 }
 
-/// The user-facing model is FOUR stages: upcoming → on pages → practicing
-/// → known. The engine's six states stay load-bearing underneath (P2), but
-/// "ready" is only a session-priority hint (any on-pages word can be
-/// introduced in practice anyway) and "mastered" is a badge on known — not
-/// mental-model stages of their own.
-extension Stage {
+/// The user-facing model: upcoming (not in the library yet) → practicing →
+/// known. "Mastered" is a badge on known, not a mental-model stage of its
+/// own; library membership itself is the first visible step.
+extension Optional where Wrapped == Stage {
     var displayName: String {
         switch self {
-        case .locked: return "upcoming"
-        case .ambient, .ready: return "on pages"
+        case nil: return "upcoming"
         case .learning: return "practicing"
         case .known, .mastered: return "known"
         }
@@ -533,7 +509,7 @@ extension Stage {
 }
 
 struct StageChip: View {
-    let stage: Stage
+    let stage: Stage?
 
     var color: Color { Theme.stageColor(stage) }
 

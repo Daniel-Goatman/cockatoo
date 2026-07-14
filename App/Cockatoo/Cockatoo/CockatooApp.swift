@@ -94,14 +94,13 @@ struct MenuBarContent: View {
 
     /// Actionable status, not a census: what is there to do right now?
     func menuStatus(_ overview: LearnerEngine.Overview) -> String {
-        let actionable = overview.dueNow + overview.readyCount
-        if actionable > 0 {
-            return "\(actionable) word\(actionable == 1 ? "" : "s") to practice · tier \(overview.unlockedTier)"
+        if overview.dueNow > 0 {
+            return "\(overview.dueNow) word\(overview.dueNow == 1 ? "" : "s") due · \(overview.libraryCount) in your library"
         }
-        if overview.introAvailable > 0 {
-            return "New words available · tier \(overview.unlockedTier)"
+        if overview.newRemainingToday > 0, overview.introAvailable > 0 {
+            return "New words available · \(overview.libraryCount) in your library"
         }
-        return "All caught up · tier \(overview.unlockedTier)"
+        return "All caught up · \(overview.libraryCount) in your library"
     }
 }
 

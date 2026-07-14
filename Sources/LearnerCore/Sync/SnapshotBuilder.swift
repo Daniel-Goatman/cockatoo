@@ -1,7 +1,8 @@
 import Foundation
 
-/// Builds the versioned active slice the extension renders from. Items in
-/// stages ambient...known; mastered items leave the snapshot (R3 eviction).
+/// Builds the versioned active slice the extension renders from. Library
+/// items in learning/known — pages reinforce what practice introduced
+/// (D-R1); mastered items leave the snapshot (R3 eviction).
 public struct SnapshotBuilder: Sendable {
     public var config: EngineConfig
 
@@ -17,19 +18,18 @@ public struct SnapshotBuilder: Sendable {
         let blockedHosts = try store.blockedHosts()
 
         let progress = try store.allProgress()
-        let activeStages: Set<Stage> = [.ambient, .ready, .learning, .known]
+        let activeStages: Set<Stage> = [.learning, .known]
 
         let items = try store.items(language: language)
             .filter { item in
                 guard item.replacementPolicy == .ambientSafe else { return false }
-                let stage = progress[item.id]?.stage ?? .locked
+                guard let stage = progress[item.id]?.stage else { return false }
                 return activeStages.contains(stage)
             }
             .map { item -> SnapshotItem in
-                let stage = progress[item.id]?.stage ?? .locked
-                // Size control (R3): hover examples ride along only for items
-                // still being introduced; learning/known items get slim hovers.
-                let includeExample = stage == .ambient || stage == .ready
+                // Size control (R3): hover examples ride along only for
+                // freshly introduced items; settled items get slim hovers.
+                let includeExample = (progress[item.id]?.srsBox ?? 0) <= 1
                 return SnapshotItem(
                     id: item.id,
                     kind: item.kind,

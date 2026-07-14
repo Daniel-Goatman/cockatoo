@@ -58,7 +58,7 @@ final class SyncServiceTests: XCTestCase {
     func testPostEventsRoundTripThroughEnvelope() throws {
         let engine = try Fixtures.makeEngine()
         let service = SyncService(engine: engine)
-        let itemId = try engine.store.allProgress().values.first { $0.stage == .ambient }!.itemId
+        let itemId = try Fixtures.introduce(engine, "de.word.und", at: t0).itemId
 
         let request = PostEventsRequest(events: [
             ExposureEvent(id: "env-e1", itemId: itemId, type: .seen, occurredAt: t0),

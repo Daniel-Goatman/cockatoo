@@ -111,6 +111,28 @@ public struct AppDatabase: Sendable {
             }
         }
 
+        // Practice-first redesign (docs/plan/10-learning-redesign.md):
+        // library membership = row exists. Pre-introduction rows
+        // (locked/ambient/ready) are dropped — those items re-enter via the
+        // intake drip. distinctCorrectDays is backfilled from srsBox: each
+        // box was at least one day's correct answer under the old pacing.
+        migrator.registerMigration("v2-practice-first") { db in
+            try db.alter(table: "item_progress") { t in
+                t.add(column: "distinctCorrectDays", .integer).notNull().defaults(to: 0)
+                t.add(column: "lastCorrectAt", .datetime)
+                t.add(column: "lastAdvancedAt", .datetime)
+            }
+            try db.execute(sql: """
+                DELETE FROM item_progress WHERE stage IN ('locked','ambient','ready')
+                """)
+            try db.execute(sql: """
+                UPDATE item_progress SET
+                  distinctCorrectDays = MIN(srsBox, 6),
+                  lastCorrectAt = CASE WHEN srsBox > 0 THEN lastResultAt ELSE NULL END,
+                  dueAt = COALESCE(dueAt, updatedAt)
+                """)
+        }
+
         return migrator
     }
 }

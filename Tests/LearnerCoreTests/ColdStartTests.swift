@@ -1,9 +1,9 @@
 import XCTest
 @testable import LearnerCore
 
-/// The day-1 regression suite: a fresh import must offer practice
-/// immediately through introduction questions (transition c'), without
-/// weakening the exposure rules for everything else.
+/// The day-1 suite for practice-first intake (docs/plan/10-learning-redesign):
+/// a fresh import must offer practice immediately through introduction
+/// questions, and sessions must never run dry while the library has items.
 final class ColdStartTests: XCTestCase {
     var engine: LearnerEngine!
     let t0 = Fixtures.t0
@@ -24,27 +24,75 @@ final class ColdStartTests: XCTestCase {
         }
     }
 
-    func testIntroductionsFollowAdmissionOrder() throws {
+    func testIntroductionsFollowIntakeOrder() throws {
         let session = try engine.planSession(now: t0, seed: 1)
         let items = try engine.store.items(language: "de")
         let expected = items
-            .filter { $0.frequencyBand == 1 }
             .sorted { ($0.frequencyBand, $0.id) < ($1.frequencyBand, $1.id) }
             .prefix(EngineConfig.default.sessionIntroLimit)
             .map(\.id)
         XCTAssertEqual(session.queue.map(\.question.itemId), Array(expected))
     }
 
-    func testGradedIntroductionEntersLearning() throws {
+    func testGradedIntroductionCreatesLibraryRow() throws {
         let session = try engine.planSession(now: t0, seed: 1)
         let question = session.queue[0].question
+        XCTAssertNil(try engine.store.progress(itemId: question.itemId), "no row before the first answer")
         let updated = try engine.grade(result: PracticeResult(
             itemId: question.itemId, mode: .recognition, correct: true, answeredAt: t0
         ), now: t0)
-        XCTAssertEqual(updated.stage, .learning, "transition c' — ambient enters learning on first answer")
+        XCTAssertEqual(updated.stage, .learning, "first answer enters the library at learning")
         XCTAssertEqual(updated.srsBox, 1)
+        XCTAssertEqual(updated.distinctCorrectDays, 1)
         XCTAssertNotNil(updated.dueAt)
+        XCTAssertEqual(updated.activatedAt, t0)
         XCTAssertEqual(updated.validateInvariants(), [])
+    }
+
+    func testDailyIntakeBudgetCapsIntroductionsAcrossSessions() throws {
+        // Sessions 1 and 2 introduce 3 + 2 = newPerDay(5); session 3 the
+        // same day gets none.
+        var clock = t0
+        for expected in [3, 2, 0] {
+            let session = try engine.planSession(now: clock, seed: 1)
+            let intros = session.queue.filter(\.isIntro)
+            XCTAssertEqual(intros.count, expected, "at \(clock)")
+            for planned in intros {
+                try engine.grade(result: PracticeResult(
+                    itemId: planned.question.itemId, mode: .recognition, correct: true, answeredAt: clock
+                ), now: clock)
+            }
+            clock = clock.addingTimeInterval(600)
+        }
+
+        // Tomorrow the budget refills.
+        let tomorrow = t0.addingTimeInterval(24 * 3600)
+        let fresh = try engine.planSession(now: tomorrow, seed: 2)
+        XCTAssertEqual(fresh.queue.filter(\.isIntro).count, EngineConfig.default.sessionIntroLimit)
+    }
+
+    func testSessionsNeverRunDryWhileLibraryHasItems() throws {
+        // Introduce 5 words (the daily budget), then immediately ask for
+        // another session: nothing is due, the budget is spent — the session
+        // must still fill with reinforcement reps.
+        var clock = t0
+        for _ in 0..<2 {
+            let session = try engine.planSession(now: clock, seed: 1)
+            for planned in session.queue where planned.isIntro {
+                try engine.grade(result: PracticeResult(
+                    itemId: planned.question.itemId, mode: .recognition, correct: true, answeredAt: clock
+                ), now: clock)
+            }
+            clock = clock.addingTimeInterval(60)
+        }
+
+        let extra = try engine.planSession(now: clock, seed: 3)
+        XCTAssertFalse(extra.queue.isEmpty, "practice must always be available (D-R1)")
+        XCTAssertEqual(extra.queue.filter(\.isIntro).count, 0, "daily budget spent")
+        XCTAssertEqual(
+            Set(extra.queue.filter { $0.beat != .release }.map(\.question.itemId)).count, 5,
+            "all five library words return as reinforcement"
+        )
     }
 
     /// The release beat closes a session with ONE self-grade card on a
@@ -53,67 +101,49 @@ final class ColdStartTests: XCTestCase {
     func testReleaseBeatPicksSettledOutOfSessionWord() throws {
         let items = try engine.store.items(language: "de").filter { $0.frequencyBand == 1 }
 
-        // One due word (carries the session) and one settled, not-due word
-        // (the release candidate).
-        var due = try Fixtures.progress(engine, items[0].id)
-        due.stage = .learning
-        due.srsBox = 1
-        due.dueAt = t0.addingTimeInterval(-60)
-        try engine.store.saveProgress(due)
-
-        var settled = try Fixtures.progress(engine, items[1].id)
-        settled.stage = .known
-        settled.srsBox = 4
-        settled.dueAt = t0.addingTimeInterval(86_400)
-        try engine.store.saveProgress(settled)
+        // Enough due words to fill the session target (7 due + 3 intros),
+        // plus one settled, not-due word (the release candidate) — with no
+        // reinforcement room left to swallow it.
+        for item in items.prefix(7) {
+            try Fixtures.seed(engine, item.id) { p in
+                p.srsBox = 1
+                p.dueAt = self.t0.addingTimeInterval(-60)
+            }
+        }
+        let releaseCandidate = items[7].id
+        try Fixtures.seed(engine, releaseCandidate) { p in
+            p.stage = .known
+            p.srsBox = 4
+            p.dueAt = self.t0.addingTimeInterval(86_400)
+        }
 
         let session = try engine.planSession(now: t0, seed: 1)
         let release = session.queue.filter { $0.beat == .release }
         XCTAssertEqual(release.count, 1)
-        XCTAssertEqual(release[0].question.itemId, items[1].id)
-        XCTAssertEqual(release[0].question.mode, .selfGrade)
+        XCTAssertEqual(release.first?.question.itemId, releaseCandidate)
+        XCTAssertEqual(release.first?.question.mode, .selfGrade)
         XCTAssertEqual(session.queue.last?.beat, .release, "release closes the session")
     }
 
-    func testIntroducedItemLeavesNextSessionUntilDue() throws {
-        let first = try engine.planSession(now: t0, seed: 1)
-        let introducedId = first.queue[0].question.itemId
-        try engine.grade(result: PracticeResult(
-            itemId: introducedId, mode: .recognition, correct: true, answeredAt: t0
-        ), now: t0)
-
-        // Immediately after: the item is in learning, box 1, due in ~1h —
-        // the next session must not re-offer it as an intro or a review.
-        let second = try engine.planSession(now: t0.addingTimeInterval(60), seed: 2)
-        XCTAssertFalse(second.queue.contains { $0.question.itemId == introducedId })
-    }
-
-    func testReviewsAndReadyTakePriorityOverIntroductions() throws {
-        // Make three items due-for-review and two ready; intros should only
-        // fill the room the target leaves.
+    func testReviewsTakePriorityOverIntroductions() throws {
         var config = EngineConfig.default
         config.sessionQuestionTarget = 6
         let engine = try Fixtures.makeEngine(config: config)
         let items = try engine.store.items(language: "de").filter { $0.frequencyBand == 1 }
 
-        for item in items.prefix(3) {
-            var p = try Fixtures.progress(engine, item.id)
-            p.stage = .learning
-            p.srsBox = 1
-            p.dueAt = t0.addingTimeInterval(-60)
-            try engine.store.saveProgress(p)
-        }
-        for item in items.dropFirst(3).prefix(2) {
-            var p = try Fixtures.progress(engine, item.id)
-            p.stage = .ready
-            try engine.store.saveProgress(p)
+        for item in items.prefix(5) {
+            try Fixtures.seed(engine, item.id) { p in
+                p.srsBox = 1
+                p.dueAt = self.t0.addingTimeInterval(-60)
+            }
         }
 
         let session = try engine.planSession(now: t0, seed: 3)
         let intros = session.queue.filter(\.isIntro)
-        let reviews = session.queue.filter { !$0.isIntro }
-        XCTAssertEqual(reviews.count, 5, "due + ready come first")
-        XCTAssertEqual(intros.count, 1, "intros only fill the remaining room")
+        let dueIds = Set(items.prefix(5).map(\.id))
+        let reviews = session.queue.filter { dueIds.contains($0.question.itemId) }
+        XCTAssertEqual(reviews.count, 5, "due reviews all present")
+        XCTAssertEqual(intros.count, 1, "intros only fill the room reviews leave")
     }
 
     func testFullSessionLeavesNoRoomForIntroductions() throws {
@@ -122,28 +152,39 @@ final class ColdStartTests: XCTestCase {
         let engine = try Fixtures.makeEngine(config: config)
         let items = try engine.store.items(language: "de").filter { $0.frequencyBand == 1 }
         for item in items.prefix(4) {
-            var p = try Fixtures.progress(engine, item.id)
-            p.stage = .learning
-            p.srsBox = 1
-            p.dueAt = t0.addingTimeInterval(-60)
-            try engine.store.saveProgress(p)
+            try Fixtures.seed(engine, item.id) { p in
+                p.srsBox = 1
+                p.dueAt = self.t0.addingTimeInterval(-60)
+            }
         }
         let session = try engine.planSession(now: t0, seed: 4)
         XCTAssertTrue(session.queue.allSatisfy { !$0.isIntro })
     }
 
-    func testOverviewReportsPracticeAvailabilityAndTierProgress() throws {
+    func testIntakePausesUnderReviewDebt() throws {
+        let items = try engine.store.items(language: "de")
+        for item in items.prefix(EngineConfig.default.introDuePauseThreshold) {
+            try Fixtures.seed(engine, item.id) { p in
+                p.srsBox = 1
+                p.dueAt = self.t0.addingTimeInterval(-60)
+            }
+        }
+        let session = try engine.planSession(now: t0, seed: 5)
+        XCTAssertTrue(session.queue.allSatisfy { !$0.isIntro }, "introductions pause while review debt is high")
+    }
+
+    func testOverviewReportsPracticeAvailabilityAndMilestone() throws {
         let overview = try engine.overview(now: t0)
         XCTAssertTrue(overview.practiceAvailable, "day 1 must have something to do")
-        XCTAssertEqual(overview.introAvailable, EngineConfig.default.sessionIntroLimit)
-        XCTAssertEqual(overview.readyCount, 0)
-        XCTAssertEqual(overview.almostReady.count, 3)
+        XCTAssertEqual(overview.libraryCount, 0)
+        XCTAssertEqual(overview.introAvailable, 24, "every pack item is an intake candidate")
+        XCTAssertEqual(overview.newRemainingToday, EngineConfig.default.newPerDay)
 
-        let tier = try XCTUnwrap(overview.tierProgress)
-        XCTAssertEqual(tier.currentTier, 1)
-        XCTAssertEqual(tier.nextTier, 2)
-        XCTAssertEqual(tier.knownInCurrentTier, 0)
-        XCTAssertEqual(tier.currentTierTotal, 8)
-        XCTAssertEqual(tier.neededInCurrentTier, 6, "ceil(0.7 × 8)")
+        let milestone = try XCTUnwrap(overview.nextMilestone)
+        XCTAssertEqual(milestone.band, 1)
+        XCTAssertEqual(milestone.known, 0)
+        XCTAssertEqual(milestone.total, 8)
+        XCTAssertEqual(milestone.needed, 6, "ceil(0.7 × 8)")
+        XCTAssertNil(overview.pendingMilestoneBand)
     }
 }

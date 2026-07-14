@@ -24,18 +24,7 @@ public struct LearnerEngine: Sendable {
 
     @discardableResult
     public func importPack(_ pack: PackFile, rawData: Data? = nil, now: Date) throws -> Int {
-        let count = try importer.importPack(pack, rawData: rawData, store: store, now: now)
-        try bootstrapActivation(now: now)
-        return count
-    }
-
-    /// Initial locked → ambient admissions (there are no events yet to
-    /// trigger activation, so run it once after import).
-    public func bootstrapActivation(now: Date) throws {
-        try store.db.writer.write { dbc in
-            try ingestor.runActivation(dbc: dbc, now: now)
-            try store.bumpSnapshotVersion(dbc)
-        }
+        try importer.importPack(pack, rawData: rawData, store: store, now: now)
     }
 
     // MARK: - Extension-facing
@@ -70,18 +59,21 @@ public struct LearnerEngine: Sendable {
         public var grading: GradingConfig
     }
 
+    /// Config with the user-tunable knobs (newPerDay) resolved from settings.
+    func effectiveConfig() throws -> EngineConfig {
+        var effective = config
+        if let raw = try store.setting(SettingsKey.newPerDay), let value = Int(raw) {
+            effective.newPerDay = max(1, min(20, value))
+        }
+        return effective
+    }
+
     public func planSession(now: Date, seed: UInt64) throws -> Session {
         let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
-        let tier = try tierState()
-        let checkReady = ingestor.activation.shouldUnlockNextTier(
-            items: items, progress: progress, tier: tier, now: now
-        )
-        let selection = planner.select(
-            items: items, progress: progress, now: now,
-            currentTier: tier.unlockedTier, tierCheckReady: checkReady
-        )
+        let planner = SessionPlanner(config: try effectiveConfig())
+        let selection = planner.select(items: items, progress: progress, now: now)
         let queue = try planner.plan(
             selection: selection,
             allItems: items,
@@ -93,43 +85,9 @@ public struct LearnerEngine: Sendable {
         return Session(queue: queue, grading: grading)
     }
 
-    // MARK: - Tier unlock (the earned moment, fired from the tier-check beat)
-
-    func tierState() throws -> ActivationEngine.TierState {
-        let unlockedTier = Int(try store.setting(SettingsKey.unlockedTier) ?? "1") ?? 1
-        let unlockedAt = (try store.setting(SettingsKey.tierUnlockedAt(unlockedTier)))
-            .flatMap { ISO8601DateFormatter().date(from: $0) }
-        return ActivationEngine.TierState(unlockedTier: unlockedTier, unlockedAt: unlockedAt)
-    }
-
-    /// Unlock tier N+1 after a passed tier check. The unlock condition is
-    /// re-validated here (P1: the UI reports, the engine decides), so a
-    /// stray call can never skip ahead. Returns the newly unlocked tier, or
-    /// nil when the condition doesn't hold.
-    @discardableResult
-    public func unlockNextTier(now: Date) throws -> Int? {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
-        let items = try store.items(language: language)
-        let progress = try store.allProgress()
-        let tier = try tierState()
-        guard ingestor.activation.shouldUnlockNextTier(
-            items: items, progress: progress, tier: tier, now: now
-        ) else { return nil }
-
-        let next = tier.unlockedTier + 1
-        try store.db.writer.write { dbc in
-            try SettingRecord(key: SettingsKey.unlockedTier, value: String(next)).save(dbc)
-            try SettingRecord(
-                key: SettingsKey.tierUnlockedAt(next),
-                value: ISO8601DateFormatter().string(from: now)
-            ).save(dbc)
-            try ingestor.runActivation(dbc: dbc, now: now)
-            try store.bumpSnapshotVersion(dbc)
-        }
-        return next
-    }
-
     /// Grade an answered question, persist progress, bump snapshot version.
+    /// A first answer for an item CREATES its progress row — that is the
+    /// moment the word enters the library (practice-first intake, D-R1).
     @discardableResult
     public func grade(result: PracticeResult, now: Date) throws -> ItemProgress {
         let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
@@ -137,12 +95,17 @@ public struct LearnerEngine: Sendable {
         let grader = Grader(config: config, grading: grading)
 
         return try store.db.writer.write { dbc in
-            guard let progress = try ItemProgress.fetchOne(dbc, key: result.itemId) else {
-                throw GradeError.unknownItem(result.itemId)
+            let progress: ItemProgress
+            if let existing = try ItemProgress.fetchOne(dbc, key: result.itemId) {
+                progress = existing
+            } else {
+                guard try VocabItemRecord.fetchOne(dbc, key: result.itemId) != nil else {
+                    throw GradeError.unknownItem(result.itemId)
+                }
+                progress = ItemProgress(itemId: result.itemId, now: now)
             }
             let updated = grader.apply(result: result, progress: progress, now: now)
             try updated.save(dbc)
-            try ingestor.runActivation(dbc: dbc, now: now)
             try store.bumpSnapshotVersion(dbc)
             return updated
         }
@@ -152,66 +115,68 @@ public struct LearnerEngine: Sendable {
         case unknownItem(String)
     }
 
-    // MARK: - Dashboard queries
+    // MARK: - Milestones (non-gating band completions, D-R3)
 
-    /// An ambient item's distance from `ready`, for "almost ready" UI.
-    public struct ExposureNeed: Equatable, Sendable {
-        public var itemId: String
-        public var source: String
-        public var target: String
-        public var seenCount: Int
-        public var engagedCount: Int
-        /// Seen credits that make the item ready on their own.
-        public var seenForReady: Int
-        /// Seen credits that suffice once engagedForReady is also met.
-        public var seenForFastReady: Int
-        public var engagedForFastReady: Int
-        /// Raw exposure events today vs the daily crediting caps — when
-        /// capped, "more sightings today" is a lie and the UI must not
-        /// suggest it.
-        public var seenToday: Int
-        public var engagedToday: Int
-        public var seenDailyCap: Int
-        public var engagedDailyCap: Int
-
-        public var seenCappedToday: Bool { seenToday >= seenDailyCap }
-        public var engagedCappedToday: Bool { engagedToday >= engagedDailyCap }
+    /// The lowest band that has crossed the milestone fraction but hasn't
+    /// been celebrated yet. The UI shows the moment, then marks it.
+    public func pendingMilestone(now: Date) throws -> Int? {
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let items = try store.items(language: language)
+        let progress = try store.allProgress()
+        for band in planner.intake.bandProgress(items: items, progress: progress) where band.reached {
+            if try store.setting(SettingsKey.milestoneCelebrated(band.band)) == nil {
+                return band.band
+            }
+        }
+        return nil
     }
 
-    /// Progress toward unlocking the next tier, when one exists in the pack.
-    public struct TierProgress: Equatable, Sendable {
-        public var currentTier: Int
-        public var nextTier: Int
-        public var knownInCurrentTier: Int
-        public var neededInCurrentTier: Int
-        public var currentTierTotal: Int
+    public func markMilestoneCelebrated(band: Int, now: Date) throws {
+        try store.setSetting(
+            SettingsKey.milestoneCelebrated(band),
+            ISO8601DateFormatter().string(from: now)
+        )
+    }
+
+    // MARK: - Dashboard queries
+
+    /// Progress toward the next uncompleted band milestone.
+    public struct MilestoneProgress: Equatable, Sendable {
+        public var band: Int
+        public var known: Int
+        public var needed: Int
+        public var total: Int
     }
 
     public struct Overview: Equatable, Sendable {
-        public var unlockedTier: Int
         public var countsByStage: [Stage: Int]
-        public var dueNow: Int
         public var totalItems: Int
-        /// Items awaiting their first question.
-        public var readyCount: Int
-        /// Ambient items an introduction question could bring into practice.
+        /// Items introduced into the library (= progress rows).
+        public var libraryCount: Int
+        public var dueNow: Int
+        /// Words introduced today vs the daily intake budget.
+        public var newToday: Int
+        public var newPerDay: Int
+        /// Introductions still available today (0 while review debt pauses
+        /// intake or the budget is spent).
+        public var newRemainingToday: Int
+        /// Un-introduced items eligible for intake right now.
         public var introAvailable: Int
-        /// The closest ambient items to becoming ready, nearest first.
-        public var almostReady: [ExposureNeed]
-        /// nil when the pack has no tier above the unlocked one.
-        public var tierProgress: TierProgress?
-        /// True when the tier-unlock condition holds — the next practice
-        /// session will include a tier-check burst.
-        public var tierCheckReady: Bool
-        /// Earliest upcoming review among scheduled items (nil when none).
+        /// The lowest band that hasn't completed its milestone (nil when
+        /// every populated band has).
+        public var nextMilestone: MilestoneProgress?
+        /// A band milestone reached but not yet celebrated.
+        public var pendingMilestoneBand: Int?
+        /// Earliest upcoming review among library items (nil when none).
         public var nextDueAt: Date?
         /// When the last exposure event arrived from the extension (ever,
         /// not just this launch) — the sync-liveness signal.
         public var lastEventAt: Date?
 
-        /// Whether starting a practice session right now yields questions.
+        /// Practice is available whenever anything is in the library or
+        /// anything can be introduced — sessions are never empty (D-R1).
         public var practiceAvailable: Bool {
-            dueNow + readyCount + introAvailable > 0
+            libraryCount > 0 || (introAvailable > 0 && newRemainingToday > 0)
         }
     }
 
@@ -219,80 +184,51 @@ public struct LearnerEngine: Sendable {
         let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
-        let scheduler = LeitnerScheduler(config: config)
+        let effective = try effectiveConfig()
+        let scheduler = LeitnerScheduler(config: effective)
+        let intake = IntakeEngine(config: effective)
 
         var counts: [Stage: Int] = [:]
-        for item in items {
-            let stage = progress[item.id]?.stage ?? .locked
-            counts[stage, default: 0] += 1
+        for p in progress.values {
+            counts[p.stage, default: 0] += 1
         }
         let dueNow = progress.values.filter {
             ($0.stage == .learning || $0.stage == .known) && scheduler.isDue($0, now: now)
         }.count
 
-        let ambientItems = items.filter { progress[$0.id]?.stage == .ambient }
-        let countsToday = try store.exposureCountsToday(now: now)
-        let almostReady = ambientItems
-            .compactMap { item -> ExposureNeed? in
-                guard let p = progress[item.id] else { return nil }
-                let today = countsToday[item.id] ?? (seen: 0, engaged: 0)
-                return ExposureNeed(
-                    itemId: item.id,
-                    source: item.bareSourceForm ?? item.id,
-                    target: item.displayTarget,
-                    seenCount: p.seenCount,
-                    engagedCount: p.engagedCount,
-                    seenForReady: config.readySeenThreshold,
-                    seenForFastReady: config.readySeenWithEngagementThreshold,
-                    engagedForFastReady: config.readyEngagedThreshold,
-                    seenToday: today.seen,
-                    engagedToday: today.engaged,
-                    seenDailyCap: config.seenCreditDailyCap,
-                    engagedDailyCap: config.engagedCreditDailyCap
-                )
-            }
-            .sorted { a, b in
-                let ra = max(0, a.seenForReady - a.seenCount)
-                let rb = max(0, b.seenForReady - b.seenCount)
-                return ra == rb ? a.itemId < b.itemId : ra < rb
-            }
+        let dayStart = LearningCalendar.dayStart(of: now)
+        let newToday = progress.values.filter { ($0.activatedAt ?? .distantPast) >= dayStart }.count
+        let budget = intake.budget(progress: progress, dueNow: dueNow, now: now)
+        let candidates = intake.candidates(items: items, progress: progress)
 
-        let tier = try tierState()
-        let unlockedTier = tier.unlockedTier
-        let tierCheckReady = ingestor.activation.shouldUnlockNextTier(
-            items: items, progress: progress, tier: tier, now: now
-        )
-        var tierProgress: TierProgress?
-        let currentTierItems = items.filter { $0.frequencyBand == unlockedTier }
-        if !currentTierItems.isEmpty,
-           items.contains(where: { $0.frequencyBand == unlockedTier + 1 }) {
-            let known = currentTierItems.filter { (progress[$0.id]?.stage ?? .locked) >= .known }.count
-            let needed = Int((Double(currentTierItems.count) * config.tierUnlockFraction).rounded(.up))
-            tierProgress = TierProgress(
-                currentTier: unlockedTier,
-                nextTier: unlockedTier + 1,
-                knownInCurrentTier: known,
-                neededInCurrentTier: needed,
-                currentTierTotal: currentTierItems.count
-            )
+        let bands = intake.bandProgress(items: items, progress: progress)
+        let nextMilestone = bands.first { !$0.reached }.map {
+            MilestoneProgress(band: $0.band, known: $0.known, needed: $0.needed, total: $0.total)
+        }
+        var pendingMilestoneBand: Int?
+        for band in bands where band.reached {
+            if try store.setting(SettingsKey.milestoneCelebrated(band.band)) == nil {
+                pendingMilestoneBand = band.band
+                break
+            }
         }
 
         let nextDueAt = progress.values
-            .filter { $0.stage >= .learning }
             .compactMap(\.dueAt)
             .filter { $0 > now }
             .min()
 
         return Overview(
-            unlockedTier: unlockedTier,
             countsByStage: counts,
-            dueNow: dueNow,
             totalItems: items.count,
-            readyCount: counts[.ready] ?? 0,
-            introAvailable: min(counts[.ambient] ?? 0, config.sessionIntroLimit),
-            almostReady: Array(almostReady.prefix(3)),
-            tierProgress: tierProgress,
-            tierCheckReady: tierCheckReady,
+            libraryCount: progress.count,
+            dueNow: dueNow,
+            newToday: newToday,
+            newPerDay: effective.newPerDay,
+            newRemainingToday: budget,
+            introAvailable: candidates.count,
+            nextMilestone: nextMilestone,
+            pendingMilestoneBand: pendingMilestoneBand,
             nextDueAt: nextDueAt,
             lastEventAt: try store.lastEventProcessedAt()
         )

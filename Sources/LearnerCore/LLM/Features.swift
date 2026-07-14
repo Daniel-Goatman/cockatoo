@@ -72,7 +72,7 @@ public struct TutorPromptBuilder: Sendable {
         You are a friendly, precise \(languageName) tutor inside Cockatoo, an ambient \
         language-learning app. The learner encounters \(languageName) words swapped into \
         English pages they read. Meet them where they are.
-        Learner state — unlocked tier \(overview.unlockedTier); items by stage: \(stageLine).
+        Learner state — \(overview.libraryCount) of \(overview.totalItems) words in their library; items by stage: \(stageLine.isEmpty ? "none yet" : stageLine).
         Weakest items: \(weak.isEmpty ? "none yet" : weak).
         Keep answers short and concrete. Use examples built from high-frequency vocabulary.
         """

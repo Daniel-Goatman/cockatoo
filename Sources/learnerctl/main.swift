@@ -66,10 +66,13 @@ case "import":
 case "overview":
     do {
         let o = try engine.overview(now: now)
-        print("unlocked tier: \(o.unlockedTier)   items: \(o.totalItems)   due now: \(o.dueNow)")
+        print("library: \(o.libraryCount)/\(o.totalItems)   due now: \(o.dueNow)   new today: \(o.newToday)/\(o.newPerDay)")
         for stage in Stage.allCases {
             let label = stage.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0)
             print("  \(label)\(o.countsByStage[stage] ?? 0)")
+        }
+        if let m = o.nextMilestone {
+            print("next milestone: band \(m.band) — \(m.known)/\(m.needed) known (of \(m.total))")
         }
     } catch {
         fail("\(error)")
@@ -119,8 +122,8 @@ case "simulate":
         var counter = 0
         var totalAnswered = 0
         var totalCorrect = 0
-        var lastTier = try sim.overview(now: clock).unlockedTier
         var firstMasteredReported = false
+        var celebratedBands = Set<Int>()
         let itemName: (String) throws -> String = { id in
             guard let item = try sim.store.item(id: id) else { return id }
             let english = item.sourceForms.first { !$0.form.contains(" ") }?.form ?? item.sourceForms[0].form
@@ -129,21 +132,19 @@ case "simulate":
 
         print("Simulating \(days) days of browsing + practice at 85% accuracy (seed \(seed))\(persist ? " — PERSISTING to database" : " — sandbox, nothing will be saved")")
         print("")
-        print("day   tier   ambient  ready  learning  known  mastered   answered")
-        print("────  ────   ───────  ─────  ────────  ─────  ────────   ────────")
+        print("day   library  learning  known  mastered  new   answered")
+        print("────  ───────  ────────  ─────  ────────  ───   ────────")
 
         for day in 0..<days {
             var answeredToday = 0
             for bout in 0..<4 {
                 clock = clock.addingTimeInterval(4 * 3600)
+                // Browsing: library words get sighted on pages (display-only).
                 var events: [ExposureEvent] = []
-                for p in try sim.store.allProgress().values where p.stage == .ambient || p.stage == .ready {
+                for p in try sim.store.allProgress().values where p.stage < .mastered {
+                    guard rng.next() % 100 < 30 else { continue }
                     counter += 1
                     events.append(ExposureEvent(id: "ctl-\(counter)", itemId: p.itemId, type: .seen, occurredAt: clock))
-                    if rng.next() % 100 < 40 {
-                        counter += 1
-                        events.append(ExposureEvent(id: "ctl-\(counter)", itemId: p.itemId, type: .engaged, occurredAt: clock))
-                    }
                     if rng.next() % 100 < 20, let item = try sim.store.item(id: p.itemId) {
                         counter += 1
                         events.append(ExposureEvent(
@@ -155,7 +156,6 @@ case "simulate":
                 try sim.postEvents(events, now: clock)
                 if bout % 2 == 0 {
                     let session = try sim.planSession(now: clock, seed: rng.next())
-                    var tierCheckFirsts: [Bool] = []
                     for planned in session.queue {
                         let correct = rng.next() % 100 < 85
                         _ = try sim.grade(result: .init(
@@ -163,27 +163,22 @@ case "simulate":
                             mode: planned.question.mode,
                             correct: correct, answeredAt: clock
                         ), now: clock)
-                        if planned.beat == .tierCheck { tierCheckFirsts.append(correct) }
                         answeredToday += 1
                         totalAnswered += 1
                         if correct { totalCorrect += 1 }
                     }
-                    // Tier unlocking is quiz-gated: a clean tier-check burst
-                    // fires the unlock, exactly as the app's practice UI does.
-                    if SessionPlanner.tierCheckPassed(firstResults: tierCheckFirsts) {
-                        _ = try sim.unlockNextTier(now: clock)
+                    if let band = try sim.pendingMilestone(now: clock), !celebratedBands.contains(band) {
+                        celebratedBands.insert(band)
+                        try sim.markMilestoneCelebrated(band: band, now: clock)
+                        print("      ▸ band \(band) milestone — \(Int(EngineConfig.default.milestoneFraction * 100))% known")
                     }
                 }
             }
 
             let o = try sim.overview(now: clock)
             func col(_ stage: Stage) -> String { String(o.countsByStage[stage] ?? 0).leftPadded(to: 5) }
-            print("\(String(day + 1).leftPadded(to: 4))  \(String(o.unlockedTier).leftPadded(to: 4))   \(col(.ambient).leftPadded(to: 7))  \(col(.ready))  \(col(.learning).leftPadded(to: 8))  \(col(.known))  \(col(.mastered).leftPadded(to: 8))   \(String(answeredToday).leftPadded(to: 8))")
+            print("\(String(day + 1).leftPadded(to: 4))  \(String(o.libraryCount).leftPadded(to: 7))  \(col(.learning).leftPadded(to: 8))  \(col(.known))  \(col(.mastered).leftPadded(to: 8))  \(String(o.newToday).leftPadded(to: 3))   \(String(answeredToday).leftPadded(to: 8))")
 
-            if o.unlockedTier > lastTier {
-                print("      ▸ tier \(o.unlockedTier) unlocked — new words entering rotation")
-                lastTier = o.unlockedTier
-            }
             if !firstMasteredReported, (o.countsByStage[.mastered] ?? 0) > 0 {
                 let mastered = try sim.store.allProgress().values.first { $0.stage == .mastered }
                 if let mastered {
@@ -198,7 +193,7 @@ case "simulate":
         let accuracy = totalAnswered > 0 ? Int((Double(totalCorrect) / Double(totalAnswered) * 100).rounded()) : 0
         print("")
         print("── after \(days) simulated days ──")
-        print("questions answered: \(totalAnswered) (\(accuracy)% correct)   tier reached: \(o.unlockedTier)")
+        print("questions answered: \(totalAnswered) (\(accuracy)% correct)   library: \(o.libraryCount)/\(o.totalItems)")
         let maxCount = max(1, Stage.allCases.map { o.countsByStage[$0] ?? 0 }.max() ?? 1)
         for stage in Stage.allCases {
             let count = o.countsByStage[stage] ?? 0

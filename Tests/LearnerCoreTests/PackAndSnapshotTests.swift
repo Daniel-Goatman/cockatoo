@@ -108,7 +108,8 @@ final class PackImporterTests: XCTestCase {
     func testUpgradePreservesProgressAndRetiresRemovedItemsWithProgress() throws {
         let engine = try Fixtures.makeEngine()
         let itemId = "de.word.und"
-        // Give the item progress.
+        // Give the item progress (introduce it, then sight it once).
+        try Fixtures.introduce(engine, itemId, at: t0)
         try engine.postEvents([ExposureEvent(id: "e1", itemId: itemId, type: .seen, occurredAt: t0)], now: t0)
         let seenBefore = try Fixtures.progress(engine, itemId).seenCount
         XCTAssertEqual(seenBefore, 1)
@@ -140,10 +141,23 @@ final class PackImporterTests: XCTestCase {
 final class SnapshotTests: XCTestCase {
     let t0 = Fixtures.t0
 
-    func testSnapshotContainsOnlyActiveSlice() throws {
+    func testSnapshotContainsOnlyLibraryItems() throws {
         let engine = try Fixtures.makeEngine()
+        // Fresh import: nothing introduced → nothing swapped on pages.
+        guard case .snapshot(let empty) = try engine.snapshot() else { return XCTFail() }
+        XCTAssertTrue(empty.items.isEmpty, "practice-first: pages only reinforce introduced words")
+
+        // Introduce a handful; a mastered item is evicted.
+        for id in ["de.word.haus", "de.word.hund", "de.word.und", "de.word.aber"] {
+            try Fixtures.introduce(engine, id, at: t0)
+        }
+        try Fixtures.seed(engine, "de.word.stadt") { p in
+            p.stage = .mastered
+            p.srsBox = 6
+            p.dueAt = self.t0.addingTimeInterval(720 * 3600)
+        }
         guard case .snapshot(let snap) = try engine.snapshot() else { return XCTFail() }
-        XCTAssertEqual(snap.items.count, 8, "only the bootstrapped ambient band-1 items")
+        XCTAssertEqual(snap.items.count, 4, "learning/known in, mastered evicted")
         XCTAssertEqual(snap.language, "de")
         XCTAssertTrue(snap.settings.enabled)
         XCTAssertFalse(snap.settings.pageContextOptIn)
@@ -162,9 +176,8 @@ final class SnapshotTests: XCTestCase {
         }
         XCTAssertEqual(version, snap.version)
 
-        // Progress change bumps the version → full snapshot again.
-        let itemId = snap.items[0].id
-        try engine.postEvents([ExposureEvent(id: "e1", itemId: itemId, type: .seen, occurredAt: t0)], now: t0)
+        // Any accepted event batch bumps the version → full snapshot again.
+        try engine.postEvents([ExposureEvent(id: "e1", itemId: "de.word.haus", type: .seen, occurredAt: t0)], now: t0)
         guard case .snapshot(let fresh) = try engine.snapshot(sinceVersion: snap.version) else {
             return XCTFail("expected fresh snapshot after events")
         }
@@ -192,17 +205,17 @@ final class SnapshotTests: XCTestCase {
         let engine = LearnerEngine(store: LearnerStore(db: db))
         try engine.importPack(pack, now: t0)
 
-        // Force a 200-item active slice: 15 ambient + 185 learning.
+        // Force a 200-item active slice: 15 freshly introduced (box ≤ 1,
+        // example-rich hovers — the worst case for size) + 185 settled.
         try engine.store.db.writer.write { dbc in
             for (index, item) in items.prefix(200).enumerated() {
                 var p = ItemProgress(itemId: item.id, now: self.t0)
                 if index < 15 {
-                    p.stage = .ambient
+                    p.srsBox = 1
                 } else {
-                    p.stage = .learning
                     p.srsBox = 2
-                    p.dueAt = self.t0.addingTimeInterval(3600)
                 }
+                p.dueAt = self.t0.addingTimeInterval(3600)
                 try p.save(dbc)
             }
         }
