@@ -96,12 +96,12 @@ public struct QuestionFactory: Sendable {
             return recall(item: item)
         case .cloze:
             if let sentence, let q = cloze(item: item, sentence: sentence) { return q }
-            // Day-1 cloze source: a pack example's source sentence, drawn
-            // at random so rich-example items don't recycle one sentence
-            // (captured sentences win when they exist).
+            // Pack-example cloze: blank the GERMAN word, show the English
+            // sentence as the hint — always answerable, unlike blanking the
+            // English word out of a five-word sentence. Drawn at random so
+            // rich-example items don't recycle one sentence.
             for example in item.examples.shuffled(using: &rng) {
-                let synthetic = CapturedSentence(itemId: item.id, text: example.source, capturedAt: .distantPast)
-                if let q = cloze(item: item, sentence: synthetic) { return q }
+                if let q = exampleCloze(item: item, example: example) { return q }
             }
             // Documented fallback: no usable sentence → recall, and the
             // question *is* a recall question (no silent degradation
@@ -180,18 +180,48 @@ public struct QuestionFactory: Sendable {
         return .recall(itemId: item.id, prompt: source, expected: displayTarget(item))
     }
 
+    /// Captured-page cloze: blank the English surface form in its real
+    /// context; expected answer is that form's German target. Only usable
+    /// when the match sits on word boundaries (never "Glam_____gan"), the
+    /// sentence is short enough to read as a card, and enough context
+    /// survives the blank to identify the word.
     func cloze(item: VocabItem, sentence: CapturedSentence) -> Question? {
-        // Blank the surface form that appeared in that sentence; expected
-        // answer is that form's target.
         let text = sentence.text
-        let lowered = text.lowercased()
+        guard text.count <= config.capturedSentenceMaxLength else { return nil }
         // Longest form first so "the houses" wins over "houses".
         let forms = item.sourceForms.sorted { $0.form.count > $1.form.count }
         for form in forms {
-            if let range = lowered.range(of: form.form.lowercased()) {
-                let blanked = text.replacingCharacters(in: range, with: "_____")
-                return .cloze(itemId: item.id, sentenceWithBlank: blanked, expected: form.target)
-            }
+            guard let range = Self.boundedRange(of: form.form, in: text) else { continue }
+            let blanked = text.replacingCharacters(in: range, with: "_____")
+            // ≥4 surviving words: "The _____ is old." identifies nothing.
+            let context = blanked.split(separator: " ").filter { !$0.contains("_____") }.count
+            guard context >= 4 else { continue }
+            return .cloze(itemId: item.id, sentenceWithBlank: blanked, hint: nil, expected: form.target)
+        }
+        return nil
+    }
+
+    /// Pack-example cloze: blank the citation form inside the authored
+    /// German sentence; the English sentence rides along as the hint.
+    func exampleCloze(item: VocabItem, example: Example) -> Question? {
+        guard let range = Self.boundedRange(of: item.target, in: example.target) else { return nil }
+        let blanked = example.target.replacingCharacters(in: range, with: "_____")
+        return .cloze(itemId: item.id, sentenceWithBlank: blanked, hint: example.source, expected: item.target)
+    }
+
+    /// First case-insensitive occurrence of `needle` that sits on word
+    /// boundaries (not letter-adjacent on either side).
+    static func boundedRange(of needle: String, in text: String) -> Range<String.Index>? {
+        let lowered = text.lowercased()
+        let target = needle.lowercased()
+        var searchStart = lowered.startIndex
+        while let range = lowered.range(of: target, range: searchStart..<lowered.endIndex) {
+            let beforeOK = range.lowerBound == lowered.startIndex
+                || !lowered[lowered.index(before: range.lowerBound)].isLetter
+            let afterOK = range.upperBound == lowered.endIndex
+                || !lowered[range.upperBound].isLetter
+            if beforeOK, afterOK { return range }
+            searchStart = range.upperBound
         }
         return nil
     }

@@ -81,23 +81,64 @@ final class QuestionFactoryTests: XCTestCase {
         let item = pack.items.first { $0.id == "de.word.haus" }!
         let sentence = CapturedSentence(itemId: item.id, text: "We walked past the houses at dusk.", capturedAt: now)
         guard let q = factory.cloze(item: item, sentence: sentence),
-              case .cloze(_, let blanked, let expected) = q else {
+              case .cloze(_, let blanked, let hint, let expected) = q else {
             return XCTFail("cloze not generated")
         }
         XCTAssertEqual(expected, "die Häuser", "expected the surface form that appeared ('the houses'), not the citation form")
         XCTAssertTrue(blanked.contains("_____"))
         XCTAssertFalse(blanked.lowercased().contains("the houses"))
+        XCTAssertNil(hint, "captured-context cloze carries no hint — context is the point")
     }
 
-    /// Without a captured sentence, cloze uses the pack example's source
-    /// sentence (day-1 cloze); with no example either, it degrades to recall
+    /// The Glamorgan bug: a form must never be blanked mid-word, a
+    /// paragraph-sized capture is not a card, and a blank that removes all
+    /// identifying context is not a question.
+    func testCapturedClozeRejectsUnanswerableSentences() {
+        let oder = Fixtures.invariant("or", "oder")
+
+        // "or" inside "Glamorgan" — word boundaries required.
+        let midWord = CapturedSentence(itemId: oder.id, text: "Glywysing is now called Glamorgan today.", capturedAt: now)
+        XCTAssertNil(factory.cloze(item: oder, sentence: midWord), "must not blank inside a word")
+
+        // Boundary-clean occurrence still works.
+        let clean = CapturedSentence(itemId: oder.id, text: "Is the kingdom large or small today?", capturedAt: now)
+        guard case .cloze(_, let blanked, _, _)? = factory.cloze(item: oder, sentence: clean) else {
+            return XCTFail("boundary-clean cloze should generate")
+        }
+        XCTAssertTrue(blanked.contains("large _____ small"))
+
+        // Longer than the card cap → rejected.
+        let essay = CapturedSentence(
+            itemId: oder.id,
+            text: "In the seventh century it was one kingdom or two, covering the south-east, "
+                + "but in the ninth century it was divided between two smaller realms of higher "
+                + "status whose borders shifted many times over the following decades.",
+            capturedAt: now
+        )
+        XCTAssertNil(factory.cloze(item: oder, sentence: essay), "paragraph captures are not cards")
+
+        // Blanking away nearly everything → rejected (no context survives).
+        let haus = pack.items.first { $0.id == "de.word.haus" }!
+        let tiny = CapturedSentence(itemId: haus.id, text: "The house is old.", capturedAt: now)
+        XCTAssertNil(factory.cloze(item: haus, sentence: tiny), "'_____ is old.' identifies nothing")
+    }
+
+    /// Without a captured sentence, cloze blanks the GERMAN word in the
+    /// authored example and carries the English sentence as the hint —
+    /// always answerable. With no example either, it degrades to recall
     /// and IS a recall question (no silent degradation labeled cloze — P4).
-    func testClozeWithoutSentenceUsesExampleThenFallsBackToLabeledRecall() {
+    func testExampleClozeBlanksGermanWithEnglishHint() {
         let item = pack.items.first { $0.id == "de.word.haus" }!
         var rng = SplitMix64(seed: 1)
 
-        let fromExample = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng)
-        XCTAssertEqual(fromExample?.mode, .cloze)
+        guard case .cloze(_, let blanked, let hint, let expected)? =
+            factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng) else {
+            return XCTFail("example cloze should generate")
+        }
+        XCTAssertTrue(blanked.contains("_____"))
+        XCTAssertFalse(blanked.contains("Haus"), "the German word is the blank")
+        XCTAssertEqual(expected, "Haus")
+        XCTAssertEqual(hint, item.examples[0].source, "English sentence rides along as the hint")
 
         var bare = item
         bare.examples = []
@@ -138,7 +179,7 @@ final class QuestionFactoryTests: XCTestCase {
         var clozeSentences = Set<String>(), rebuildSources = Set<String>()
         for seed in 0..<60 {
             var rng = SplitMix64(seed: UInt64(seed))
-            if case .cloze(_, let blanked, _)? = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng) {
+            if case .cloze(_, let blanked, _, _)? = factory.question(item: item, mode: .cloze, distractorPool: pack.items, sentence: nil, rng: &rng) {
                 clozeSentences.insert(blanked)
             }
             var rng2 = SplitMix64(seed: UInt64(seed) &+ 999)

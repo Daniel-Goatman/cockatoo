@@ -47,6 +47,10 @@ public struct EngineConfig: Sendable {
     // Retention
     public var sentencesPerItemCap: Int = 5
     public var sentenceStoreCap: Int = 2000
+    /// Captured sentences longer than this are useless as practice cards
+    /// (a Wikipedia paragraph is not a cloze) — skipped at ingest and at
+    /// question time.
+    public var capturedSentenceMaxLength: Int = 160
     public var eventRetentionDays: Int = 30
 
     // Snapshot (R3)

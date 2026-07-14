@@ -173,6 +173,41 @@ final class ColdStartTests: XCTestCase {
         XCTAssertTrue(session.queue.allSatisfy { !$0.isIntro }, "introductions pause while review debt is high")
     }
 
+    /// The "aber forever" bug: the release beat must not pin one word —
+    /// a word that already got its release today is excluded, and ties
+    /// rotate by least-recently-practiced.
+    func testReleaseBeatRotatesInsteadOfPinningOneWord() throws {
+        let items = try engine.store.items(language: "de").filter { $0.frequencyBand == 1 }
+        // Fill the session with due words so release candidates stay out.
+        for item in items.prefix(7) {
+            try Fixtures.seed(engine, item.id) { p in
+                p.srsBox = 1
+                p.dueAt = self.t0.addingTimeInterval(-60)
+                p.lastResultAt = self.t0.addingTimeInterval(-3600)
+            }
+        }
+        // Two settled candidates: "aber" is strongest but was practiced
+        // TODAY (its release already happened); the weaker one wasn't.
+        try Fixtures.seed(engine, items[7].id) { p in   // de.word.und (sorted last)
+            p.stage = .known
+            p.srsBox = 5
+            p.dueAt = self.t0.addingTimeInterval(86_400)
+            p.lastResultAt = self.t0.addingTimeInterval(-600)   // today
+        }
+        let fresh = try engine.store.items(language: "de").first { $0.frequencyBand == 2 }!
+        try Fixtures.seed(engine, fresh.id) { p in
+            p.stage = .known
+            p.srsBox = 4
+            p.dueAt = self.t0.addingTimeInterval(86_400)
+            p.lastResultAt = self.t0.addingTimeInterval(-30 * 3600)   // yesterday
+        }
+
+        let session = try engine.planSession(now: t0, seed: 9)
+        let release = session.queue.filter { $0.beat == .release }
+        XCTAssertEqual(release.map(\.question.itemId), [fresh.id],
+                       "practiced-today words sit release out; the rest rotate")
+    }
+
     func testOverviewReportsPracticeAvailabilityAndMilestone() throws {
         let overview = try engine.overview(now: t0)
         XCTAssertTrue(overview.practiceAvailable, "day 1 must have something to do")

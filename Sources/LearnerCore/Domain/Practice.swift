@@ -38,9 +38,12 @@ public enum Question: Equatable, Sendable {
     case recognition(itemId: String, prompt: String, options: [String], correctIndex: Int)
     /// Show source text; type the target.
     case recall(itemId: String, prompt: String, expected: String)
-    /// A captured sentence with the token blanked; type the surface form
-    /// that appeared in that sentence.
-    case cloze(itemId: String, sentenceWithBlank: String, expected: String)
+    /// A sentence with the word blanked; type what fills the blank.
+    /// Two flavours: a pack example blanks the GERMAN word in the German
+    /// sentence and carries the English as `hint` (unambiguous); a captured
+    /// page sentence blanks the English form in context (no hint — the
+    /// context is the point) and expects its German target.
+    case cloze(itemId: String, sentenceWithBlank: String, hint: String?, expected: String)
     /// Show the source sentence; rebuild the target sentence by ordering
     /// the shuffled `tokens`. `expectedOrder` is the authored sentence.
     case rebuild(itemId: String, sourceText: String, tokens: [String], expectedOrder: [String])
@@ -52,7 +55,7 @@ public enum Question: Equatable, Sendable {
         switch self {
         case .recognition(let id, _, _, _): return id
         case .recall(let id, _, _): return id
-        case .cloze(let id, _, _): return id
+        case .cloze(let id, _, _, _): return id
         case .rebuild(let id, _, _, _): return id
         case .selfGrade(let id, _, _, _): return id
         }

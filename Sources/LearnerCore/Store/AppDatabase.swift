@@ -133,6 +133,12 @@ public struct AppDatabase: Sendable {
                 """)
         }
 
+        // Captured-sentence hygiene: paragraph-sized captures predating the
+        // ingest length filter are useless as cards — drop them.
+        migrator.registerMigration("v3-sentence-hygiene") { db in
+            try db.execute(sql: "DELETE FROM captured_sentence WHERE LENGTH(text) > 160")
+        }
+
         return migrator
     }
 }

@@ -59,7 +59,8 @@ public struct EventIngestor: Sendable {
 
     func apply(event: ExposureEvent, dbc: Database, now: Date) throws {
         if event.type == .sentenceCaptured {
-            guard let text = event.sentence, !text.isEmpty else { return }
+            guard let text = event.sentence, !text.isEmpty,
+                  text.count <= config.capturedSentenceMaxLength else { return }
             try CapturedSentence(
                 id: event.id,
                 itemId: event.itemId,

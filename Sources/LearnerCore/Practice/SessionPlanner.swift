@@ -147,10 +147,11 @@ public struct SessionPlanner: Sendable {
         selection.newWords = intro.compactMap { byId[$0] }
         selection.mix = (core + reinforcement).compactMap { byId[$0] }
 
-        // Release: one light production card (self-grade) on the strongest
-        // word NOT already in this session — a quick win, and no double SRS
-        // credit for a word answered minutes earlier. Skipped when the
-        // session is otherwise empty or nothing qualifies (never padded).
+        // Release: one light production card (self-grade) on a settled word
+        // NOT already in this session and NOT practiced today — a quick
+        // win that rotates instead of pinning the alphabetically-first
+        // strongest word forever. Skipped when the session is otherwise
+        // empty or nothing qualifies (never padded).
         if !selection.isEmpty {
             let allTaken = taken.union(reinforcement)
             // srsBox ≥ 2: a word with some standing — never a box-0/1 item
@@ -160,9 +161,13 @@ public struct SessionPlanner: Sendable {
                     (p.stage == .learning || p.stage == .known)
                         && p.srsBox >= 2
                         && !allTaken.contains(p.itemId)
+                        && !LearningCalendar.sameDay(p.lastResultAt, now)
                 }
                 .sorted { a, b in
-                    a.srsBox == b.srsBox ? a.itemId < b.itemId : a.srsBox > b.srsBox
+                    if a.srsBox != b.srsBox { return a.srsBox > b.srsBox }
+                    let ra = a.lastResultAt ?? .distantPast
+                    let rb = b.lastResultAt ?? .distantPast
+                    return ra == rb ? a.itemId < b.itemId : ra < rb
                 }
                 .prefix(1)
                 .compactMap { byId[$0.itemId] }

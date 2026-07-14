@@ -228,8 +228,8 @@ case "session":
                 print("\(i + 1). [recognition] \(id): \(prompt) → \(options.joined(separator: " / ")) (answer: \(options[correct]))")
             case .recall(let id, let prompt, let expected):
                 print("\(i + 1). [recall] \(id): \(prompt) → \(expected)")
-            case .cloze(let id, let sentence, let expected):
-                print("\(i + 1). [cloze] \(id): \(sentence) → \(expected)")
+            case .cloze(let id, let sentence, let hint, let expected):
+                print("\(i + 1). [cloze] \(id): \(sentence)\(hint.map { " (\($0))" } ?? "") → \(expected)")
             case .rebuild(let id, let source, _, let order):
                 print("\(i + 1). [rebuild] \(id): \(source) → \(order.joined(separator: " "))")
             case .selfGrade(let id, let prompt, _, _):

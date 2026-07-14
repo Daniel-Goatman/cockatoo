@@ -227,7 +227,7 @@ final class PracticeSessionModel: ObservableObject {
         switch question {
         case .recognition(_, let prompt, _, _): return prompt
         case .recall(_, _, let expected): return expected
-        case .cloze(_, _, let expected): return expected
+        case .cloze(_, _, _, let expected): return expected
         case .rebuild(let id, _, _, _):
             return (try? engine.store.item(id: id))?.displayTarget ?? id
         case .selfGrade(_, let prompt, _, _): return prompt
@@ -238,7 +238,7 @@ final class PracticeSessionModel: ObservableObject {
         switch currentQuestion?.question {
         case .recognition(_, _, let options, let i): return options[i]
         case .recall(_, _, let expected): return expected
-        case .cloze(_, _, let expected): return expected
+        case .cloze(_, _, _, let expected): return expected
         case .rebuild(_, _, _, let order): return order.joined(separator: " ")
         case .selfGrade(_, let prompt, _, _): return prompt
         case nil: return ""

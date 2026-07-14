@@ -250,10 +250,18 @@ struct PracticeSessionView: View {
                 .foregroundStyle(Theme.inkMuted)
                 .padding(.bottom, 10)
             answerField
-        case .cloze(_, let sentence, _):
+        case .cloze(_, let sentence, let hint, _):
             Text(sentence)
                 .font(Theme.serif(22, weight: .regular))
                 .multilineTextAlignment(.center)
+            if let hint {
+                Text(hint)
+                    .font(.system(size: 13))
+                    .italic()
+                    .foregroundStyle(Theme.inkMuted)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 2)
+            }
             Text("Fill in the blank (German)")
                 .font(.system(size: 13))
                 .foregroundStyle(Theme.inkMuted)

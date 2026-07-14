@@ -32,7 +32,7 @@ public struct Grader: Sendable {
         let expected: String
         switch question {
         case .recall(_, _, let e): expected = e
-        case .cloze(_, _, let e): expected = e
+        case .cloze(_, _, _, let e): expected = e
         case .recognition, .rebuild, .selfGrade: return .wrong(expected: "")
         }
         let normAnswer = normalize(answer)
