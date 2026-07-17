@@ -8,9 +8,10 @@ during the pass; only release-blocking fixes restart the clock.
 
 - Start: 2026-07-17
 - Target end: 2026-07-23 (after seven completed daily records)
-- App commit: `566e215a21e513d27ecfa16cf8310806bf59779f`
+- App commit: `e93d2003c3623b3246def36548f1b4d20f2d3849`
 - Restart note: the pass was re-pinned on 2026-07-17 before Day 1 was
-  completed, after fixing the release-blocking Safari → Library open action.
+  completed, after fixing the release-blocking Safari → Library open action
+  and replacing the extension popup's placeholder brand mark.
 - German pack SHA-256: `f4752a8f17e72c42ffcc83671ef15287aa12973c9a2b5f17b189e123fd71550b`
 - macOS / Safari versions: macOS 15.7.5 / Safari 18.6
 
