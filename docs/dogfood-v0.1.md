@@ -8,7 +8,9 @@ during the pass; only release-blocking fixes restart the clock.
 
 - Start: 2026-07-17
 - Target end: 2026-07-23 (after seven completed daily records)
-- App commit: `1e228061b7365be63437d073aa46018f78be2a70`
+- App commit: `566e215a21e513d27ecfa16cf8310806bf59779f`
+- Restart note: the pass was re-pinned on 2026-07-17 before Day 1 was
+  completed, after fixing the release-blocking Safari → Library open action.
 - German pack SHA-256: `f4752a8f17e72c42ffcc83671ef15287aa12973c9a2b5f17b189e123fd71550b`
 - macOS / Safari versions: macOS 15.7.5 / Safari 18.6
 
