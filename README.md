@@ -13,36 +13,18 @@ your normal reading, at a low enough density that comprehension holds.
 > areas (practice especially) are still evolving. Contributions are welcome; see
 > [Contributing](#contributing).
 
-<p align="center">
-  <img src="docs/media/02-web-swap-hover.png" alt="A German word swapped into an English Wikipedia article, with a hover card showing the original English word" width="720">
-  <br>
-  <sub><em>Reading English on Wikipedia, with one word in German. Hover it for the original and its meaning.</em></sub>
-</p>
-
-## See it in action
-
 <table>
   <tr>
-    <td width="33%" valign="top" align="center">
-      <img src="docs/media/05-overview.png" alt="The app Overview screen" width="100%">
-      <br><sub><b>Overview</b><br>What is due and your progress</sub>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/02-web-swap-hover.png" alt="A German word swapped into an English Wikipedia article, with a hover card showing the original English word" width="100%">
+      <br><sub><em>One word on the page is German. Hover it for the original and its meaning.</em></sub>
     </td>
-    <td width="33%" valign="top" align="center">
-      <img src="docs/media/04-practice.png" alt="A practice session" width="100%">
-      <br><sub><b>Practice</b><br>Short daily sessions</sub>
-    </td>
-    <td width="33%" valign="top" align="center">
-      <img src="docs/media/06-library.png" alt="The Library screen" width="100%">
-      <br><sub><b>Library</b><br>Every word and its strength</sub>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/04-practice.png" alt="A practice session building a German sentence from word tiles" width="100%">
+      <br><sub><em>Short daily practice sessions, here building a sentence from word tiles.</em></sub>
     </td>
   </tr>
 </table>
-
-<p align="center">
-  <img src="docs/media/03-extension-popup.png" alt="The Safari extension popup showing the active language and counts" width="300">
-  <br>
-  <sub><em>The Safari toolbar popup: active language, live counts, and a one click session.</em></sub>
-</p>
 
 ## Quick start
 
@@ -75,6 +57,23 @@ swift run CockatooDev
 
 Running the Safari extension needs an Apple Development team and a shared App
 Group. The [setup guide](docs/setup.md) covers it step by step.
+
+## See it in action
+
+<p align="center">
+  <img src="docs/media/05-overview.png" alt="The app Overview screen" width="820">
+  <br><sub><b>Overview.</b> What is due and your progress at a glance.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/06-library.png" alt="The Library screen" width="820">
+  <br><sub><b>Library.</b> Every word, its stage, strength, and next review.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/03-extension-popup.png" alt="The Safari extension popup showing the active language and counts" width="320">
+  <br><sub><b>Extension popup.</b> Active language, live counts, and a one click session.</sub>
+</p>
 
 ## The idea
 
