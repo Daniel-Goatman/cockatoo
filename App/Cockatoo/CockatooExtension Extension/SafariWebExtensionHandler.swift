@@ -9,7 +9,21 @@ import SafariServices
 // and this lookup under the sandbox. This file is compiled into the Xcode
 // appex target (see App/README.md for the packaging steps).
 
-let appServiceName = "group.dev.cockatoo.shared.api"
+private func configuredValue(_ key: String, fallback: String) -> String {
+    guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+          !value.isEmpty,
+          !value.contains("$(") else { return fallback }
+    return value
+}
+
+let appServiceName = configuredValue(
+    "CockatooIPCServiceName",
+    fallback: "group.dev.cockatoo.shared.api"
+)
+let containingAppBundleIdentifier = configuredValue(
+    "CockatooAppBundleIdentifier",
+    fallback: "dev.cockatoo.app"
+)
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     func beginRequest(with context: NSExtensionContext) {
@@ -75,7 +89,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     }
 
     private static func launchApp(then continuation: @escaping @Sendable () -> Void) {
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "dev.cockatoo.app") else {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: containingAppBundleIdentifier) else {
             continuation()
             return
         }

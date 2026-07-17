@@ -4,6 +4,10 @@ Date: 2026-07-11. Scope: full codebase (LearnerCore, app UI, extension, packs,
 docs) plus the prototype-branch research now ported to [research/](../research/).
 Test state at time of writing: 63 Swift + 32 extension tests, all green.
 
+> **Historical assessment:** later work resolved several findings and removed
+> the Tutor/runtime model experiment. Use the root README and `docs/plan/` for
+> current product and architecture claims.
+
 ## TL;DR
 
 The engineering is unusually disciplined — one engine, one progress store,

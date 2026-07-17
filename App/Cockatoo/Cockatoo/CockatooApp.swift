@@ -10,7 +10,20 @@ struct CockatooApp: App {
         // make the process a regular app: Dock icon + Cmd-Tab, and come to
         // the front on launch. Without this a hidden window is unfindable.
         DispatchQueue.main.async {
+            #if DEBUG
+            if CommandLine.arguments.contains("--light-appearance") {
+                NSApp.appearance = NSAppearance(named: .aqua)
+            }
+            #endif
             NSApp.setActivationPolicy(.regular)
+            // Launch Services may retain an older Dock / app-switcher image
+            // when a development build is repeatedly replaced at the same
+            // bundle URL. Re-apply the icon embedded by the asset catalog so
+            // the running app always presents the artwork in this build.
+            if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+               let icon = NSImage(contentsOf: iconURL) {
+                NSApp.applicationIconImage = icon
+            }
             NSApp.activate(ignoringOtherApps: true)
         }
     }
@@ -30,40 +43,79 @@ struct CockatooApp: App {
             MenuBarContent()
                 .environmentObject(model)
         } label: {
-            MenuBarLabel(badge: model.dueBadge)
+            MenuBarLabel()
         }
     }
 }
 
 /// The menu bar label is the one view that exists for the app's whole
 /// lifetime, so it hosts the listener that fronts the dashboard when the
-/// Safari extension (via XPC) asks for it.
+/// Safari extension (via the app IPC port) asks for it.
 struct MenuBarLabel: View {
-    let badge: String
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        HStack(spacing: 3) {
-            Image(nsImage: Self.markTemplate)
-            if !badge.isEmpty { Text(badge) }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .cockatooOpenDashboard)) { _ in
-            openDashboardWindow(openWindow)
-        }
+        Image(nsImage: Self.markTemplate)
+            .accessibilityLabel("Cockatoo")
+            .onReceive(NotificationCenter.default.publisher(for: .cockatooOpenDashboard)) { _ in
+                openDashboardWindow(openWindow)
+            }
     }
 
-    /// The cockatoo mark as a template image — mono, so it follows the menu
-    /// bar like every native status item (the 16px pressure test in
-    /// research/prototype-v2/menubar.html chose template over colored crest).
+    /// A resolution-independent AppKit template image. The drawing handler is
+    /// evaluated at the destination's backing scale, avoiding the jagged edge
+    /// produced when a pre-rasterised 36px mask was enlarged or transformed.
+    /// The compact body and spread crest take the system foreground colour;
+    /// the outlined beak and eye use negative space.
     static let markTemplate: NSImage = {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: true) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            let markRect = rect.insetBy(dx: 0.5, dy: 0.5)
+
             ctx.setFillColor(NSColor.black.cgColor)
-            ctx.addPath(CockatooBodyShape().path(in: rect).cgPath)
+            ctx.addPath(CockatooToolbarCrestRootShape().path(in: markRect).cgPath)
             ctx.fillPath()
-            ctx.addPath(CockatooCrestShape().path(in: rect).cgPath)
+
+            // Fill overlapping silhouettes independently. Combining the head
+            // and crest into one compound path lets their opposite windings
+            // cancel, which punched a dark triangular patch into the join.
+            ctx.addPath(CockatooToolbarCrestShape().path(in: markRect).cgPath)
             ctx.fillPath()
+            ctx.addPath(CockatooToolbarBodyShape().path(in: markRect).cgPath)
+            ctx.fillPath()
+
+            // Negative space supplies the dark face details without fighting
+            // macOS template tinting. The crest stays solid because its three
+            // separated feathers are the recognition cue at status-item size.
+            let upperBeakPath = CockatooToolbarUpperBeakShape().path(in: markRect).cgPath
+            ctx.setBlendMode(.clear)
+            ctx.addPath(upperBeakPath)
+            ctx.fillPath()
+
+            // Slightly oversizing the eye keeps it crisp after the 18pt image
+            // is rasterised for a Retina menu bar.
+            let eyeSide = max(1.0, markRect.width * 0.06)
+            let eyeCenter = CGPoint(
+                x: markRect.minX + markRect.width * 0.69,
+                y: markRect.minY + markRect.height * 0.36
+            )
+            ctx.fillEllipse(in: CGRect(
+                x: eyeCenter.x - eyeSide / 2,
+                y: eyeCenter.y - eyeSide / 2,
+                width: eyeSide,
+                height: eyeSide
+            ))
+
+            // A foreground outline keeps the dark shapes distinct from the
+            // menu-bar background without turning them back into solid blobs.
+            ctx.setBlendMode(.normal)
+            ctx.setStrokeColor(NSColor.black.cgColor)
+            ctx.setLineWidth(max(0.45, markRect.width * 0.027))
+            ctx.setLineCap(.round)
+            ctx.setLineJoin(.round)
+            ctx.addPath(upperBeakPath)
+            ctx.strokePath()
             return true
         }
         image.isTemplate = true
@@ -76,31 +128,80 @@ struct MenuBarContent: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        VStack(alignment: .leading) {
-            if let overview = model.overview {
-                Text(menuStatus(overview))
+        if let overview = model.overview {
+            Text(menuStatus(overview))
+
+            if overview.practiceAvailable {
+                Button {
+                    open(.practice)
+                } label: {
+                    Label(practiceTitle(overview), systemImage: "rectangle.stack.fill")
+                }
             }
-            Button(model.paused ? "Resume swapping" : "Pause swapping") {
+
+            Divider()
+        }
+
+        Button {
+            open(.dashboard)
+        } label: {
+            Label("Open Overview", systemImage: AppSection.dashboard.icon)
+        }
+        .keyboardShortcut("o")
+
+        Button {
+            open(.library)
+        } label: {
+            Label("Library", systemImage: AppSection.library.icon)
+        }
+
+        Button {
+            open(.settings)
+        } label: {
+            Label("Settings…", systemImage: AppSection.settings.icon)
+        }
+        .keyboardShortcut(",")
+
+        Divider()
+
+        Toggle("Pause Page Swaps", isOn: Binding(
+            get: { model.paused },
+            set: { paused in
+                guard paused != model.paused else { return }
                 model.togglePaused()
             }
-            Button("Open Cockatoo") {
-                openDashboardWindow(openWindow)
-            }
-            .keyboardShortcut("o")
-            Divider()
-            Button("Quit") { NSApp.terminate(nil) }
-        }
+        ))
+
+        Divider()
+
+        Button("Quit Cockatoo") { NSApp.terminate(nil) }
+            .keyboardShortcut("q")
     }
 
     /// Actionable status, not a census: what is there to do right now?
     func menuStatus(_ overview: LearnerEngine.Overview) -> String {
         if overview.dueNow > 0 {
-            return "\(overview.dueNow) word\(overview.dueNow == 1 ? "" : "s") due · \(overview.libraryCount) in your library"
+            return "\(overview.dueNow) due · \(overview.libraryCount) in library"
         }
         if overview.newRemainingToday > 0, overview.introAvailable > 0 {
-            return "New words available · \(overview.libraryCount) in your library"
+            return "New words · \(overview.libraryCount) in library"
         }
-        return "All caught up · \(overview.libraryCount) in your library"
+        return "All caught up · \(overview.libraryCount) in library"
+    }
+
+    func practiceTitle(_ overview: LearnerEngine.Overview) -> String {
+        if overview.dueNow > 0 {
+            return "Practice Now"
+        }
+        if overview.newRemainingToday > 0, overview.introAvailable > 0 {
+            return "Practice New Words"
+        }
+        return "Practice"
+    }
+
+    private func open(_ section: AppSection) {
+        model.section = section
+        openDashboardWindow(openWindow)
     }
 }
 
@@ -156,7 +257,6 @@ struct RootView: View {
         case .dashboard: DashboardView()
         case .practice: PracticeView()
         case .library: LibraryView()
-        case .tutor: TutorView()
         case .settings: SettingsView()
         }
     }
@@ -317,14 +417,13 @@ struct SidebarChevron: View {
 }
 
 enum AppSection: CaseIterable, Hashable {
-    case dashboard, practice, library, tutor, settings
+    case dashboard, practice, library, settings
 
     var title: String {
         switch self {
         case .dashboard: return "Overview"
         case .practice: return "Practice"
         case .library: return "Library"
-        case .tutor: return "Tutor"
         case .settings: return "Settings"
         }
     }
@@ -334,7 +433,6 @@ enum AppSection: CaseIterable, Hashable {
         case .dashboard: return "square.grid.2x2"
         case .practice: return "rectangle.stack"
         case .library: return "books.vertical"
-        case .tutor: return "bubble.left.and.bubble.right"
         case .settings: return "gearshape"
         }
     }

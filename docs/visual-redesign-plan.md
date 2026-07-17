@@ -5,6 +5,9 @@ Agreed 2026-07-12 from the critique of the first frame prototype
 Companion to `docs/design-brief.md`; this plan turns the "sulphur-crested"
 direction into the shipped app UI.
 
+> **Historical implementation plan:** retained as design rationale. References
+> to the Tutor predate its removal from the Developer Preview on 2026-07-16.
+
 ## Direction (locked)
 
 Graphite surfaces, ivory ink, serif German. **Decisions from the critique

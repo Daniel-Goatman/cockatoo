@@ -1,58 +1,5 @@
 import SwiftUI
 import LearnerCore
-import UniformTypeIdentifiers
-
-// MARK: - Onboarding (fidelity-tier transparency requirement 1)
-
-struct OnboardingView: View {
-    @EnvironmentObject var model: AppModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Welcome to Cockatoo").font(.largeTitle.bold())
-            Text("""
-            Cockatoo teaches you German while you read the web. New words arrive in \
-            short practice sessions — a few per day, marked as new — and then start \
-            appearing swapped into German on pages you read. Hover any marked word \
-            to see the original English, always.
-
-            **Words and genders come first; grammar comes later.** Swapped words show \
-            their dictionary form with the correct article ("the house" becomes \
-            "das Haus"), so every encounter teaches the word *and* its gender. Full \
-            grammatical agreement inside English sentences isn't always possible — \
-            Cockatoo marks every swap and never pretends otherwise. You can read \
-            exactly what is and isn't guaranteed in Settings → How swapping works.
-            """)
-            .frame(maxWidth: 560, alignment: .leading)
-
-            HStack(spacing: 10) {
-                Button("Start learning German") { model.importBundledPack() }
-                    .buttonStyle(.pillProminent)
-                Button("Import a custom pack…") { pickPack() }
-                    .buttonStyle(.pill)
-            }
-            Text("The built-in pack has over 200 frequency-ordered words and phrases. You can practice your first words right away — no browsing required.")
-                .font(.caption).foregroundStyle(.secondary)
-                .frame(maxWidth: 560, alignment: .leading)
-
-            if let error = model.lastError {
-                Text(error).foregroundStyle(.red)
-            }
-            Spacer()
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    func pickPack() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.json]
-        panel.message = "Choose a Cockatoo language pack (e.g. de-2026.07.json)"
-        if panel.runModal() == .OK, let url = panel.url {
-            model.importPack(from: url)
-        }
-    }
-}
 
 // MARK: - Dashboard (real data only — P4; leads with the next action)
 
@@ -320,29 +267,37 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section {
-                    ForEach(bands) { band in
-                        bandHeader(band)
-                        ForEach(band.rows, content: row)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        ForEach(bands) { band in
+                            bandHeader(band)
+                            ForEach(band.rows, content: row)
+                        }
+                    } header: {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Library")
+                                .font(.system(size: 21, weight: .semibold))
+                            columnHeader
+                        }
+                        .padding(.top, 24)
+                        .padding(.bottom, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.bg)
                     }
-                } header: {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Library")
-                            .font(.system(size: 21, weight: .semibold))
-                        columnHeader
-                    }
-                    .padding(.top, 24)
-                    .padding(.bottom, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.bg)
                 }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 24)
+            .onAppear {
+                reload()
+                revealRequestedItem(using: proxy)
+            }
+            .onChange(of: model.requestedLibraryItemID) {
+                revealRequestedItem(using: proxy)
+            }
         }
-        .onAppear(perform: reload)
         // dbGeneration, not countsByStage: seen/engaged counts change
         // without any stage changing, and they must update live too.
         .onChange(of: model.dbGeneration) { reload() }
@@ -351,15 +306,15 @@ struct LibraryView: View {
 
     // Column widths sized so the last column survives the base window with
     // the sidebar expanded — never clip the time-sensitive column.
-    static let colEnglish: CGFloat = 108
-    static let colGerman: CGFloat = 138
+    static let colSource: CGFloat = 108
+    static let colTarget: CGFloat = 138
     static let colStage: CGFloat = 96
     static let colProgress: CGFloat = 112
 
     var columnHeader: some View {
         HStack(spacing: 12) {
-            Text("ENGLISH").frame(width: Self.colEnglish, alignment: .leading)
-            Text("GERMAN").frame(width: Self.colGerman, alignment: .leading)
+            Text("SOURCE").frame(width: Self.colSource, alignment: .leading)
+            Text(model.targetLanguageName.uppercased()).frame(width: Self.colTarget, alignment: .leading)
             Text("STAGE").frame(width: Self.colStage, alignment: .leading)
             Text("PROGRESS").frame(width: Self.colProgress, alignment: .leading)
             Text("NEXT REVIEW").frame(minWidth: 70, alignment: .leading)
@@ -399,7 +354,19 @@ struct LibraryView: View {
     }
 
     func row(_ row: LibraryRow) -> some View {
-        LibraryRowView(row: row) { progressCell(row) }
+        LibraryRowView(row: row, highlighted: row.id == model.requestedLibraryItemID) { progressCell(row) }
+            .id(row.id)
+    }
+
+    func revealRequestedItem(using proxy: ScrollViewProxy) {
+        guard let id = model.requestedLibraryItemID else { return }
+        // Wait one run-loop turn for a freshly loaded LazyVStack to publish
+        // its scroll targets.
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.24)) {
+                proxy.scrollTo(id, anchor: .center)
+            }
+        }
     }
 
     /// Library rows show SRS strength plus wild sightings; upcoming rows
@@ -427,7 +394,7 @@ struct LibraryView: View {
 
     func reload() {
         let formatter = RelativeDateTimeFormatter()
-        let language = (try? model.engine.store.setting(SettingsKey.activeLanguage) ?? "de") ?? "de"
+        guard let language = try? model.engine.store.setting(SettingsKey.activeLanguage) else { return }
         guard let items = try? model.engine.store.items(language: language),
               let progress = try? model.engine.store.allProgress() else { return }
         let dayStart = Calendar(identifier: .gregorian).startOfDay(for: Date())
@@ -454,6 +421,7 @@ struct LibraryView: View {
 /// One library row: fixed columns matching the header, hover highlight.
 struct LibraryRowView<Progress: View>: View {
     let row: LibraryView.LibraryRow
+    let highlighted: Bool
     @ViewBuilder let progress: () -> Progress
     @State private var hovering = false
 
@@ -472,11 +440,11 @@ struct LibraryRowView<Progress: View>: View {
                         .foregroundStyle(Theme.outcomeIntroduced)
                 }
             }
-            .frame(width: LibraryView.colEnglish, alignment: .leading)
+            .frame(width: LibraryView.colSource, alignment: .leading)
             Text(row.target)
                 .font(Theme.serif(14.5, weight: .medium))
                 .lineLimit(1)
-                .frame(width: LibraryView.colGerman, alignment: .leading)
+                .frame(width: LibraryView.colTarget, alignment: .leading)
             StageChip(stage: row.stage).frame(width: LibraryView.colStage, alignment: .leading)
             progress().frame(width: LibraryView.colProgress, alignment: .leading)
             Text(row.due)
@@ -488,10 +456,14 @@ struct LibraryRowView<Progress: View>: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
+        .background(
+            highlighted ? Theme.gold.opacity(0.18) : (hovering ? Theme.surface : .clear),
+            in: RoundedRectangle(cornerRadius: 7)
+        )
         .opacity(row.stage == nil ? 0.55 : 1)
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: hovering)
+        .animation(.easeOut(duration: 0.18), value: highlighted)
     }
 }
 

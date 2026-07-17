@@ -4,6 +4,11 @@ Handover context for brand-identity and visual-redesign work. Everything a
 design session needs to ideate broadly without rediscovering the product.
 Written 2026-07-11, after the Phase A/B UX work landed on main.
 
+> **Historical design input:** this captures the product at that date. The
+> optional Tutor and runtime model client were removed from the Developer
+> Preview on 2026-07-16. Current scope lives in the root README and
+> `docs/plan/08-roadmap.md`.
+
 ## 1. What Cockatoo is (one paragraph)
 
 Cockatoo teaches you German **while you read the web**. A Safari extension
@@ -69,9 +74,9 @@ Existing interaction design already decided (keep, restyle):
 | **App: Overview** | Next-action card, stat tiles, tier progress + check-ready flag, extension status, stage bars. |
 | **App: Practice** | The living deck: question cards ×3 modes, intro card, repair/tier-check beats, progress strip, session ledger, tier-unlock celebration. Where "alive" matters most. |
 | **App: Library** | Tier-grouped table, stage chips, exposure progress ("3/6 seen · done today"), strength dots. |
-| **App: Tutor, Settings, Onboarding** | Currently plain forms/chat. |
-| **Menu bar** | Icon (currently SF Symbol `bird`) + due badge + dropdown. The always-present touchpoint. |
-| **Icons** | App icon is still the Xcode default. Safari toolbar icon, extension icon. |
+| **App: Settings, Onboarding** | Native configuration and first-run guidance. |
+| **Menu bar** | Original cockatoo template mark + actionable practice/status menu. The always-present touchpoint. |
+| **Icons** | Original vector cockatoo mark shared by the app icon and compact toolbar treatment. |
 
 ## 5. Existing design material (hand all of this over)
 
@@ -80,11 +85,6 @@ Existing interaction design already decided (keep, restyle):
   (cream/tobacco/moss/indigo palette, Newsreader serif). This is candidate
   direction #1 and shows the practice-flow interactions in situ. Open in a
   browser.
-- `research/brand-assets/cockatoo-idle/` — a pixel-art cockatoo idle
-  animation (8 frames + gif). The only existing mascot material. The open
-  question isn't "mascot yes/no" so much as *dosage*: none ↔ a mark only ↔
-  a quiet presence (menu bar? empty states? unlock moments?). Mascot guilt
-  is banned; mascot charm is negotiable.
 - `research/app-overview-wireframes.md` — full wireframe set + the original
   visual-language notes ("mature, calm, high-signal…").
 - `docs/plan/01-vision-and-principles.md` — vision, principles, anti-goals,

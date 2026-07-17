@@ -1,9 +1,10 @@
-# Research
+# Historical research archive
 
 Product and pedagogy research carried over from the prototype branches so it
-survives on main. This material predates the ground-up rebuild (docs/plan/)
-but most of its findings still apply — cite it when making UX or
-learning-engine decisions.
+survives on main. This material is design history, **not the current product
+contract**. It predates the ground-up rebuild and includes discarded Tutor,
+runtime-model, and paid-beta directions. Current scope and architecture live in
+`README.md` and `docs/plan/`; do not infer shipped features from this folder.
 
 ## Provenance
 

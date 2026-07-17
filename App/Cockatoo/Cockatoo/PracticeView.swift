@@ -245,7 +245,7 @@ struct PracticeSessionView: View {
             }
         case .recall(_, let prompt, _):
             Text(prompt).font(Theme.serif(34, weight: .semibold))
-            Text("Type the German")
+            Text("Type the \(model.targetLanguageName)")
                 .font(.system(size: 13))
                 .foregroundStyle(Theme.inkMuted)
                 .padding(.bottom, 10)
@@ -262,13 +262,13 @@ struct PracticeSessionView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 2)
             }
-            Text("Fill in the blank (German)")
+            Text("Fill in the blank (\(model.targetLanguageName))")
                 .font(.system(size: 13))
                 .foregroundStyle(Theme.inkMuted)
                 .padding(.bottom, 10)
             answerField
         case .rebuild(_, let sourceText, let tokens, _):
-            Text("Build the German for")
+            Text("Build the \(model.targetLanguageName) for")
                 .font(.system(size: 13))
                 .foregroundStyle(Theme.inkMuted)
             Text(sourceText)
@@ -336,7 +336,7 @@ struct PracticeSessionView: View {
     }
 
     var answerField: some View {
-        TextField("auf Deutsch…", text: $session.typed)
+        TextField("Your \(model.targetLanguageName) answer…", text: $session.typed)
             .textFieldStyle(.plain)
             .font(Theme.serif(19, weight: .regular))
             .multilineTextAlignment(.center)
@@ -588,7 +588,10 @@ struct RebuildAnswerView: View {
             FlowLayout(spacing: 6) {
                 ForEach(tokens.indices.filter { !placed.contains($0) }, id: \.self) { i in
                     TokenChip(text: tokens[i], placed: false) {
-                        guard !locked else { return }
+                        // A rapid double-click can deliver both actions before
+                        // SwiftUI has removed this chip from the pool. Treat
+                        // placement as an idempotent operation.
+                        guard !locked, !placed.contains(i) else { return }
                         placed.append(i)
                     }
                 }
@@ -939,4 +942,3 @@ struct CelebrationView: View {
         }
     }
 }
-

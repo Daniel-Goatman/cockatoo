@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import LearnerCore
 
 /// The app-side IPC endpoint the appex forwards native messages to (D9).
@@ -9,7 +10,7 @@ import LearnerCore
 /// verified live, see docs/plan/03-data-model-and-storage.md §R2.)
 /// The protocol is unchanged: opaque JSON envelope in, JSON response out —
 /// all typing happens in LearnerCore.SyncService.
-final class CockatooXPCListener {
+final class CockatooIPCListener {
     private final class ServiceBox {
         let service: SyncService
         init(_ service: SyncService) { self.service = service }
@@ -39,11 +40,28 @@ final class CockatooXPCListener {
             let request = (data as Data?) ?? Data()
 
             // openDashboard is the one method with a UI side effect: front
-            // the window (LearnerCore just acks it — it has no UI).
+            // the window and optionally select an explicit destination
+            // (LearnerCore validates the payload, then just acks it).
             if let object = try? JSONSerialization.jsonObject(with: request) as? [String: Any],
                object["method"] as? String == "openDashboard" {
+                let openRequest: OpenDashboardRequest? = (object["payload"] as? String)
+                    .flatMap { $0.data(using: .utf8) }
+                    .flatMap { try? JSONDecoder().decode(OpenDashboardRequest.self, from: $0) }
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .cockatooOpenDashboard, object: nil)
+                    NotificationCenter.default.post(name: .cockatooOpenDashboard, object: openRequest)
+
+                    // Front an existing dashboard directly as well as asking
+                    // SwiftUI to recreate one through the notification. The
+                    // menu-bar scene can otherwise be lazy when Safari sends
+                    // the first request of a launch.
+                    NSApp.setActivationPolicy(.regular)
+                    NSApp.unhide(nil)
+                    for window in NSApp.windows where
+                        window.identifier?.rawValue.hasPrefix("main") == true || window.title == "Cockatoo" {
+                        window.deminiaturize(nil)
+                        window.makeKeyAndOrderFront(nil)
+                    }
+                    NSApp.activate(ignoringOtherApps: true)
                 }
             }
 
@@ -59,19 +77,19 @@ final class CockatooXPCListener {
 
         guard let port = CFMessagePortCreateLocal(
             nil,
-            CockatooPaths.xpcServiceName as CFString,
+            CockatooPaths.ipcServiceName as CFString,
             callback,
             &context,
             nil
         ) else {
-            NSLog("Cockatoo: CFMessagePort registration failed for \(CockatooPaths.xpcServiceName)")
+            NSLog("Cockatoo: CFMessagePort registration failed for \(CockatooPaths.ipcServiceName)")
             return
         }
         self.port = port
         let source = CFMessagePortCreateRunLoopSource(nil, port, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         self.source = source
-        NSLog("Cockatoo: service listening on \(CockatooPaths.xpcServiceName)")
+        NSLog("Cockatoo: service listening on \(CockatooPaths.ipcServiceName)")
     }
 }
 
@@ -80,36 +98,4 @@ extension Notification.Name {
     static let cockatooOpenDashboard = Notification.Name("dev.cockatoo.openDashboard")
     /// Posted on every IPC message — drives the extension-status UI.
     static let cockatooExtensionContact = Notification.Name("dev.cockatoo.extensionContact")
-}
-
-// MARK: - Keychain (API keys never touch the DB or UserDefaults — D7)
-
-enum KeychainStore {
-    static let service = "dev.cockatoo.llm"
-
-    static func read(key: String) -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: true,
-        ]
-        var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
-    }
-
-    static func write(key: String, value: String) {
-        let base: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-        ]
-        SecItemDelete(base as CFDictionary)
-        guard !value.isEmpty else { return }
-        var add = base
-        add[kSecValueData as String] = Data(value.utf8)
-        SecItemAdd(add as CFDictionary, nil)
-    }
 }

@@ -92,6 +92,25 @@ final class PracticeSessionModel: ObservableObject {
         prepareCurrent()
     }
 
+    /// A queued session belongs to the language that planned it. Switching
+    /// packs discards that transient queue; progress remains untouched.
+    func resetForLanguageChange() {
+        queue = []
+        index = 0
+        typed = ""
+        feedback = nil
+        sessionDone = false
+        showingIntro = false
+        introItem = nil
+        ledger = []
+        answerTrail = []
+        lastGraded = nil
+        milestoneBand = nil
+        lastChoice = nil
+        celebrationSeen = false
+        sessionsThisSitting = 0
+    }
+
     private func prepareCurrent() {
         guard let planned = currentQuestion, planned.isIntro, !planned.isRepair else {
             showingIntro = false
@@ -120,7 +139,7 @@ final class PracticeSessionModel: ObservableObject {
     func answerTyped() {
         guard feedback == nil, let planned = currentQuestion else { return }
         let grading = (try? engine.importer.gradingConfig(
-            language: (try? engine.store.setting(SettingsKey.activeLanguage)) ?? "de",
+            language: (try? engine.store.setting(SettingsKey.activeLanguage)) ?? "und",
             store: engine.store
         )) ?? GradingConfig(articles: [])
         let grader = Grader(grading: grading)
