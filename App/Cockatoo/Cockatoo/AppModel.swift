@@ -3,6 +3,19 @@ import Combine
 import LearnerCore
 import GRDB
 
+/// A Library reveal is an event rather than durable selection state. The
+/// token makes repeated requests for the same item observable so every click
+/// from Safari scrolls and briefly highlights the row again.
+struct LibraryRevealRequest: Equatable, Sendable {
+    let itemID: String
+    let token: UUID
+
+    init(itemID: String, token: UUID = UUID()) {
+        self.itemID = itemID
+        self.token = token
+    }
+}
+
 /// The app-side view model over LearnerEngine. The app owns the database
 /// exclusively (D9); GRDB ValueObservation drives live UI updates.
 @MainActor
@@ -27,9 +40,9 @@ final class AppModel: ObservableObject {
     @Published var dbGeneration = 0
     @Published var installedLanguages: [String] = []
     @Published var activeLanguageCode: String?
-    /// Item requested from an extension hover card. LibraryView uses this to
-    /// reveal and highlight the matching row after the window is fronted.
-    @Published var requestedLibraryItemID: String?
+    /// Item requested from an extension hover card. LibraryView consumes the
+    /// event to reveal the row; it does not become permanent selection state.
+    @Published private(set) var libraryRevealRequest: LibraryRevealRequest?
 
     /// Practice session state — owned here so it survives section switches.
     lazy var practice = PracticeSessionModel(engine: engine)
@@ -76,7 +89,9 @@ final class AppModel: ObservableObject {
                 case .practice:
                     self?.section = .practice
                 case .library:
-                    self?.requestedLibraryItemID = request.itemId
+                    if let itemID = request.itemId, !itemID.isEmpty {
+                        self?.libraryRevealRequest = LibraryRevealRequest(itemID: itemID)
+                    }
                     self?.section = .library
                 case nil:
                     break
@@ -117,6 +132,11 @@ final class AppModel: ObservableObject {
     func toggleSidebar() {
         sidebarCollapsed.toggle()
         if !sidebarCollapsed { practiceInspectorOpen = false }
+    }
+
+    func consumeLibraryReveal(_ token: UUID) {
+        guard libraryRevealRequest?.token == token else { return }
+        libraryRevealRequest = nil
     }
 
     func togglePracticeInspector() {

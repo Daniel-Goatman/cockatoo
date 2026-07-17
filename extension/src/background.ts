@@ -106,7 +106,8 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           sendResponse(isSyncError(response)
             ? { ok: false, error: response.detail ?? response.error }
             : { ok: true });
-        });
+        })
+        .catch(() => sendResponse({ ok: false, error: "appUnavailable" }));
       return true;
     case "cachedStatus":
       // Popup first paint must be local-only. Safari can render this while a

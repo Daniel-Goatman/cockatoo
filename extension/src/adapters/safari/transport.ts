@@ -17,14 +17,35 @@ declare const browser: {
 };
 
 const NATIVE_APP_ID = "application.id"; // Safari resolves to the containing app
+const NATIVE_MESSAGE_TIMEOUT_MS = 8_000;
+
+async function withTimeout<T>(operation: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("native message timed out")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export class SafariTransport implements Transport {
   async call<T>(method: string, payload?: unknown): Promise<T | SyncErrorResponse> {
     try {
-      const response = await browser.runtime.sendNativeMessage(NATIVE_APP_ID, buildEnvelope(method, payload));
+      const response = await withTimeout(
+        browser.runtime.sendNativeMessage(NATIVE_APP_ID, buildEnvelope(method, payload)),
+        NATIVE_MESSAGE_TIMEOUT_MS,
+      );
       return (typeof response === "string" ? JSON.parse(response) : response) as T;
-    } catch {
-      return { error: "appUnavailable" };
+    } catch (error) {
+      return {
+        error: "appUnavailable",
+        detail: error instanceof Error ? error.message : undefined,
+      };
     }
   }
 

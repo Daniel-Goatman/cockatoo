@@ -28,7 +28,8 @@ in `App/Config/`; day-to-day use the repo-level scripts rather than the Xcode UI
   runloop. NSXPCListener(machServiceName:) does NOT work here — it only
   registered when Xcode launched the app (docs/plan/03 §R2 outcome).
 - Appex side: stateless `CFMessagePortCreateRemote` + synchronous
-  send/reply per request. Launch-on-miss ONLY for `openDashboard`.
+  send/reply per request. Launch/activation is allowed ONLY for
+  `openDashboard`; background traffic never resurrects the app.
 - `openDashboard` fronts the window via `.cockatooOpenDashboard`; its optional
   `destination: "practice"` payload selects the Practice section before the
   window appears.

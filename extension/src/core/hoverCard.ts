@@ -6,6 +6,7 @@ import type { SnapshotItem } from "./types";
 // only if functional (P4): v1 ships exactly one — "Open in Cockatoo".
 
 export const CLOSE_DELAY_MS = 90;
+export const OPEN_TIMEOUT_MS = 9_000;
 
 export interface HoverCardDelegate {
   openDashboard(itemId: string): Promise<boolean>;
@@ -116,7 +117,15 @@ export class HoverCard {
       event.stopPropagation();
       openButton.disabled = true;
       openButton.textContent = "Opening…";
-      const opened = await this.delegate.openDashboard(item.id).catch(() => false);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const opened = await Promise.race([
+        this.delegate.openDashboard(item.id).catch(() => false),
+        new Promise<boolean>((resolve) => {
+          timer = setTimeout(() => resolve(false), OPEN_TIMEOUT_MS);
+        }),
+      ]).finally(() => {
+        if (timer) clearTimeout(timer);
+      });
       if (opened) {
         openButton.textContent = "Opened";
       } else {

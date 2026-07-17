@@ -239,7 +239,9 @@ struct DashboardView: View {
 
 struct LibraryView: View {
     @EnvironmentObject var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bands: [BandGroup] = []
+    @State private var highlightedItemID: String?
 
     struct BandGroup: Identifiable {
         let id: Int
@@ -292,10 +294,23 @@ struct LibraryView: View {
             }
             .onAppear {
                 reload()
-                revealRequestedItem(using: proxy)
             }
-            .onChange(of: model.requestedLibraryItemID) {
-                revealRequestedItem(using: proxy)
+            .task(id: model.libraryRevealRequest?.token) {
+                guard let request = model.libraryRevealRequest else { return }
+                // A newly-created LazyVStack needs a turn to publish its row
+                // scroll targets after reload/section navigation.
+                await Task.yield()
+                highlightedItemID = request.itemID
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.24)) {
+                    proxy.scrollTo(request.itemID, anchor: .center)
+                }
+                try? await Task.sleep(nanoseconds: 1_400_000_000)
+                guard !Task.isCancelled,
+                      model.libraryRevealRequest?.token == request.token else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.55)) {
+                    highlightedItemID = nil
+                }
+                model.consumeLibraryReveal(request.token)
             }
         }
         // dbGeneration, not countsByStage: seen/engaged counts change
@@ -354,19 +369,8 @@ struct LibraryView: View {
     }
 
     func row(_ row: LibraryRow) -> some View {
-        LibraryRowView(row: row, highlighted: row.id == model.requestedLibraryItemID) { progressCell(row) }
+        LibraryRowView(row: row, highlighted: row.id == highlightedItemID) { progressCell(row) }
             .id(row.id)
-    }
-
-    func revealRequestedItem(using proxy: ScrollViewProxy) {
-        guard let id = model.requestedLibraryItemID else { return }
-        // Wait one run-loop turn for a freshly loaded LazyVStack to publish
-        // its scroll targets.
-        DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: 0.24)) {
-                proxy.scrollTo(id, anchor: .center)
-            }
-        }
     }
 
     /// Library rows show SRS strength plus wild sightings; upcoming rows
@@ -457,13 +461,16 @@ struct LibraryRowView<Progress: View>: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(
-            highlighted ? Theme.gold.opacity(0.18) : (hovering ? Theme.surface : .clear),
+            highlighted ? Theme.gold.opacity(0.22) : (hovering ? Theme.surface : .clear),
             in: RoundedRectangle(cornerRadius: 7)
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: 7)
+                .strokeBorder(Theme.gold.opacity(highlighted ? 0.9 : 0), lineWidth: 1)
+        }
         .opacity(row.stage == nil ? 0.55 : 1)
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: hovering)
-        .animation(.easeOut(duration: 0.18), value: highlighted)
     }
 }
 

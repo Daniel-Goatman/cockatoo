@@ -35,9 +35,9 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             return
         }
 
-        // Launch-on-miss ONLY for explicit user intent (openDashboard).
-        // Background sync must respect an explicit quit: it degrades to the
-        // cached snapshot + queued events instead of resurrecting the app.
+        // Launch/activation is allowed ONLY for explicit user intent
+        // (openDashboard). Background sync must respect an explicit quit: it
+        // degrades to cached state instead of resurrecting the app.
         let method = (message as? [String: Any])?["method"] as? String
         let boxedContext = UncheckedSendable(value: context)
         Self.forward(envelope, attemptLaunch: method == "openDashboard") { responseData in
@@ -54,31 +54,43 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
 
     private static func forward(_ envelope: Data, attemptLaunch: Bool, completion: @escaping @Sendable (Data?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
+            if attemptLaunch {
+                // Even when IPC is already reachable, route the user's click
+                // through Launch Services. That user-intent-bearing activation
+                // is more reliable than asking a background app to front
+                // itself, and it also starts a quit app before delivery.
+                launchApp {
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        if let response = sendToApp(envelope, timeout: 2.0) {
+                            completion(response)
+                            return
+                        }
+                        // Launch completion can precede the app registering
+                        // its CFMessagePort. One short, bounded retry covers
+                        // that cold-start window.
+                        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.6) {
+                            completion(sendToApp(envelope, timeout: 3.0))
+                        }
+                    }
+                }
+                return
+            }
+
             if let response = sendToApp(envelope) {
                 completion(response)
                 return
             }
-            guard attemptLaunch else {
-                completion(nil)
-                return
-            }
-            launchApp {
-                // One retry after a launch attempt; a cold app needs a
-                // moment to register its port.
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 2.0) {
-                    completion(sendToApp(envelope))
-                }
-            }
+            completion(nil)
         }
     }
 
-    private static func sendToApp(_ envelope: Data) -> Data? {
+    private static func sendToApp(_ envelope: Data, timeout: TimeInterval = 5.0) -> Data? {
         guard let port = CFMessagePortCreateRemote(nil, appServiceName as CFString) else {
             return nil
         }
         var reply: Unmanaged<CFData>?
         let status = CFMessagePortSendRequest(
-            port, 0, envelope as CFData, 5.0, 5.0,
+            port, 0, envelope as CFData, timeout, timeout,
             CFRunLoopMode.defaultMode.rawValue, &reply
         )
         CFMessagePortInvalidate(port)
@@ -94,8 +106,8 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             return
         }
         let config = NSWorkspace.OpenConfiguration()
-        // Launch here only ever happens for openDashboard — an explicit
-        // click — so bringing the app forward is what the user asked for.
+        // This path is reserved for openDashboard — an explicit click — so
+        // bringing an existing app forward is also the requested behavior.
         config.activates = true
         NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in
             continuation()

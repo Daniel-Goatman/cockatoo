@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HoverCard } from "../src/core/hoverCard";
+import { HoverCard, OPEN_TIMEOUT_MS } from "../src/core/hoverCard";
 import { hausItem } from "./helpers";
 
 describe("HoverCard", () => {
@@ -26,11 +26,32 @@ describe("HoverCard", () => {
 
     const button = document.querySelector(".cck-hovercard-open") as HTMLButtonElement;
     button.click();
-    await Promise.resolve();
-    await Promise.resolve();
 
     expect(openDashboard).toHaveBeenCalledWith("de.word.haus");
-    expect(button.textContent).toContain("Couldn’t open");
-    expect(button.disabled).toBe(false);
+    await vi.waitFor(() => {
+      expect(button.textContent).toContain("Couldn’t open");
+      expect(button.disabled).toBe(false);
+    });
+  });
+
+  it("recovers when the native open request never replies", async () => {
+    vi.useFakeTimers();
+    try {
+      const card = new HoverCard(document, {
+        openDashboard: () => new Promise<boolean>(() => {}),
+      });
+      card.open(document.getElementById("token")!, hausItem(), true);
+
+      const button = document.querySelector(".cck-hovercard-open") as HTMLButtonElement;
+      button.click();
+      expect(button.textContent).toBe("Opening…");
+
+      await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS);
+
+      expect(button.textContent).toContain("Couldn’t open");
+      expect(button.disabled).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
