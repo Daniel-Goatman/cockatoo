@@ -66,11 +66,16 @@ order that gets you reading fastest.
   context. The replacement budget is a pedagogical parameter, not just a UX one.
 - **Meaningful phrases, not just tokens.** Beyond single words, packs teach
   multi-word chunks that carry real meaning ("there is" → *es gibt*, "for
-  example" → *zum Beispiel*). Chunks unlock only once you know the words they're
-  built from — you never meet a structure whose parts you don't already know.
-- **Exposure primes; retrieval cements.** Seeing and hovering a word prepares
-  it; only active recall in a short practice session advances its scheduled
-  strength. Hovering can never power-level a word.
+  example" → *zum Beispiel*). A chunk only becomes eligible once the words it's
+  built from are already in your library, so you never meet a phrase whose parts
+  you haven't started learning.
+- **Practice advances a word; the web reinforces it.** New words are introduced
+  a few at a time in short practice sessions (a tunable daily drip), and only
+  answering questions moves a word's scheduled strength. Seeing or hovering a
+  word on a page is tracked as "seen in the wild" and reinforces recognition,
+  but exposure never advances the schedule — reading can't power-level, and a
+  word's strength only climbs across distinct days, so extra practice sharpens
+  without rushing it.
 
 The full rationale lives in
 [docs/plan/01-vision-and-principles.md](docs/plan/01-vision-and-principles.md).
@@ -98,9 +103,10 @@ twice. Details: [docs/plan/02-architecture.md](docs/plan/02-architecture.md).
 ### The in-page language system (how words get swapped)
 
 When you open a page, the extension asks the app for the current snapshot — a
-compact, versioned table of the vocabulary items that are currently "ambient"
-(eligible to appear in a page), each with its surface forms and hover content.
-Rendering then follows a few deliberate rules:
+compact, versioned table of the vocabulary the app wants shown on pages: the
+words you're actively practicing or already know (mastered words retire from
+pages, and anything not safe to swap is excluded), each with its surface forms
+and hover content. Rendering then follows a few deliberate rules:
 
 - **A page gate runs first.** Only `http`/`https` pages are touched, and a
   sensitive-host denylist (banking, payment, health, government) plus your own
@@ -129,31 +135,44 @@ interface, so a Chrome port is a matter of writing one adapter. Full spec:
 
 ### Practice (the companion app)
 
-Seeing words in the wild primes them; short recall sessions in the app are what
-actually move a word forward. A session is deliberately tiny (~2 minutes, 4–10
-questions) and has a visible arc: warm-up → new words → mixed review → an
-occasional tier check.
+Practice is where words actually advance. A session is deliberately tiny
+(~2 minutes, around 10 questions) and has a visible arc: **warm-up → new words →
+mix → release**, where the warm-up opens on your easiest due items and the
+release is one light self-graded production card to close.
 
 - **One progress store.** A single record per item is shared by the browser, the
   practice sessions, the Library, and the Overview. Progress you earn anywhere
-  shows up everywhere.
+  shows up everywhere. A word moves through **practicing → known → mastered**
+  (words not yet introduced show as *upcoming*).
 - **A Leitner spacing ladder** (1h → 6h → 24h → 3d → 7d → 30d) schedules reviews;
-  items surface when they're due, not when it's convenient for a counter.
-- **Several question modes**, offered by the item's stage: recognition
-  (German → English, multiple choice), recall (English → German, free text),
-  cloze (a real sentence with the word blanked), and sentence building
-  (assembling a phrase from word tiles). A mode is only ever offered if it can
-  actually be generated for that item — no dead ends.
-- **Missed answers are repaired in-session**, not just marked wrong: a near-miss
-  holds the word's box and re-queues it a few questions later.
+  items surface when they're due, not when it's convenient for a counter. A word
+  can advance **at most one box per calendar day**, so a binge session can't
+  cram a word to "known" — the evidence unit is distinct days, not reps.
+- **Five question modes**, chosen by the word's strength and what the pack can
+  actually generate for it (a mode is never offered if it can't be built — no
+  dead ends):
+  - **Recognition** — see the German, pick the English meaning from options.
+  - **Recall** — see the English, type the German.
+  - **Cloze** — a real sentence with the word blanked out; type what fills it.
+  - **Rebuild** — reassemble the target sentence from shuffled word tiles
+    (production without typing — this is the "Build the German for…" card).
+  - **Self-grade** — a release-beat prompt to say or think a small sentence with
+    the word, then honestly report whether it came easily. The app never
+    pretends it can grade free production.
+- **Missed answers are repaired in-session**, not just marked wrong: a wrong
+  answer re-enters the queue a few questions later, and a near-miss (a typo
+  within one edit) holds the word's box instead of lapsing it.
+- **Milestones celebrate, they never gate.** Finishing most of a frequency band
+  is a one-time celebration; there are no locked tiers or quizzes standing
+  between you and the next words.
 
 > **Practice is the roughest surface today and the one most worth improving.**
 > The mechanics above are implemented and tested, but the pedagogy, pacing, and
 > feel are still early. If you have ideas about session design, grading, or
-> motivation, this is a great place to contribute. Design notes:
-> [docs/plan/04-learning-engine.md](docs/plan/04-learning-engine.md) and the
-> in-progress redesign in
-> [docs/plan/10-learning-redesign.md](docs/plan/10-learning-redesign.md).
+> motivation, this is a great place to contribute. The current design is
+> [docs/plan/10-learning-redesign.md](docs/plan/10-learning-redesign.md), which
+> supersedes parts of the earlier
+> [docs/plan/04-learning-engine.md](docs/plan/04-learning-engine.md).
 
 ### Honest about grammar: fidelity tiers
 
@@ -236,8 +255,9 @@ swift run CockatooDev    # launches the app
 
 **2. Run the full Safari extension — needs an Apple Development team.** The
 extension and app must share a provisioned App Group, so this path requires an
-Apple developer account (a free one that can provision an App Group is enough;
-Developer ID is **not** required for local use):
+Apple developer account with an App Group registered to your team. Developer ID
+signing and notarization are **not** required for local use — Apple Development
+signing is enough:
 
 ```sh
 cp App/Config/Local.example.xcconfig App/Config/Local.xcconfig
@@ -262,7 +282,8 @@ exact signing/notarization limitations.
 ## Contributing
 
 Cockatoo is in its early stages and pull requests are genuinely welcome — from
-bug fixes to whole language packs. A few pointers to get started:
+bug fixes to whole language packs. **[CONTRIBUTING.md](CONTRIBUTING.md) is the
+full guide**; the essentials:
 
 - **Understand the shape first.** Read
   [docs/plan/01-vision-and-principles.md](docs/plan/01-vision-and-principles.md)
@@ -273,7 +294,7 @@ bug fixes to whole language packs. A few pointers to get started:
   keep `script/check.sh` green — it's the same suite CI runs.
 - **High-value areas right now:** improving practice (session design, grading,
   pacing — see [docs/plan/10-learning-redesign.md](docs/plan/10-learning-redesign.md)),
-  authoring and reviewing language packs, expanding ambient coverage
+  authoring and reviewing language packs, expanding in-page coverage
   (the verb problem, OP-1), and a Chrome adapter for the extension core.
 - **Language packs** have their own guide: [packs/README.md](packs/README.md).
   Packs are reviewed source artifacts, not runtime model output — an LLM may
@@ -281,9 +302,6 @@ bug fixes to whole language packs. A few pointers to get started:
   that ships.
 - **Open an issue** to discuss anything larger before you build it, so we can
   make sure it fits the local-first, deterministic-core direction.
-
-There is not yet a formal `CONTRIBUTING.md` or code of conduct — adding them is
-itself a welcome first PR.
 
 ## Architecture and repository map
 
