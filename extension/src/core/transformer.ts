@@ -7,8 +7,7 @@ import type { SnapshotItem } from "./types";
 
 export const WORDS_PER_TOKEN = 40;
 export const MIN_PAGE_TOKENS = 3;
-export const MAX_PAGE_TOKENS = 20;
-export const BLOCK_WORDS_PER_TOKEN = 25;
+export const MAX_PAGE_TOKENS = 40;
 export const MIN_BLOCK_WORDS = 8;
 export const MUTATION_DEBOUNCE_MS = 250;
 
@@ -110,24 +109,25 @@ export class PageTransformer {
     const candidates = blocks.filter((b) => !this.isExcluded(b) && approximateWordCount(b) >= MIN_BLOCK_WORDS);
     if (candidates.length === 0) return;
 
-    // Even distribution: round-robin one token per block, spaced subset.
-    const spaced = evenlySpacedSubset(candidates, Math.min(candidates.length, this.remaining));
-    for (const block of spaced) {
-      if (this.remaining <= 0) break;
-      this.fillBlock(block);
-    }
-  }
-
-  private fillBlock(block: Element): void {
-    const blockBudget = Math.max(1, Math.floor(approximateWordCount(block) / BLOCK_WORDS_PER_TOKEN));
-    const used = this.perItemInBlock.get(block) ?? new Set<string>();
-    this.perItemInBlock.set(block, used);
-    let placed = 0;
-
-    // Re-walk after each insertion: splitting a text node invalidates the walker.
-    while (placed < blockBudget && this.remaining > 0) {
-      if (!this.insertOneToken(block, used)) break;
-      placed += 1;
+    // Even distribution: split the candidate blocks into as many contiguous
+    // regions as we have budget for, spanning the whole root top-to-bottom, and
+    // place one token in the FIRST matchable block of each region. Scanning
+    // within a region (rather than fixing on one pre-picked block, or filling
+    // match-rich blocks to a per-block budget) means a region whose leading
+    // blocks carry no vocabulary — reference lists, stubs, citation runs — still
+    // yields a swap from a later block. So swaps reach the bottom of long pages
+    // and never clump into the handful of match-dense blocks near the top.
+    const regions = Math.min(candidates.length, this.remaining);
+    const perRegion = candidates.length / regions;
+    for (let r = 0; r < regions && this.remaining > 0; r++) {
+      const start = Math.floor(r * perRegion);
+      const end = r === regions - 1 ? candidates.length : Math.floor((r + 1) * perRegion);
+      for (let i = start; i < end; i++) {
+        const block = candidates[i];
+        const used = this.perItemInBlock.get(block) ?? new Set<string>();
+        this.perItemInBlock.set(block, used);
+        if (this.insertOneToken(block, used)) break; // one per region; move on
+      }
     }
   }
 
@@ -233,17 +233,6 @@ export function isVisible(el: Element): boolean {
 
 function isRealLayout(view: Window & typeof globalThis): boolean {
   return !(view.navigator?.userAgent ?? "").includes("jsdom");
-}
-
-export function evenlySpacedSubset<T>(items: T[], count: number): T[] {
-  if (count >= items.length) return [...items];
-  if (count <= 0) return [];
-  const result: T[] = [];
-  const step = items.length / count;
-  for (let i = 0; i < count; i++) {
-    result.push(items[Math.floor(i * step)]);
-  }
-  return result;
 }
 
 export function clamp(value: number, min: number, max: number): number {

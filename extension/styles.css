@@ -1,7 +1,7 @@
 /* Cockatoo brand — content-script styles for inline highlight + hover card.
    Mirrors the native graphite/ivory app, with a light counterpart selected
-   from system appearance. Page tokens use the app's "on pages" blue; gold
-   remains the crest/achievement accent.
+   from system appearance. Page tokens carry the app's gold crest underline so
+   a swap is easy to spot against any page background.
    Token marking is R1b: visible-but-subtle so a swap reads as a vocabulary
    card in place; approximate tier (reserved, v1-empty) gets a dotted line. */
 
@@ -53,10 +53,11 @@
 
 .cck-token {
   /* Keep the host page's readable foreground. Sites frequently use a page
-     theme that differs from the macOS appearance; the branded underline is
-     the stable marker across both. */
+     theme that differs from the macOS appearance; the branded gold underline
+     is the stable marker across both — the crest colour, kept legible against
+     arbitrary page backgrounds rather than the quieter "on pages" blue. */
   color: inherit;
-  border-bottom: 1.5px solid var(--cck-page);
+  border-bottom: 2px solid var(--cck-gold);
   border-radius: 1px;
   padding: 0 0.5px;
   cursor: help;

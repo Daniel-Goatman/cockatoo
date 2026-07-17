@@ -84,6 +84,46 @@ describe("PageTransformer", () => {
     expect(placed).toBeGreaterThanOrEqual(MIN_PAGE_TOKENS);
   });
 
+  it("spreads swaps across the whole page, not just the top", () => {
+    // Long candidate paragraphs each carrying matchable text. The page budget
+    // is far smaller than the block count, so any strategy that fills or
+    // revisits match-rich blocks clumps swaps near the top; region-bucketing
+    // must instead reach the bottom of the document.
+    const count = 60;
+    setBody(Array.from({ length: count }, () => paragraph(90, "and the house")).join(""));
+    const transformer = makeTransformer();
+    const placed = transformer.applyInitial();
+    expect(placed).toBeGreaterThanOrEqual(MIN_PAGE_TOKENS);
+
+    const paragraphs = [...document.querySelectorAll("p")];
+    const tokenIndices = [...document.querySelectorAll<HTMLElement>("[data-cck-token]")].map((token) =>
+      paragraphs.indexOf(token.closest("p")!),
+    );
+    // At least one swap must land in the bottom half of the document.
+    expect(Math.max(...tokenIndices)).toBeGreaterThanOrEqual(count / 2);
+    // And the spread should span a wide range, not a tight cluster near the top.
+    expect(Math.max(...tokenIndices) - Math.min(...tokenIndices)).toBeGreaterThanOrEqual(count / 2);
+  });
+
+  it("reaches the bottom when match-rich blocks are all near the top", () => {
+    // The realistic Wikipedia shape: a band of matchable prose up top, then a
+    // long tail of blocks with NO vocabulary (reference/citation lists). The
+    // swaps must still reach the tail's few matchable blocks rather than piling
+    // into the dense top band.
+    const topProse = Array.from({ length: 8 }, () => paragraph(60, "and the house")).join("");
+    const deadTail = Array.from({ length: 40 }, (_, i) => paragraph(30, `citation number ${i}`)).join("");
+    const bottomMatch = paragraph(30, "and the house"); // lone matchable block at the very end
+    setBody(topProse + deadTail + bottomMatch);
+
+    makeTransformer().applyInitial();
+    const paragraphs = [...document.querySelectorAll("p")];
+    const tokenIndices = [...document.querySelectorAll<HTMLElement>("[data-cck-token]")].map((token) =>
+      paragraphs.indexOf(token.closest("p")!),
+    );
+    // The final paragraph is the only match in the bottom third — it must be hit.
+    expect(Math.max(...tokenIndices)).toBe(paragraphs.length - 1);
+  });
+
   it("places at most one token per item per block", () => {
     setBody(`<p>the house and the house and the house make three houses in a very long sentence here today</p>`);
     makeTransformer().applyInitial();
