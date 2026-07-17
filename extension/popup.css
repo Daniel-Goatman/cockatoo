@@ -75,25 +75,22 @@ body {
   letter-spacing: 0.14em;
 }
 
-.crest {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  border-radius: 50% 50% 52% 42%;
-  background: var(--gold);
-  transform: rotate(-12deg);
+.brand-mark {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  overflow: visible;
 }
 
-.crest::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 4px;
-  right: -4px;
-  top: 3px;
-  background: var(--gold);
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
+.brand-mark-crest { fill: var(--gold); }
+.brand-mark-body { fill: var(--ink); }
+.brand-mark-beak {
+  fill: var(--bg);
+  stroke: var(--ink);
+  stroke-width: 1.8px;
+  stroke-linejoin: round;
 }
+.brand-mark-eye { fill: var(--bg); }
 
 .connection {
   gap: 6px;
