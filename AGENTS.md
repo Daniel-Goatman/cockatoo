@@ -14,13 +14,15 @@ risks as R1–R8; those references resolve in the plan docs.
 | Extension tests | `cd extension && npm test` |
 | Extension bundle | `cd extension && npm run build` (output: `extension/dist-resources/`, consumed by the appex's Copy WebExtension Resources phase) |
 | Boundary lint | `cd extension && npm run lint:boundaries` |
-| Pack validation | `swift run packtool validate packs/build/de-2026.07.json` |
-| Full-loop simulation (no Safari) | `swift run learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.07.json && swift run learnerctl --db /tmp/dev.sqlite simulate --days 30` |
+| Pack validation | `swift run packtool validate packs/build/de-2026.10.json` |
+| Full-loop simulation (no Safari) | `swift run learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.10.json && swift run learnerctl --db /tmp/dev.sqlite simulate --days 30` |
 | App UI without installing | `swift run CockatooDev` |
-| **Ship to the user's machine** | `script/install.sh` (builds everything, installs to /Applications, relaunches; `--restart-safari` if content-script behavior changed) |
+| Complete verification | `script/check.sh` |
+| Signed local install | `script/install-dev.sh` (`script/install.sh` keeps the stable `/Applications` workflow) |
 
-After changing extension or app code, `script/install.sh` is the deploy
-step — the user does not run Xcode.
+After changing extension or app code, `script/install-dev.sh` is the local
+deploy step. It requires Apple Development configuration; the user does not
+open Xcode.
 
 ## Hard rules
 
@@ -49,8 +51,8 @@ step — the user does not run Xcode.
   (explicit user intent). Background sync degrades to `appUnavailable`.
 - **No decode-time migrations, no legacy imports** (D8). Schema changes go
   through numbered GRDB migrations in `AppDatabase.swift`.
-- **API keys live in Keychain** (`KeychainStore`), never in the DB,
-  UserDefaults, or source.
+- **No model or API-key path ships in the runtime.** Future agent/LLM pack
+  authoring belongs in a separate CLI and secrets must never enter source.
 
 ## Gotchas (each cost real debugging time)
 
@@ -76,7 +78,7 @@ step — the user does not run Xcode.
 ## Verification bar
 
 Before claiming a change works: `swift test` + `npm test` green, and for
-anything touching the extension↔app boundary, `script/install.sh` and drive
+anything touching the extension↔app boundary, `script/install-dev.sh` and drive
 the real flow in Safari (browse → tokens → hover → popup status → practice).
 The popup's status line is diagnostic-grade: it reports live sync errors
 with detail, not cached optimism.

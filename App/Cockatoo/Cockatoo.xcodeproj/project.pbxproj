@@ -38,9 +38,20 @@
 /* Begin PBXFileReference section */
 		65189E233001F327005C1F20 /* Cockatoo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cockatoo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "CockatooExtension Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0C0A0010000000000000001 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		C0C0A0020000000000000002 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		C0C0A0030000000000000003 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		C0C0A0040000000000000004 /* Local.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.example.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C0C0A0100000000000000010 /* Exceptions for "Cockatoo" folder in "Cockatoo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 65189E223001F327005C1F20 /* Cockatoo */;
+		};
 		65D68E003002037B00482FA2 /* Exceptions for "CockatooExtension Extension" folder in "CockatooExtension Extension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -53,6 +64,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		65189E253001F327005C1F20 /* Cockatoo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C0C0A0100000000000000010 /* Exceptions for "Cockatoo" folder in "Cockatoo" target */,
+			);
 			path = Cockatoo;
 			sourceTree = "<group>";
 		};
@@ -88,6 +102,7 @@
 		65189E1A3001F327005C1F20 = {
 			isa = PBXGroup;
 			children = (
+				C0C0A0000000000000000000 /* Config */,
 				65189E253001F327005C1F20 /* Cockatoo */,
 				65D68DE63002037B00482FA2 /* CockatooExtension Extension */,
 				65189E243001F327005C1F20 /* Products */,
@@ -101,6 +116,18 @@
 				65D68DE23002037B00482FA2 /* CockatooExtension Extension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C0C0A0000000000000000000 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C0C0A0010000000000000001 /* Base.xcconfig */,
+				C0C0A0020000000000000002 /* Debug.xcconfig */,
+				C0C0A0030000000000000003 /* Release.xcconfig */,
+				C0C0A0040000000000000004 /* Local.example.xcconfig */,
+			);
+			name = Config;
+			path = ../Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,6 +289,7 @@
 /* Begin XCBuildConfiguration section */
 		65189E2C3001F329005C1F20 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0020000000000000002 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -295,7 +323,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -326,6 +354,7 @@
 		};
 		65189E2D3001F329005C1F20 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0030000000000000003 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -359,7 +388,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -382,26 +411,29 @@
 		};
 		65189E2F3001F329005C1F20 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0020000000000000002 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Cockatoo/Cockatoo.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "$(COCKATOO_CODE_SIGN_IDENTITY)";
+				CODE_SIGNING_ALLOWED = "$(COCKATOO_CODE_SIGNING_ALLOWED)";
+				CODE_SIGN_STYLE = "$(COCKATOO_CODE_SIGN_STYLE)";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Cockatoo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(COCKATOO_APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -415,26 +447,29 @@
 		};
 		65189E303001F329005C1F20 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0030000000000000003 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Cockatoo/Cockatoo.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "$(COCKATOO_CODE_SIGN_IDENTITY)";
+				CODE_SIGNING_ALLOWED = "$(COCKATOO_CODE_SIGNING_ALLOWED)";
+				CODE_SIGN_STYLE = "$(COCKATOO_CODE_SIGN_STYLE)";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Cockatoo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(COCKATOO_APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -448,11 +483,14 @@
 		};
 		65D68DFE3002037B00482FA2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0020000000000000002 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../CockatooExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "$(COCKATOO_CODE_SIGN_IDENTITY)";
+				CODE_SIGNING_ALLOWED = "$(COCKATOO_CODE_SIGNING_ALLOWED)";
+				CODE_SIGN_STYLE = "$(COCKATOO_CODE_SIGN_STYLE)";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -472,7 +510,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(COCKATOO_EXTENSION_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -485,11 +523,14 @@
 		};
 		65D68DFF3002037B00482FA2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0C0A0030000000000000003 /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../CockatooExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "$(COCKATOO_CODE_SIGN_IDENTITY)";
+				CODE_SIGNING_ALLOWED = "$(COCKATOO_CODE_SIGNING_ALLOWED)";
+				CODE_SIGN_STYLE = "$(COCKATOO_CODE_SIGN_STYLE)";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 635WSP868V;
+				DEVELOPMENT_TEAM = "$(COCKATOO_DEVELOPMENT_TEAM)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -509,7 +550,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.cockatoo.app.Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(COCKATOO_EXTENSION_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

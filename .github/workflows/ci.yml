@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift-and-packs:
+    name: Swift and language pack
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Swift tests
+        run: swift test
+      - name: Reproduce German pack
+        run: |
+          node packs/sources/de/build-seed.mjs > "$RUNNER_TEMP/de-2026.10.json"
+          cmp "$RUNNER_TEMP/de-2026.10.json" packs/build/de-2026.10.json
+          node script/review-german-pack.mjs > /dev/null
+      - name: Validate and import German pack
+        run: |
+          swift run packtool validate packs/build/de-2026.10.json
+          swift run packtool import-test packs/build/de-2026.10.json
+
+  extension:
+    name: Browser extension
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint:boundaries
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  unsigned-xcode-build:
+    name: Unsigned universal app
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci
+        working-directory: extension
+      - run: script/build.sh --debug --unsigned
+      - name: Verify universal binaries
+        run: |
+          APP="build/DerivedData/Build/Products/Debug/Cockatoo.app"
+          lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/Cockatoo"
+          lipo -verify_arch arm64 x86_64 "$APP/Contents/PlugIns/CockatooExtension Extension.appex/Contents/MacOS/CockatooExtension Extension"

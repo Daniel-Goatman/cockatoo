@@ -6,7 +6,7 @@
 
 Cockatoo teaches you a language **while you do what you were already doing**. Its core surface is a Safari extension that quietly swaps a small, budgeted number of words on the pages you read with their target-language equivalents. Hovering shows the translation. That's the whole interruption model: zero tasks, zero notifications, zero "time to practice!" — the language comes to you inside your own reading, at a density low enough that comprehension never breaks.
 
-Depth is available *on request*, never pushed: hover a word for its translation; click through for explanation, forms, and examples; open the companion Mac app for a two-minute review session, a vocabulary library, or a tutor conversation. The app owns truth — vocabulary, progress, scheduling — and the extension renders it.
+Depth is available *on request*, never pushed: hover a word for its translation; click through for authored explanation, forms, and examples; open the companion Mac app for a two-minute review session or vocabulary library. The app owns truth — vocabulary, progress, scheduling — and the extension renders it.
 
 Difficulty layers on with demonstrated comfort. You start with high-frequency, sense-stable words whose swap costs nothing to understand ("and" → "und", "but" → "aber"). As exposure and successful retrieval accumulate, the system unlocks lower-frequency vocabulary, multi-word chunks ("there is" → "es gibt"), and eventually grammatical patterns. **Simple lexical swaps come before foreign grammar** — you never meet a structure whose parts you don't already know.
 
@@ -41,12 +41,12 @@ These are binding on all other documents. Each has a number; later docs cite the
 
 - **P1 — Swift owns all learning logic; JS renders and reports.** Every rule about SRS, eligibility, tiers, mastery, and scheduling lives in one Swift library (`LearnerCore`). The extension receives a precomputed *snapshot* of what to render and emits raw *exposure events*. No learning rule is ever implemented twice. (Kills the drift disease documented in [00-current-state-assessment.md](00-current-state-assessment.md) §3.)
 - **P2 — One progress store.** A single `item_progress` record per vocabulary item is the only place progress exists. Every surface (extension, review sessions, library, dashboard) reads and writes it. (Kills the dual-engine fragmentation, §1.)
-- **P3 — Local-first; cloud is opt-in and tiered.** Everything core — replacement, hover, review, progress — works with no network and no API key. LLM features are annotated by privacy tier (`localOnly` / `sendsWordIds` / `sendsPageText`) and the last tier is hard-gated behind an explicit user opt-in. See [06-llm-integration.md](06-llm-integration.md).
+- **P3 — Local-first runtime.** Replacement, hover, review, progress, and pack import work with no network or API key. The Developer Preview has no runtime model client or network entitlement; model-assisted pack authoring is an offline contributor tool with separate provenance and review requirements. See [06-llm-integration.md](06-llm-integration.md).
 - **P4 — No fake UI.** A control that renders must function; a mode that's advertised must be generatable for every eligible item; a number on screen must come from real data. If a feature isn't built, it doesn't appear. (Kills the decorative panels, §1.)
-- **P5 — Deterministic core, model as assistant.** The curriculum, scheduler, and progress rules are deterministic and testable. The LLM proposes, explains, enriches, and generates practice material — it never mutates canonical curriculum or progress directly.
-- **P6 — Provider-agnostic model access.** One OpenAI-compatible chat client (configurable base URL + key + model) serves OpenRouter, OpenAI, llama.cpp server, and Ollama alike. No provider-specific code paths.
+- **P5 — Deterministic core, model as authoring assistant.** Curriculum validation, scheduling, and progress rules are deterministic and testable. A future model may draft pack source, but it never writes canonical build output or learner progress directly.
+- **P6 — Provider-agnostic authoring tools.** Future agent/LLM pack generation uses a CLI boundary and structured files, not provider-specific code in the shipped app.
 - **P7 — Non-interruptive above all.** The extension must never make a page feel broken, slow, or unsafe: hard replacement budgets, strict exclusion zones (inputs, code, sensitive forms/hosts), incremental processing with explicit perf budgets, and visible-but-subtle marking of swapped tokens so imperfect grammar reads as "vocabulary card in place," not corrupted prose.
-- **P8 — Personal tool first, product door open.** Built for one user now. The things that keep the door open — versioned language packs, stable item IDs, the provider abstraction, a portable extension core — are in scope. Monetization, onboarding polish, and licensing are not.
+- **P8 — Personal tool first, product door open.** Built for one user now. The things that keep the door open — versioned language packs, stable item IDs, a reproducible authoring boundary, and a portable extension core — are in scope. Monetization is not.
 
 ## Anti-goals
 
@@ -74,5 +74,4 @@ Used consistently across all documents.
 | **Snapshot** | The versioned, precomputed slice of active items (with surface-form match table and hover content) that LearnerCore hands the extension. The extension's entire knowledge of the curriculum. |
 | **Event** | An append-only, idempotent exposure record (`seen`, `engaged`, `sentenceCaptured`, …) emitted by the extension and ingested by LearnerCore. |
 | **Session** | A short (~2 min) review session in the app: recognition, recall, and cloze questions over due items. |
-| **Enrichment** | Cached LLM-generated depth content for an item (forms, examples, mnemonic, deep-dive). |
 | **Fidelity tier** | What an item's ambient swap guarantees grammatically: `exact`, `formMatched`, or `approximate`. See §Fidelity tiers. |

@@ -1,0 +1,17 @@
+// Shared build identity. A clean clone uses an unsigned build and can compile
+// without an Apple account. Contributors with a development team copy
+// Local.example.xcconfig to Local.xcconfig and customize the values there.
+
+MACOSX_DEPLOYMENT_TARGET = 14.0
+ONLY_ACTIVE_ARCH = NO
+ARCHS = arm64 x86_64
+
+COCKATOO_APP_BUNDLE_ID = dev.cockatoo.app
+COCKATOO_EXTENSION_BUNDLE_ID = $(COCKATOO_APP_BUNDLE_ID).Extension
+COCKATOO_APP_GROUP = group.dev.cockatoo.shared
+COCKATOO_IPC_SERVICE = $(COCKATOO_APP_GROUP).api
+
+COCKATOO_CODE_SIGN_STYLE = Manual
+COCKATOO_CODE_SIGN_IDENTITY = -
+COCKATOO_DEVELOPMENT_TEAM =
+COCKATOO_CODE_SIGNING_ALLOWED = NO

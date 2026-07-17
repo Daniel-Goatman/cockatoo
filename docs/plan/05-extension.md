@@ -1,6 +1,6 @@
 # 05 — Safari Extension
 
-> Rendering, capture, and the sync protocol. The extension is a dumb renderer + event emitter (P1): it knows the snapshot and the DOM, never the learning rules. Carries forward the prototype's proven transformer rules and fixes its two performance faults (full-page re-apply per mutation; 2 s polling). Perf requirements resolve risk **R4**; inflection default resolves **R1a/R1b** (the LLM upgrade path R1c is in [06-llm-integration.md](06-llm-integration.md)).
+> Rendering, capture, and the sync protocol. The extension is a dumb renderer + event emitter (P1): it knows the snapshot and the DOM, never the learning rules. Carries forward the prototype's proven transformer rules and fixes its two performance faults (full-page re-apply per mutation; 2 s polling). Perf requirements resolve risk **R4**; authored source forms and fidelity tiers resolve **R1a/R1b**.
 
 ## Page gate (`pageGate`)
 
@@ -39,7 +39,7 @@ New behavior (the R4 fixes — these are requirements, not suggestions):
 
 Carried over from the prototype's `hoverCard.js` design: floating card appended to `<body>`, `role="dialog"`, viewport-aware positioning with flip, open on `mouseover`/`focusin`, close after 90 ms grace on out, **click pins**, `Escape` closes, repositions on scroll/resize. Keyboard: tokens are tabbable; `Enter` pins.
 
-Content (all from the snapshot — no lookups, no learning math): target form, original text, canonical target + gender/POS from `targetMeta`, one example, seen-count display. Buttons appear **only if functional** (P4): v1 ships exactly one — "Open in Cockatoo" (deep-links the app's Library to the item). "Explain" appears in v1.1 wired to enrichment ([06-llm-integration.md](06-llm-integration.md)).
+Content (all from the snapshot — no lookups, no learning math): target form, original text, canonical target + gender/POS from `targetMeta`, one example, seen-count display. Buttons appear **only if functional** (P4): the Developer Preview ships exactly one — "Open in Cockatoo".
 
 ## Exposure tracking and events
 
@@ -53,15 +53,15 @@ Content (all from the snapshot — no lookups, no learning math): target form, o
 
 All messages are JSON envelopes: `{protocolVersion: 1, method, payload}`. The Swift handler rejects unknown/mismatched `protocolVersion` with a structured error the popup surfaces as "Update Cockatoo". TypeScript types for the payloads are the mirror of Swift Codables in `LearnerCore/Sync` — one spec, two encodings, covered by shared JSON fixture tests on both sides.
 
-The appex is a **stateless forwarder** ([02-architecture.md](02-architecture.md) D9): it relays each message to the app over XPC. If the app is unreachable (after one launch-and-retry attempt), any method may return `{error: "appUnavailable"}`. Extension behavior on `appUnavailable`: keep serving the cached snapshot, keep queuing events (at-least-once queue is unaffected), retry on the normal flush/heartbeat cadence, and show "Cockatoo isn't running — progress is being saved locally" in the popup. No data is dropped; sync resumes automatically when the app returns.
+The appex is a **stateless forwarder** ([02-architecture.md](02-architecture.md) D9): it relays each message to the app over CFMessagePort. If the app is unreachable, any background-sync method may return `{error: "appUnavailable"}`. Extension behavior on `appUnavailable`: keep serving the cached snapshot, keep queuing events (at-least-once queue is unaffected), retry on the normal flush/heartbeat cadence, and show an honest offline state in the popup. No data is dropped; sync resumes automatically when the app returns. Only `openDashboard`, triggered by an explicit user action, may launch the app and retry.
 
 | Method | Request | Response |
 |---|---|---|
 | `getSnapshot` | `{sinceVersion?: number}` | `{version, unchanged: true}` or `{version, snapshot}` |
 | `postEvents` | `{events: ExposureEvent[]}` | `{accepted: number, latestVersion: number}` |
-| `getSettings` | `{}` | `{enabled, blockedHosts, pageContextOptIn, activeLanguage}` |
-| `getContextualForm` | `{itemId, sentence, sentenceHash}` | `{form}` or `{error}` — **only callable when `pageContextOptIn` is true**; the handler enforces the gate server-side, not just UI-side |
-| `openDashboard` | `{itemId?}` | `{}` — launches the app via its registered URL scheme (`cockatoo://item/<id>`), not bundle-path arithmetic |
+| `getSettings` | `{}` | `{enabled, blockedHosts, activeLanguage}` |
+| `getOverview` | `{}` | `{activeLanguage, libraryCount, dueNow, newAvailable, knownCount, availablePracticeItems}` — all actionability computed by Swift |
+| `openDashboard` | `{itemId?, destination?: "practice"}` | `{}` — explicit user intent may launch/front the containing app; `destination` selects a real app section |
 
 ### Snapshot payload
 
@@ -69,7 +69,7 @@ The appex is a **stateless forwarder** ([02-architecture.md](02-architecture.md)
 {
   "version": 412,                    // monotonic; bumped on any progress/settings/pack change
   "language": "de",
-  "settings": { "blockedHosts": [], "pageContextOptIn": false },
+  "settings": { "enabled": true, "blockedHosts": [] },
   "items": [                         // active slice only: stages ambient..known, ~50–200 items
     {
       "id": "de.word.haus",

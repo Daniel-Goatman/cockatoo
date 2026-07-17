@@ -1,0 +1,12 @@
+// Copy this file to Local.xcconfig. The copy is gitignored.
+// Apple Development signing is enough for local Safari testing; it is not
+// Developer ID distribution and does not make a downloadable release trusted.
+
+COCKATOO_APP_BUNDLE_ID = com.yourname.cockatoo
+COCKATOO_APP_GROUP = group.com.yourname.cockatoo.shared
+COCKATOO_IPC_SERVICE = $(COCKATOO_APP_GROUP).api
+
+COCKATOO_CODE_SIGN_STYLE = Automatic
+COCKATOO_CODE_SIGN_IDENTITY = Apple Development
+COCKATOO_DEVELOPMENT_TEAM = YOUR_TEAM_ID
+COCKATOO_CODE_SIGNING_ALLOWED = YES

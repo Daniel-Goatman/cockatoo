@@ -1,100 +1,162 @@
 # Cockatoo
 
-Learn a language while you read the web. A Safari extension quietly swaps a
-few words per page into your target language (German first); hovering any
-marked word shows the original English. A companion menu bar app owns the
-vocabulary, progress, and scheduling — the extension just renders and reports.
+Cockatoo teaches German while you read the web. Its Safari extension swaps a
+small, controlled number of English words for German ones; hovering always
+reveals the original. A local macOS companion app owns vocabulary, practice,
+progress, settings, and the language-pack database.
 
-Ground-up rebuild of the earlier prototype. The full design lives in
-[docs/plan/](docs/plan/) — start with
-[00-current-state-assessment.md](docs/plan/00-current-state-assessment.md)
-(why rebuild) and [01-vision-and-principles.md](docs/plan/01-vision-and-principles.md)
-(what this refuses to be).
+> **Developer Preview:** the source, tests, and local development workflow are
+> usable today. There is no Developer ID-signed or notarized download yet, so
+> this is not currently a consumer-ready app release.
 
-## Layout
+## What is included
 
-| Path | What |
+- Safari WebExtension with cached rendering and queued exposure events
+- Overview, Practice, Library, Settings, onboarding, and menu-bar controls
+- deterministic local learning engine backed by SQLite/GRDB
+- bundled German pack 2026.10 with 212 items and three examples per item
+- pack validation, checksum, review-diff, import, and simulation CLIs
+- shared Swift/TypeScript protocol fixtures and automated CI
+
+The experimental Tutor and all runtime LLM/network features have been removed
+from this preview. Future model use belongs in the offline language-pack
+authoring pipeline, not in the app's core runtime.
+
+## Requirements
+
+| Purpose | Requirement |
 |---|---|
-| `Sources/LearnerCore/` | ALL learning logic: domain, SQLite store (GRDB), Leitner scheduler, activation/tiers, session planner + grading, sync (snapshot/events), LLM provider layer, pack import |
-| `App/Cockatoo/Cockatoo/` | SwiftUI menu bar app sources — single copy, built by BOTH the Xcode app target (synchronized folder) and the `CockatooDev` SPM target |
-| `App/Cockatoo/Cockatoo.xcodeproj` | The Xcode project: app + Safari extension (appex) targets |
-| `App/Cockatoo/CockatooExtension Extension/` | Appex: the stateless CFMessagePort forwarder + Info.plist |
-| `Sources/packtool/` | Content pipeline CLI: validate / checksum / review / import-test |
-| `Sources/learnerctl/` | Debug CLI: import, overview, snapshot, sandboxed 30-day simulation, session dump |
-| `extension/` | TypeScript WebExtension: matcher, transformer, hover card, exposure tracker, event queue (Safari adapter is the only browser-specific code) |
-| `packs/` | Language packs: `sources/de/build-seed.mjs` → `build/de-2026.08.json` (212 items, bands 1–10) |
-| `protocol-fixtures/` | Shared JSON fixtures decoded by BOTH Swift and TS tests — protocol drift fails tests on either side |
-| `App/*.entitlements` | App + appex entitlements (App Group `group.dev.cockatoo.shared`) |
+| Run the app | macOS 14 Sonoma or newer |
+| Build app + Safari extension | macOS 15.6+, Xcode 26+, Node.js 20+, Git |
+| Run core/pack tools | Swift 5.10+ and Node.js 20+ |
+| Test the full Safari sync loop | an Apple Development team and provisioned App Group |
+| Distribute to other users | Developer ID signing + notarization, not currently available |
 
-## Daily workflow
+Xcode must be installed because Apple compiles Safari app extensions through
+its toolchain, but you do not need to open the Xcode IDE. Every supported
+workflow below is a terminal command.
 
-```sh
-script/install.sh                    # build app + extension → install to /Applications → relaunch
-script/install.sh --restart-safari   # same, and bounce Safari (content scripts in open tabs are stale otherwise)
-script/install.sh --debug            # Debug configuration
-```
-
-The `/Applications` copy is THE copy: stable path (Safari extension
-registration and login-item both depend on it), Release-optimized. Use
-Xcode ⌘R only when you need the debugger. Launch-at-login is a toggle in
-the app's Settings (requires the /Applications copy).
-
-## Verify
+## Quick start
 
 ```sh
-swift test                      # 76 tests: scheduler properties, shuffle distribution,
-                                # generative mode coverage, idempotency, cold-start
-                                # introductions, near-miss grading, 30-day simulated
-                                # learner, snapshot size bound, privacy-tier gate,
-                                # protocol fixtures (incl. envelope + fractional dates)
-cd extension && npm install && npm test   # 32 tests: matcher, transformer budgets/
-                                          # exclusions/incremental mutations, event queue,
-                                          # page gate, protocol fixtures
-npm run lint:boundaries         # sendNativeMessage confined to adapters/safari/
-swift run packtool validate packs/build/de-2026.08.json
+git clone https://github.com/Daniel-Goatman/cockatoo.git
+cd cockatoo
+script/bootstrap.sh
+script/check.sh
 ```
 
-Full-loop simulation without Safari (sandboxed by default — saves nothing):
+`script/check.sh` runs the Swift and extension suites, protocol checks, pack
+reproducibility/validation, and a universal unsigned Xcode build.
+
+To explore the companion app without installing the Safari extension:
 
 ```sh
-swift run learnerctl --db /tmp/dev.sqlite import packs/build/de-2026.08.json
-swift run learnerctl --db /tmp/dev.sqlite simulate --days 30
-swift run learnerctl --db /tmp/dev.sqlite overview
+swift run CockatooDev
 ```
 
-Run the app UI without installing: `swift run CockatooDev`.
+To compile the complete universal app bundle without an Apple account:
 
-## Architecture in one paragraph
+```sh
+script/build.sh --unsigned
+```
 
-The app (menu bar, login item) owns the SQLite database exclusively and
-answers the extension over a **CFMessagePort** named
-`group.dev.cockatoo.shared.api` (the App-Group prefix is what the sandbox
-authorizes — see docs/plan/03 §R2 outcome for why not NSXPCListener). The
-appex is a stateless forwarder: native message in → port request → response
-out. The extension renders from a cached, versioned snapshot and queues
-idempotent exposure events; freshness piggybacks on event flushes (no
-polling). When the app isn't running the extension degrades gracefully and
-says so honestly in its popup.
+The unsigned artifact is a build-verification artifact. It cannot authorize
+the App Group used by the extension and therefore is not a supported install.
 
-## Status vs the roadmap ([docs/plan/08-roadmap.md](docs/plan/08-roadmap.md))
+## Run the Safari extension locally
 
-- **P1 LearnerCore** — done, all exit-criteria tests green
-- **P2 pack** — 212 items across bands 1–10 (2026.08): hand-curated seed +
-  model-authored expansion, validator-green and human-review accepted
-  ([docs/pack-review-2026.08.md](docs/pack-review-2026.08.md)); pack updates
-  auto-import on app launch (progress preserved via stable IDs). The full
-  ~1000-item FrequencyWords + `packtool author` run is still pending
-- **P3 extension core** — done, tests green
-- **P4 Safari integration** — **done and verified on-device**: snapshot/event
-  round-trip, app-down drill (cached rendering + queued events + honest
-  popup), openDashboard fronting, launch-path-independent IPC
-- **P5 app UI** — done: dashboard (next-action card, tier progress + check
-  status, extension status), practice (3 modes + introductions + repair +
-  session arc with warm-up/new-words/mix/tier-check beats, card motion,
-  progress strip, session ledger, resumable across tab switches; tier
-  unlocks are earned in-session through the tier check), tier-grouped
-  library with exposure progress, settings (provider, privacy, blocked
-  sites, launch-at-login, pack import), one-click onboarding (bundled
-  starter pack)
-- **P6 LLM layer** — built + unit-tested; not yet exercised against a live provider
-- **P7 hardening** — in progress: daily-use soak underway
+Developer ID is **not** required for local development. Apple Development
+signing is enough, but the app and extension must share a provisioned App Group.
+
+```sh
+cp App/Config/Local.example.xcconfig App/Config/Local.xcconfig
+# Edit Local.xcconfig with your team, unique bundle ID, and App Group.
+script/install-dev.sh
+```
+
+The development installer builds both architectures, installs to
+`~/Applications/Cockatoo.app`, registers the extension, and launches the app.
+Then enable Cockatoo in Safari → Settings → Extensions. Use
+`script/install-dev.sh --restart-safari` after changing content scripts.
+
+This repository's legacy `script/install.sh` entrypoint installs the same
+development build to `/Applications`, which is useful for a stable login-item
+path.
+
+See [docs/development.md](docs/development.md) for configuration and every
+command, and [docs/distribution.md](docs/distribution.md) for the exact
+unsigned/signing limitations.
+
+## Architecture
+
+```text
+Safari page
+  ↕ TypeScript WebExtension (render + raw events only)
+Safari app extension
+  ↕ CFMessagePort in a shared App Group
+macOS app
+  ↕ LearnerCore (all learning rules)
+SQLite database + imported language pack
+```
+
+Swift owns scheduling, eligibility, grading, progress, and pack import. The
+extension is deliberately a renderer and event emitter. Protocol types exist
+in Swift and TypeScript and are pinned by JSON fixtures decoded on both sides.
+
+## Repository map
+
+| Path | Purpose |
+|---|---|
+| `Sources/LearnerCore/` | deterministic learning engine, storage, sync, packs |
+| `App/Cockatoo/` | SwiftUI app and Safari app-extension targets |
+| `extension/` | browser-agnostic TypeScript core plus Safari adapter |
+| `packs/` | language-pack source and built artifacts |
+| `Sources/packtool/` | validation/checksum/review/import CLI |
+| `Sources/learnerctl/` | database and simulated-learner diagnostics |
+| `protocol-fixtures/` | cross-language protocol contract |
+| `docs/plan/` | product principles and architecture decisions |
+
+## Common commands
+
+| Command | Result |
+|---|---|
+| `script/doctor.sh` | verify the local toolchain and signing mode |
+| `script/bootstrap.sh` | install locked npm dependencies and resolve Swift packages |
+| `script/check.sh` | run all tests, pack checks, and unsigned app build |
+| `script/build.sh [--debug] [--unsigned]` | build the universal app bundle |
+| `script/install-dev.sh` | signed local install to `~/Applications` |
+| `script/build_and_run.sh --verify` | signed build, install, launch, and process check |
+| `script/clean.sh [--dependencies]` | remove generated output, optionally dependencies |
+
+## Language packs
+
+German `2026.10` is the bundled starter pack. Schema 2 records source and target
+BCP 47 tags, explicit source lemmas, pack-configured grading and ambient safety
+rules, and provenance. The canonical accepted-source workflow also requires a
+separate checksum-bound human review. The checked-in Spanish sample proves that
+workflow, deterministic building, import, and practice without German-specific
+runtime code; it is a development fixture, not a complete bundled course.
+
+The current German seed generator predates that canonical review gate. Its
+model-authored expansion is validation-clean and reproducible, but its human
+content review is still incomplete. Treat it as preview content, not a
+production-reviewed course.
+
+See [packs/README.md](packs/README.md) for creating a new language, safely
+drafting batches with an agent or LLM, reviewing and building them, and
+expanding a pack without breaking learner progress.
+
+## Project principles
+
+- local-first core: browsing, practice, and progress require no network
+- one progress store shared by every surface
+- deterministic learning rules; generated content must pass validation and review
+- stable item IDs preserve progress across pack upgrades
+- no fake controls or advertised-but-unverified features
+
+Start with [docs/plan/01-vision-and-principles.md](docs/plan/01-vision-and-principles.md)
+for the full design rationale.
+
+## License
+
+Cockatoo is available under the [MIT License](LICENSE).

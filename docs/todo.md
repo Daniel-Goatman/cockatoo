@@ -5,12 +5,10 @@ docs/plan/10-learning-redesign.md; roadmap in docs/plan/08-roadmap.md.
 
 ## Future
 
-- **LLM-generated practice sentences** (noted 2026-07-14): generate fresh
-  cloze/rebuild sentences on demand via the P6 gateway, constrained to the
-  learner's known vocabulary and built around anchor words. Infinite phrase
-  variety without authoring cost. Prerequisites: P6 live verification
-  (needs Daniel's API key), a validation pass so generated sentences only
-  use library words, and a cache/store story (sentenceStoreCap applies).
+- **Optional live-provider pack adapter:** schema-2 accepted source,
+  deterministic builds, provenance, review records, agent instructions, and an
+  offline Spanish fixture now ship. A future contributor-only adapter may call
+  a provider, but Cockatoo has no runtime model gateway or API-key setting.
 - **FSRS scheduler**: the ReviewScheduler protocol seam exists (decision
   D3). Revisit after the distinct-day gates have real usage data.
 
@@ -18,10 +16,16 @@ docs/plan/10-learning-redesign.md; roadmap in docs/plan/08-roadmap.md.
 
 - Learning-system redesign (docs/plan/10-learning-redesign.md): fully
   shipped 2026-07-14 — R1 engine, R2 app, R3 including rich examples
-  (pack 2026.09: 3 authored examples per item, build-time guards, engine
+  (pack 2026.10: 3 authored examples per item, build-time guards, engine
   rotates cloze/rebuild across them).
-- Daniel's spot review of pack 2026.08 (docs/pack-review-2026.08.md) —
-  now also covers the 424 new example sentences in 2026.09.
-- ~1000-item packtool author pipeline — now also carries 3–5 examples per
-  item and anchor-word flags (redesign D-R3/D-R4).
-- P6 live LLM verification (needs API key).
+- Complete Daniel's checksum-bound 50-item spot review
+  (`docs/pack-review-2026.10.md`). Its deterministic sample covers all forms,
+  metadata, explanations, and 150 examples, including 100 examples added in
+  the rich-example expansion. Then migrate German from its legacy generator to
+  the canonical accepted-source workflow in a future content release.
+- Expand the German starter pack from 212 items toward the production target
+  of ~1,000 reviewed items. The pipeline already carries 3–5 examples per item
+  and anchor-word flags (redesign D-R3/D-R4).
+- Production-size second language. Active-language selection and
+  progress-preserving switching now ship; the small Spanish fixture proves the
+  runtime and authoring boundary but is not a complete course.

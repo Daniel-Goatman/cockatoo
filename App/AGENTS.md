@@ -1,8 +1,7 @@
 # App/ — agent instructions
 
-The Xcode project (app + Safari appex) and its packaging. README.md here has
-the original manual setup checklist; the project now exists, so day-to-day
-you only need `script/install.sh` from the repo root.
+The Xcode project (app + Safari appex) and its packaging. Build settings live
+in `App/Config/`; day-to-day use the repo-level scripts rather than the Xcode UI.
 
 ## Project facts
 
@@ -17,20 +16,22 @@ you only need `script/install.sh` from the repo root.
     the "Copy WebExtension Resources" script phase (script sandboxing is OFF
     for that target — required for the rsync).
 - Entitlements: `Cockatoo.entitlements` (in the app folder) and
-  `../CockatooExtension.entitlements` — both carry App Group
-  `group.dev.cockatoo.shared`. The appex launches the app by bundle id
-  `dev.cockatoo.app`; renaming either bundle id breaks the pairing.
+  `../CockatooExtension.entitlements` carry the App Group from xcconfig. The
+  appex reads the containing app ID and IPC name from its Info.plist; all
+  identity values must come from the same configuration.
 - Deployment target 14.0 — do not let Xcode bump it above the host macOS.
 
 ## IPC (hard-won — don't regress)
 
-- App side: `CockatooXPCListener` (XPCListener.swift) registers a
+- App side: `CockatooIPCListener` (`IPCListener.swift`) registers a
   **CFMessagePort** named `group.dev.cockatoo.shared.api` on the main
   runloop. NSXPCListener(machServiceName:) does NOT work here — it only
   registered when Xcode launched the app (docs/plan/03 §R2 outcome).
 - Appex side: stateless `CFMessagePortCreateRemote` + synchronous
   send/reply per request. Launch-on-miss ONLY for `openDashboard`.
-- `openDashboard` fronts the window via `.cockatooOpenDashboard`
+- `openDashboard` fronts the window via `.cockatooOpenDashboard`; its optional
+  `destination: "practice"` payload selects the Practice section before the
+  window appears.
   notification, received by the always-alive MenuBarLabel view.
 
 ## Editing the pbxproj
@@ -38,7 +39,7 @@ you only need `script/install.sh` from the repo root.
 It's hand-editable (this project's targets were partly wired that way), but
 close Xcode first, keep edits surgical, and verify with
 `xcodebuild -project App/Cockatoo/Cockatoo.xcodeproj -scheme Cockatoo build`
-before committing. `xcuserdata/` is gitignored — never commit it.
+before committing. `xcuserdata/` and `App/Config/Local.xcconfig` are gitignored — never commit them.
 
 ## Login item
 
