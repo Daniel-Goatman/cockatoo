@@ -245,6 +245,13 @@ struct RootView: View {
                 }
                 .animation(.spring(response: 0.32, dampingFraction: 0.85), value: model.sidebarCollapsed)
                 .animation(.easeOut(duration: 0.18), value: model.section)
+                .overlay {
+                    if model.swapGuidePresented {
+                        SwapGuideOverlay { model.swapGuidePresented = false }
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.easeOut(duration: 0.2), value: model.swapGuidePresented)
             }
         }
         .foregroundStyle(Theme.ink)
@@ -272,18 +279,8 @@ struct SidebarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 9) {
-                CockatooMark(eyeColor: Theme.sideBg)
-                    .frame(width: 17, height: 17)
-                if !collapsed {
-                    Text("Cockatoo")
-                        .font(.system(size: 13, weight: .semibold))
-                        .lineLimit(1)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
-            .padding(.horizontal, collapsed ? 0 : 20)
-            .padding(.bottom, 14)
+            header
+                .padding(.bottom, 14)
 
             VStack(spacing: 1) {
                 ForEach(AppSection.allCases, id: \.self) { section in
@@ -294,19 +291,41 @@ struct SidebarView: View {
 
             Spacer(minLength: 0)
 
-            SidebarChevron(collapsed: collapsed) { model.toggleSidebar() }
-                .padding(.horizontal, collapsed ? 0 : 18)
-                .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
-                .padding(.bottom, 10)
             footer
                 .padding(.horizontal, collapsed ? 0 : 21)
                 .frame(maxWidth: .infinity, alignment: collapsed ? .center : .leading)
-                .padding(.bottom, 14)
+                .padding(.bottom, 16)
         }
         .padding(.top, Theme.chromeTop)
         .frame(width: collapsed ? 64 : 212)
         .frame(maxHeight: .infinity)
         .background(Theme.sideBg)
+    }
+
+    // Brand + collapse toggle share the top row: expanded, the chevron sits
+    // at the trailing edge; collapsed, it tucks under the centered mark.
+    @ViewBuilder
+    var header: some View {
+        if collapsed {
+            VStack(spacing: 12) {
+                CockatooMark(eyeColor: Theme.sideBg)
+                    .frame(width: 17, height: 17)
+                SidebarChevron(collapsed: collapsed) { model.toggleSidebar() }
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            HStack(spacing: 9) {
+                CockatooMark(eyeColor: Theme.sideBg)
+                    .frame(width: 17, height: 17)
+                Text("Cockatoo")
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                SidebarChevron(collapsed: collapsed) { model.toggleSidebar() }
+            }
+            .padding(.leading, 20)
+            .padding(.trailing, 12)
+        }
     }
 
     var footer: some View {

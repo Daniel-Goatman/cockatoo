@@ -8,26 +8,33 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("Overview")
                     .font(.system(size: 21, weight: .semibold))
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 22)
                 if let o = model.overview {
-                    heroCard(o)
-                    stageStripCard(o)
-                    HStack(spacing: 12) {
-                        practiceTile(o)
-                        libraryTile(o)
+                    // Flush on the background — no card chrome. Next action
+                    // leads; the milestone ring is the one ambient signal.
+                    hero(o)
+                    // The progress ramp doubles as the divider between "what
+                    // to do now" and "where you stand".
+                    stageSeparator(o)
+                        .padding(.vertical, 26)
+                    summaries(o)
+                    // Only surface the extension when it needs the user — a
+                    // healthy connection lives quietly in the sidebar footer.
+                    if model.lastExtensionContact == nil {
+                        extensionSetup
+                            .padding(.top, 30)
                     }
-                    extensionStatusCard
                 }
             }
             // The prototype's calm reading column, centered.
-            .frame(maxWidth: 640, alignment: .leading)
+            .frame(maxWidth: 620, alignment: .leading)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 32)
             .padding(.top, 24)
-            .padding(.bottom, 32)
+            .padding(.bottom, 36)
         }
         .navigationTitle("Overview")
     }
@@ -35,9 +42,9 @@ struct DashboardView: View {
     // The hub's first job: say what to do next — with the milestone ring as
     // the one piece of ambient progress, not a wall of stat cards.
     @ViewBuilder
-    func heroCard(_ o: LearnerEngine.Overview) -> some View {
-        HStack(alignment: .top, spacing: 24) {
-            VStack(alignment: .leading, spacing: 10) {
+    func hero(_ o: LearnerEngine.Overview) -> some View {
+        HStack(alignment: .center, spacing: 24) {
+            VStack(alignment: .leading, spacing: 12) {
                 if o.practiceAvailable {
                     HStack(spacing: 12) {
                         Button("Practice now") { model.section = .practice }
@@ -47,15 +54,20 @@ struct DashboardView: View {
                             .foregroundStyle(Theme.inkMuted)
                     }
                     Text("Practice as much as you like — extra reps sharpen words without rushing them; strength only climbs across days.")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12.5))
                         .foregroundStyle(Theme.inkFaint)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Label("All caught up", systemImage: "checkmark.circle")
-                        .font(.headline)
+                    Label("All caught up", systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.live)
                     if let nextDue = o.nextDueAt {
-                        Text("Next review \(RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())).")
+                        Text("Next review \(RelativeDateTimeFormatter().localizedString(for: nextDue, relativeTo: Date())). Reading a page still reinforces what you know.")
                             .font(.system(size: 12.5))
                             .foregroundStyle(Theme.inkMuted)
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -75,7 +87,6 @@ struct DashboardView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .themeCard(padding: 20)
     }
 
     func practiceSubtitle(_ o: LearnerEngine.Overview) -> String {
@@ -87,103 +98,96 @@ struct DashboardView: View {
         return parts.joined(separator: " · ")
     }
 
-    // Navigational tiles: one number each, and a door to the section.
-    func practiceTile(_ o: LearnerEngine.Overview) -> some View {
-        Button { model.section = .practice } label: {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack {
-                    Image(systemName: "rectangle.stack")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.inkFaint)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Theme.inkFaint)
-                }
-                .padding(.bottom, 8)
-                Text("\(o.dueNow)")
-                    .font(.system(size: 27, weight: .bold))
-                    .monospacedDigit()
-                Text("due to review")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.inkFaint)
-                Text("new today \(o.newToday)/\(o.newPerDay)")
-                    .font(.system(size: 10.5, design: .monospaced))
-                    .foregroundStyle(Theme.inkFaint)
-                    .padding(.top, 5)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
-        }
-        .buttonStyle(.tile)
-    }
-
-    func libraryTile(_ o: LearnerEngine.Overview) -> some View {
+    // The two navigational summaries: colourful numbers, centered, split by a
+    // hairline. Each is a subtle door into its section — no card, just a
+    // hover lift and an arrow that arrives on approach.
+    func summaries(_ o: LearnerEngine.Overview) -> some View {
         let known = (o.countsByStage[.known] ?? 0) + (o.countsByStage[.mastered] ?? 0)
-        return Button { model.section = .library } label: {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack {
-                    Image(systemName: "books.vertical")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.inkFaint)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Theme.inkFaint)
-                }
-                .padding(.bottom, 8)
-                Text("\(o.libraryCount)")
-                    .font(.system(size: 27, weight: .bold))
-                    .monospacedDigit()
-                Text("words in your library")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.inkFaint)
-                Text("\(known) known · \(o.totalItems) in pack")
-                    .font(.system(size: 10.5, design: .monospaced))
-                    .foregroundStyle(Theme.inkFaint)
-                    .padding(.top, 5)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
+        return HStack(spacing: 0) {
+            summaryColumn(
+                icon: "rectangle.stack",
+                value: o.dueNow,
+                valueColor: o.dueNow > 0 ? Theme.gold : Theme.inkMuted,
+                title: "due to review",
+                caption: "new today \(o.newToday)/\(o.newPerDay)"
+            ) { model.section = .practice }
+
+            Rectangle()
+                .fill(Theme.line)
+                .frame(width: 1, height: 62)
+
+            summaryColumn(
+                icon: "books.vertical",
+                value: o.libraryCount,
+                valueColor: Theme.stageOnPages,
+                title: "words in your library",
+                caption: "\(known) known · \(o.totalItems) in pack"
+            ) { model.section = .library }
         }
-        .buttonStyle(.tile)
+        .frame(maxWidth: .infinity)
     }
 
-    // Honest connectivity, two signals: IPC contact this launch (is the
-    // pipe up?) and the last ingested exposure event ever (is data moving?).
-    var extensionStatusCard: some View {
-        let formatter = RelativeDateTimeFormatter()
-        return HStack(spacing: 8) {
-            if let contact = model.lastExtensionContact {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.live)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Safari extension connected — last synced \(formatter.localizedString(for: contact, relativeTo: Date())).")
-                    if let event = model.overview?.lastEventAt {
-                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())). Pages reinforce the words you're learning — sightings show up in your library.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            } else {
-                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(Theme.outcomeAlmost)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("The Safari extension hasn't connected since Cockatoo launched. Enable it in Safari → Settings → Extensions, then browse any page.")
-                    if let event = model.overview?.lastEventAt {
-                        Text("Last reading activity \(formatter.localizedString(for: event, relativeTo: Date())).")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
+    func summaryColumn(
+        icon: String,
+        value: Int,
+        valueColor: Color,
+        title: String,
+        caption: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            SummaryColumnLabel(icon: icon, value: value, valueColor: valueColor, title: title, caption: caption)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+    }
+
+    // When the extension hasn't reported in, teach the fix instead of hiding
+    // an error in a status line — three concrete steps, coloured to invite.
+    var extensionSetup: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 9) {
+                Image(systemName: "safari")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.gold)
+                Text("Turn on reading reinforcement")
+                    .font(.system(size: 13.5, weight: .semibold))
+                Spacer(minLength: 0)
+            }
+            Text("The Safari extension swaps a few words on the pages you read, so the words you meet in practice keep resurfacing in the wild. It hasn't connected yet:")
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.inkMuted)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 9) {
+                setupStep(1, "Open Safari, then Settings → Extensions.")
+                setupStep(2, "Enable Cockatoo (allow it on the sites you read).")
+                setupStep(3, "Browse any page — sightings show up in your library.")
             }
         }
-        .font(.callout)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .themeCard(padding: 12)
+        .background(Theme.gold.opacity(0.07), in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius).strokeBorder(Theme.gold.opacity(0.28)))
     }
 
-    // The user-facing stages as ONE stacked ramp bar (cold→gold),
-    // upcoming last and muted — motion, not a wall of rows.
-    func stageStripCard(_ o: LearnerEngine.Overview) -> some View {
+    func setupStep(_ n: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(n)")
+                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                .foregroundStyle(Theme.onGold)
+                .frame(width: 18, height: 18)
+                .background(Theme.gold, in: Circle())
+            Text(text)
+                .font(.system(size: 12.5))
+                .foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // The user-facing stages as ONE stacked ramp bar (cold→gold), framed by
+    // hairlines so it reads as the section divider.
+    func stageSeparator(_ o: LearnerEngine.Overview) -> some View {
         func count(_ stages: Stage...) -> Int {
             stages.reduce(0) { $0 + (o.countsByStage[$1] ?? 0) }
         }
@@ -214,7 +218,7 @@ struct DashboardView: View {
                     Spacer(minLength: 0)
                 }
             }
-            .frame(height: 12)
+            .frame(height: 10)
             HStack(spacing: 16) {
                 ForEach(groups, id: \.label) { group in
                     HStack(spacing: 5) {
@@ -231,7 +235,63 @@ struct DashboardView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .themeCard()
+        .padding(.vertical, 18)
+        .overlay(Rectangle().fill(Theme.line).frame(height: 1), alignment: .top)
+        .overlay(Rectangle().fill(Theme.line).frame(height: 1), alignment: .bottom)
+    }
+}
+
+/// One Overview summary: big colour-tinted number, centered, with an arrow
+/// that fades in on hover. A door into its section without a boxy tile.
+private struct SummaryColumnLabel: View {
+    let icon: String
+    let value: Int
+    let valueColor: Color
+    let title: String
+    let caption: String
+    @State private var hovering = false
+
+    var body: some View {
+        VStack(spacing: 4) {
+            // Default: the icon alone, centered over the card. On hover the
+            // "view →" affordance is inserted (not just un-hidden), so the row
+            // re-centers — sliding the icon left as the label fades in — instead
+            // of the icon sitting permanently left of a reserved gap.
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.inkFaint)
+                if hovering {
+                    Text("view")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.inkFaint)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Theme.inkFaint)
+                }
+            }
+            Text("\(value)")
+                .font(.system(size: 40, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(valueColor)
+            Text(title)
+                .font(.system(size: 12.5))
+                .foregroundStyle(Theme.inkMuted)
+            Text(caption)
+                .font(.system(size: 10.5, design: .monospaced))
+                .foregroundStyle(Theme.inkFaint)
+                .padding(.top, 3)
+        }
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(hovering ? Theme.surface.opacity(0.5) : .clear)
+                .padding(.horizontal, 6)
+        )
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.16), value: hovering)
     }
 }
 

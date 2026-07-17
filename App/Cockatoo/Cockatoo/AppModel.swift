@@ -29,6 +29,8 @@ final class AppModel: ObservableObject {
     /// fit, so opening one collapses the other (chevron toggles in the UI).
     @Published var sidebarCollapsed = false
     @Published var practiceInspectorOpen = false
+    /// Full-window modal explaining page swaps, opened from Settings.
+    @Published var swapGuidePresented = false
     @Published var overview: LearnerEngine.Overview?
     @Published var needsOnboarding = false
     @Published var paused = false
