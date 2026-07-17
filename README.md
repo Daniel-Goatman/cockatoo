@@ -13,18 +13,15 @@ your normal reading, at a low enough density that comprehension holds.
 > areas (practice especially) are still evolving. Contributions are welcome; see
 > [Contributing](#contributing).
 
-<table>
-  <tr>
-    <td width="50%" valign="top" align="center">
-      <img src="docs/media/02-web-swap-hover.png" alt="A German word swapped into an English Wikipedia article, with a hover card showing the original English word" width="100%">
-      <br><sub><em>One word on the page is German. Hover it for the original and its meaning.</em></sub>
-    </td>
-    <td width="50%" valign="top" align="center">
-      <img src="docs/media/04-practice.png" alt="A practice session building a German sentence from word tiles" width="100%">
-      <br><sub><em>Short daily practice sessions, here building a sentence from word tiles.</em></sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/media/02-web-swap-hover.png" alt="A German word swapped into an English Wikipedia article, with a hover card showing the original English word" width="720">
+  <br><sub><em>One word on the page is German. Hover it for the original and its meaning.</em></sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/04-practice.png" alt="A practice session building a German sentence from word tiles" width="720">
+  <br><sub><em>Short daily practice sessions, here building a sentence from word tiles.</em></sub>
+</p>
 
 ## Quick start
 
