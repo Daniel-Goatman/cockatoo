@@ -68,5 +68,7 @@ jobs:
       - name: Verify universal binaries
         run: |
           APP="build/DerivedData/Build/Products/Debug/Cockatoo.app"
-          lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/Cockatoo"
-          lipo -verify_arch arm64 x86_64 "$APP/Contents/PlugIns/CockatooExtension Extension.appex/Contents/MacOS/CockatooExtension Extension"
+          # lipo takes the input file first; -verify_arch consumes every
+          # following token as an arch name, so the path must precede it.
+          lipo "$APP/Contents/MacOS/Cockatoo" -verify_arch arm64 x86_64
+          lipo "$APP/Contents/PlugIns/CockatooExtension Extension.appex/Contents/MacOS/CockatooExtension Extension" -verify_arch arm64 x86_64
