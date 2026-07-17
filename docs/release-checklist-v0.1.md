@@ -22,9 +22,9 @@
 - [x] final repository commits reviewed and clean
 - [ ] demo MP4/GIF or screenshot set added
 - [ ] README media section added
-- [ ] GitHub description/topics chosen
+- [x] GitHub description/topics chosen
 - [ ] source-only `v0.1.0` tag created from `main`
-- [ ] release notes explicitly say there is no downloadable `.app`
+- [x] release notes explicitly say there is no downloadable `.app`
 
 Do not create the tag until every unchecked release gate above is resolved.
 
