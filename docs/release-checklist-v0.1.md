@@ -13,13 +13,13 @@
 - [x] one-command bootstrap, check, build, and signed development install
 - [x] unsigned universal build works without an Apple account
 - [x] CI covers Swift, extension, protocol, packs, and unsigned Xcode build
-- [ ] clean-clone README/bootstrap/check test recorded
-- [ ] clean-clone Apple Development install tested
+- [x] clean-clone README/bootstrap/check test recorded
+- [x] clean-clone Apple Development install tested
 - [ ] seven-day dogfood record accepted
 
 ## GitHub presentation
 
-- [ ] final repository commits reviewed and clean
+- [x] final repository commits reviewed and clean
 - [ ] demo MP4/GIF or screenshot set added
 - [ ] README media section added
 - [ ] GitHub description/topics chosen
@@ -27,3 +27,20 @@
 - [ ] release notes explicitly say there is no downloadable `.app`
 
 Do not create the tag until every unchecked release gate above is resolved.
+
+## Clean-clone verification record
+
+- Date: 2026-07-17
+- Tested commit: `1e228061b7365be63437d073aa46018f78be2a70`
+- Environment: macOS 15.7.5, Xcode 26.3, Node.js 25.9.0
+- `script/bootstrap.sh`: passed from a fresh local clone
+- `script/check.sh`: passed from that clone, including 100 Swift tests,
+  40 extension tests, pack validation, protocol checks, and an unsigned
+  universal app build
+- `script/install-dev.sh --debug`: passed after adding an ignored local Apple
+  Development configuration; installed to `~/Applications/Cockatoo.app`,
+  registered the Safari extension, and launched the app
+
+The signing configuration was copied only for the local test and remains
+untracked. This verifies the contributor workflow, not Developer ID release
+signing or notarization.
