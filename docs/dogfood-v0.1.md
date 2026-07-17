@@ -6,11 +6,11 @@ during the pass; only release-blocking fixes restart the clock.
 
 ## Window
 
-- Start: _pending_
-- End: _pending_
-- App commit: _pending_
+- Start: 2026-07-17
+- Target end: 2026-07-23 (after seven completed daily records)
+- App commit: `1e228061b7365be63437d073aa46018f78be2a70`
 - German pack SHA-256: `f4752a8f17e72c42ffcc83671ef15287aa12973c9a2b5f17b189e123fd71550b`
-- macOS / Safari versions: _pending_
+- macOS / Safari versions: macOS 15.7.5 / Safari 18.6
 
 ## What to exercise
 
