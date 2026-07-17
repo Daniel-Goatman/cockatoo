@@ -31,15 +31,19 @@ Do not create the tag until every unchecked release gate above is resolved.
 ## Clean-clone verification record
 
 - Date: 2026-07-17
-- Tested commit: `1e228061b7365be63437d073aa46018f78be2a70`
+- Tested commit: `9d3f61804ea94872ec0474ba221312273e081673`
 - Environment: macOS 15.7.5, Xcode 26.3, Node.js 25.9.0
 - `script/bootstrap.sh`: passed from a fresh local clone
 - `script/check.sh`: passed from that clone, including 100 Swift tests,
-  40 extension tests, pack validation, protocol checks, and an unsigned
+  42 extension tests, pack validation, protocol checks, and an unsigned
   universal app build
 - `script/install-dev.sh --debug`: passed after adding an ignored local Apple
   Development configuration; installed to `~/Applications/Cockatoo.app`,
   registered the Safari extension, and launched the app
+
+This verification was repeated after the native library-navigation fix and
+canonical extension-popup branding landed. The fresh clone remained clean
+after bootstrap, checks, build, and installation.
 
 The signing configuration was copied only for the local test and remains
 untracked. This verifies the contributor workflow, not Developer ID release
