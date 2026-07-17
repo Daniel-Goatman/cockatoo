@@ -5,7 +5,7 @@
 - [x] scope frozen at the bundled 212-item German starter pack
 - [x] production-size ~1,000-item pack moved to a future milestone
 - [x] Tutor and runtime model/API-key paths removed
-- [x] MIT license added
+- [x] PolyForm Noncommercial 1.0.0 license added
 - [ ] German 2026.10 human spot review accepted
 
 ## Engineering

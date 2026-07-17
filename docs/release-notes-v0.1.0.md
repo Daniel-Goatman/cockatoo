@@ -44,4 +44,4 @@ unsigned universal build, and the Apple Development signed contributor install
 from a fresh clone. The final tag must also have an accepted German pack review
 and seven-day dogfood record in `docs/`.
 
-Licensed under MIT.
+Licensed under the PolyForm Noncommercial License 1.0.0.

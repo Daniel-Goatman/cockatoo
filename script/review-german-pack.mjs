@@ -7,7 +7,7 @@ import { dirname, resolve } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packPath = resolve(root, "packs/build/de-2026.10.json");
-const expectedChecksum = "f4752a8f17e72c42ffcc83671ef15287aa12973c9a2b5f17b189e123fd71550b";
+const expectedChecksum = "7597229f6257cb51160e8992058fd0cbfe5f575aa3359dbef3c507d0b14041e9";
 const sampleSeed = "cockatoo-de-2026.10-review-v1";
 const data = readFileSync(packPath);
 const checksum = createHash("sha256").update(data).digest("hex");

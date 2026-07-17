@@ -1045,7 +1045,7 @@ const pack = {
   version: "2026.10",
   provenance: {
     corpus: "hand-curated seed + model-authored expansion, frequency-informed (full FrequencyWords/OpenSubtitles pipeline pending)",
-    license: "project-authored/model-assisted content; MIT",
+    license: "project-authored/model-assisted content; PolyForm Noncommercial 1.0.0",
     packtool: "seed-generator-2.0",
     authoringModel: "claude-fable-5 (bands 5-10 + additions; human review incomplete: docs/pack-review-2026.10.md)",
     promptVersion: "de-seed-v2",

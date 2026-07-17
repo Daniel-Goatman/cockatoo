@@ -24,9 +24,9 @@ that record is complete.
   byte-for-byte into the app resources.
 
 No third-party frequency list or corpus text is embedded in this pack. The
-pack content is distributed with the repository under the MIT License. Model
-assistance is disclosed in both this record and the built pack's provenance
-metadata.
+pack content is distributed with the repository under the PolyForm Noncommercial
+License 1.0.0. Model assistance is disclosed in both this record and the built
+pack's provenance metadata.
 
 ## Reproduce and verify
 
@@ -40,6 +40,6 @@ swift run packtool import-test packs/build/de-2026.10.json
 Review-bound artifact hashes before human sign-off:
 
 ```text
-pack SHA-256:      f4752a8f17e72c42ffcc83671ef15287aa12973c9a2b5f17b189e123fd71550b
-generator SHA-256: 2eb8f84337c172298702673cbe189f1a8b8e2930c75d9a6986ba8bbce307605f
+pack SHA-256:      7597229f6257cb51160e8992058fd0cbfe5f575aa3359dbef3c507d0b14041e9
+generator SHA-256: 73bfc619fe3873b6b212622e2dc537075a0af2162d046914a98fc3faf9be3485
 ```
