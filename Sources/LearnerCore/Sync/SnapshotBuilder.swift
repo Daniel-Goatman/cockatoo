@@ -11,10 +11,9 @@ public struct SnapshotBuilder: Sendable {
     }
 
     public func build(store: LearnerStore) throws -> Snapshot {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "und"
         let version = try store.snapshotVersion()
         let enabled = (try store.setting(SettingsKey.enabled) ?? "true") == "true"
-        let pageContextOptIn = (try store.setting(SettingsKey.pageContextOptIn) ?? "false") == "true"
         let blockedHosts = try store.blockedHosts()
 
         let progress = try store.allProgress()
@@ -51,8 +50,7 @@ public struct SnapshotBuilder: Sendable {
             language: language,
             settings: SnapshotSettings(
                 enabled: enabled,
-                blockedHosts: blockedHosts,
-                pageContextOptIn: pageContextOptIn
+                blockedHosts: blockedHosts
             ),
             items: items
         )

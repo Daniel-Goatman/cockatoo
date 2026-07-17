@@ -39,10 +39,10 @@ public enum Question: Equatable, Sendable {
     /// Show source text; type the target.
     case recall(itemId: String, prompt: String, expected: String)
     /// A sentence with the word blanked; type what fills the blank.
-    /// Two flavours: a pack example blanks the GERMAN word in the German
-    /// sentence and carries the English as `hint` (unambiguous); a captured
-    /// page sentence blanks the English form in context (no hint — the
-    /// context is the point) and expects its German target.
+    /// Two flavours: a pack example blanks the target word in the authored
+    /// target-language sentence and carries the source sentence as `hint`
+    /// (unambiguous); a captured page sentence blanks the source form in
+    /// context (no hint — the context is the point) and expects its target.
     case cloze(itemId: String, sentenceWithBlank: String, hint: String?, expected: String)
     /// Show the source sentence; rebuild the target sentence by ordering
     /// the shuffled `tokens`. `expectedOrder` is the authored sentence.
@@ -77,10 +77,23 @@ public enum Question: Equatable, Sendable {
 public struct GradingConfig: Codable, Equatable, Sendable {
     /// Articles a typed answer may omit or include ("das Haus" == "Haus").
     public var articles: [String]
+    /// Locale used for case folding and language-sensitive normalization.
+    public var localeIdentifier: String
+    /// Whether accents/diacritics may be omitted in typed answers.
+    public var diacriticInsensitive: Bool
+    /// Pack-provided orthographic equivalences used during answer grading.
+    public var substitutions: [String: String]
 
-    public init(articles: [String]) {
+    public init(
+        articles: [String],
+        localeIdentifier: String = "und",
+        diacriticInsensitive: Bool = true,
+        substitutions: [String: String] = [:]
+    ) {
         self.articles = articles
+        self.localeIdentifier = localeIdentifier
+        self.diacriticInsensitive = diacriticInsensitive
+        self.substitutions = substitutions
     }
 
-    public static let german = GradingConfig(articles: ["der", "die", "das", "ein", "eine"])
 }

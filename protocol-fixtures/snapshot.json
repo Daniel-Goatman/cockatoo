@@ -3,8 +3,7 @@
   "language": "de",
   "settings": {
     "enabled": true,
-    "blockedHosts": ["bank.example"],
-    "pageContextOptIn": false
+    "blockedHosts": ["bank.example"]
   },
   "items": [
     {

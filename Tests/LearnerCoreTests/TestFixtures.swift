@@ -1,6 +1,15 @@
 import Foundation
 @testable import LearnerCore
 
+extension GradingConfig {
+    static let germanFixture = GradingConfig(
+        articles: ["der", "die", "das", "ein", "eine"],
+        localeIdentifier: "de",
+        diacriticInsensitive: true,
+        substitutions: ["ß": "ss"]
+    )
+}
+
 enum Fixtures {
     static let t0 = ISO8601DateFormatter().date(from: "2026-07-01T08:00:00Z")!
 
@@ -24,6 +33,7 @@ enum Fixtures {
         return VocabItem(
             id: "de.word.\(german.lowercased())",
             language: "de",
+            sourceLemma: english,
             kind: .word,
             sourceForms: forms,
             target: german,
@@ -41,6 +51,7 @@ enum Fixtures {
         VocabItem(
             id: "de.word.\(german.lowercased())",
             language: "de",
+            sourceLemma: english,
             kind: .word,
             sourceForms: [SourceForm(form: english, target: german)],
             target: german,
@@ -88,7 +99,7 @@ enum Fixtures {
             language: "de",
             version: "2026.07-test",
             provenance: .init(corpus: "test", license: "test", packtool: "test", generatedAt: "2026-07-01"),
-            grading: .german,
+            grading: .germanFixture,
             items: items
         )
     }

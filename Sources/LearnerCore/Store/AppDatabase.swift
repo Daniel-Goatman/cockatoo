@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 /// The single database, owned exclusively by the app process (decision D9).
-/// The appex never opens this — it reaches data through the app's XPC API.
+/// The appex never opens this — it reaches data through the app's IPC API.
 public struct AppDatabase: Sendable {
     public let writer: any DatabaseWriter
 

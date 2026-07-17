@@ -7,6 +7,7 @@ import LearnerCore
 //   packtool checksum <pack.json>
 //   packtool review <new.json> --previous <prev.json>
 //   packtool import-test <pack.json>
+//   packtool build <accepted-source.json> --review <review.json> --output <pack.json>
 
 let args = Array(CommandLine.arguments.dropFirst())
 
@@ -27,6 +28,16 @@ func loadPack(_ path: String) -> (PackFile, Data) {
     }
 }
 
+func loadReview(_ path: String) -> PackReviewRecord {
+    let url = URL(fileURLWithPath: path)
+    guard let data = try? Data(contentsOf: url) else { fail("cannot read \(path)") }
+    do {
+        return try JSONDecoder().decode(PackReviewRecord.self, from: data)
+    } catch {
+        fail("cannot parse review \(path): \(error)")
+    }
+}
+
 func option(_ name: String) -> String? {
     guard let index = args.firstIndex(of: name), args.indices.contains(index + 1) else { return nil }
     return args[index + 1]
@@ -41,9 +52,11 @@ guard let command = args.first else {
       checksum <pack.json>                            sha256 for distribution
       review <new.json> --previous <prev.json>        human-review markdown diff (stage 4)
       import-test <pack.json>                         import into a scratch DB and report
+      build <accepted-source.json> --review <review.json> --output <pack.json>
+                                                     review-gated deterministic emission
 
-    The LLM authoring pass (stage 2: candidates → authored items) requires a
-    configured OpenAI-compatible provider; see docs/plan/07-content-pipeline.md.
+    Agent/LLM drafting stays outside the runtime. See packs/README.md for the
+    provider-neutral draft → review → deterministic build workflow.
     """)
     exit(0)
 }
@@ -63,6 +76,35 @@ case "checksum":
     guard args.count >= 2 else { fail("usage: packtool checksum <pack.json>") }
     let (_, data) = loadPack(args[1])
     print(PackFile.checksum(of: data))
+
+case "build":
+    guard args.count >= 2, let reviewPath = option("--review"), let outputPath = option("--output") else {
+        fail("usage: packtool build <accepted-source.json> --review <review.json> --output <pack.json>")
+    }
+    let (pack, sourceData) = loadPack(args[1])
+    let report = PackValidator().validate(pack)
+    guard report.isValid else {
+        for failure in report.failures { FileHandle.standardError.write(Data("FAIL: \(failure)\n".utf8)) }
+        fail("accepted source failed deterministic validation")
+    }
+    let review = loadReview(reviewPath)
+    let reviewFailures = review.validate(for: pack, sourceData: sourceData)
+    guard reviewFailures.isEmpty else {
+        for failure in reviewFailures { FileHandle.standardError.write(Data("FAIL: \(failure)\n".utf8)) }
+        fail("human review gate failed")
+    }
+    do {
+        let outputURL = URL(fileURLWithPath: outputPath)
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let data = try pack.canonicalData()
+        try data.write(to: outputURL, options: .atomic)
+        print("built \(pack.language)-\(pack.version): \(pack.items.count) items, sha256 \(PackFile.checksum(of: data))")
+    } catch {
+        fail("cannot write \(outputPath): \(error)")
+    }
 
 case "review":
     guard args.count >= 2, let previousPath = option("--previous") else {
@@ -100,9 +142,6 @@ case "import-test":
     } catch {
         fail("import failed: \(error)")
     }
-
-case "author":
-    fail("the LLM authoring pass needs a configured provider (base URL + key + model) — see docs/plan/07-content-pipeline.md stage 2")
 
 default:
     fail("unknown command '\(command)'")

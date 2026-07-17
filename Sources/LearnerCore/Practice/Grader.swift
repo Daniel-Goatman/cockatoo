@@ -45,12 +45,16 @@ public struct Grader: Sendable {
         return .wrong(expected: expected)
     }
 
-    /// Case-insensitive, accent-insensitive, whitespace-trimmed.
+    /// Pack-configured case/diacritic folding, substitutions, and whitespace.
     func normalize(_ s: String) -> String {
-        s.trimmingCharacters(in: .whitespacesAndNewlines)
-            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US"))
-            .replacingOccurrences(of: "ß", with: "ss")
-            .split(separator: " ").joined(separator: " ")
+        var options: String.CompareOptions = [.caseInsensitive]
+        if grading.diacriticInsensitive { options.insert(.diacriticInsensitive) }
+        var normalized = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: options, locale: Locale(identifier: grading.localeIdentifier))
+        for key in grading.substitutions.keys.sorted() {
+            normalized = normalized.replacingOccurrences(of: key, with: grading.substitutions[key] ?? "")
+        }
+        return normalized.split(separator: " ").joined(separator: " ")
     }
 
     func stripArticle(_ s: String) -> String {

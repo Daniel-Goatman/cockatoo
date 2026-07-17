@@ -61,6 +61,9 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
     /// Stable content-addressed slug, e.g. "de.word.haus". Progress joins on this.
     public var id: String
     public var language: String
+    /// Canonical source-language dictionary form used by Library display.
+    /// Schema-2 packs must author it explicitly.
+    public var sourceLemma: String
     public var kind: ItemKind
     public var sourceForms: [SourceForm]
     /// Canonical target text, e.g. "Haus".
@@ -79,12 +82,13 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
     public var examples: [Example]
     /// Pack-flagged "fun anchor" — jumps the intake queue (boosted two
     /// bands) so sentences and phrases can be built around it early.
-    /// Optional for backward compatibility with schema-1 packs.
+    /// Optional because older authored items may not opt into anchor priority.
     public var anchor: Bool?
 
     public init(
         id: String,
         language: String,
+        sourceLemma: String,
         kind: ItemKind,
         sourceForms: [SourceForm],
         target: String,
@@ -100,6 +104,7 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
     ) {
         self.id = id
         self.language = language
+        self.sourceLemma = sourceLemma
         self.kind = kind
         self.sourceForms = sourceForms
         self.target = target
@@ -118,14 +123,9 @@ public struct VocabItem: Codable, Equatable, Identifiable, Sendable {
 public extension VocabItem {
     var isAnchor: Bool { anchor ?? false }
 
-    /// The bare (non-determiner) source form for display: "book", not
-    /// "the book" — determiner variants exist for the matcher, not lists.
+    /// Determiners and matcher variants never leak into Library display.
     var bareSourceForm: String? {
-        let bare = sourceForms.first { form in
-            let lowered = form.form.lowercased()
-            return !lowered.hasPrefix("the ") && !lowered.hasPrefix("a ") && !lowered.hasPrefix("an ")
-        }
-        return (bare ?? sourceForms.first)?.form
+        sourceLemma
     }
 
     /// Target with citation-form article where authored, e.g. "das Haus".

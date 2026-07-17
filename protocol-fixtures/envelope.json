@@ -7,5 +7,15 @@
   "withoutPayload": {
     "protocolVersion": 1,
     "method": "getSettings"
+  },
+  "openPractice": {
+    "protocolVersion": 1,
+    "method": "openDashboard",
+    "payload": "{\"destination\":\"practice\"}"
+  },
+  "openLibraryItem": {
+    "protocolVersion": 1,
+    "method": "openDashboard",
+    "payload": "{\"itemId\":\"de:jetzt\",\"destination\":\"library\"}"
   }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import GRDB
 
-/// Top-level API surface: the app UI, the XPC listener, learnerctl, and the
+/// Top-level API surface: the app UI, the IPC listener, learnerctl, and the
 /// simulated-learner tests all drive this one type.
 public struct LearnerEngine: Sendable {
     public let store: LearnerStore
@@ -47,8 +47,23 @@ public struct LearnerEngine: Sendable {
         GetSettingsResponse(
             enabled: (try store.setting(SettingsKey.enabled) ?? "true") == "true",
             blockedHosts: try store.blockedHosts(),
-            pageContextOptIn: (try store.setting(SettingsKey.pageContextOptIn) ?? "false") == "true",
-            activeLanguage: try store.setting(SettingsKey.activeLanguage) ?? "de"
+            activeLanguage: try store.setting(SettingsKey.activeLanguage) ?? "und"
+        )
+    }
+
+    public func extensionOverview(now: Date) throws -> GetOverviewResponse {
+        let activeLanguage = try store.setting(SettingsKey.activeLanguage) ?? "und"
+        let summary = try overview(now: now)
+        let newAvailable = min(summary.newRemainingToday, summary.introAvailable)
+        let knownCount = summary.countsByStage[.known, default: 0]
+            + summary.countsByStage[.mastered, default: 0]
+        return GetOverviewResponse(
+            activeLanguage: activeLanguage,
+            libraryCount: summary.libraryCount,
+            dueNow: summary.dueNow,
+            newAvailable: newAvailable,
+            knownCount: knownCount,
+            availablePracticeItems: summary.dueNow + newAvailable
         )
     }
 
@@ -69,7 +84,7 @@ public struct LearnerEngine: Sendable {
     }
 
     public func planSession(now: Date, seed: UInt64) throws -> Session {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "und"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
         let planner = SessionPlanner(config: try effectiveConfig())
@@ -90,7 +105,7 @@ public struct LearnerEngine: Sendable {
     /// moment the word enters the library (practice-first intake, D-R1).
     @discardableResult
     public func grade(result: PracticeResult, now: Date) throws -> ItemProgress {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "und"
         let grading = try importer.gradingConfig(language: language, store: store)
         let grader = Grader(config: config, grading: grading)
 
@@ -120,7 +135,7 @@ public struct LearnerEngine: Sendable {
     /// The lowest band that has crossed the milestone fraction but hasn't
     /// been celebrated yet. The UI shows the moment, then marks it.
     public func pendingMilestone(now: Date) throws -> Int? {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "und"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
         for band in planner.intake.bandProgress(items: items, progress: progress) where band.reached {
@@ -181,7 +196,7 @@ public struct LearnerEngine: Sendable {
     }
 
     public func overview(now: Date) throws -> Overview {
-        let language = try store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try store.setting(SettingsKey.activeLanguage) ?? "und"
         let items = try store.items(language: language)
         let progress = try store.allProgress()
         let effective = try effectiveConfig()
@@ -235,17 +250,13 @@ public struct LearnerEngine: Sendable {
     }
 }
 
-/// Envelope-level dispatch shared by the XPC listener (and, through it, the
-/// appex). Enforces protocolVersion and the sendsPageText gate server-side.
+/// Envelope-level dispatch shared by the IPC listener (and, through it, the
+/// appex). Enforces the protocol version before dispatching methods.
 public struct SyncService: Sendable {
     public let engine: LearnerEngine
-    /// Injected so the contextual-form feature stays optional (no provider
-    /// configured → degrade, R8).
-    public var contextualForm: (@Sendable (GetContextualFormRequest) throws -> String)?
 
-    public init(engine: LearnerEngine, contextualForm: (@Sendable (GetContextualFormRequest) throws -> String)? = nil) {
+    public init(engine: LearnerEngine) {
         self.engine = engine
-        self.contextualForm = contextualForm
     }
 
     public func handle(_ envelopeData: Data, now: Date) -> Data {
@@ -268,17 +279,14 @@ public struct SyncService: Sendable {
                 return try JSONCoding.encoder.encode(engine.postEvents(req.events, now: now))
             case .getSettings:
                 return try JSONCoding.encoder.encode(engine.settingsResponse())
-            case .getContextualForm:
-                guard let req = try decodePayload(GetContextualFormRequest.self, envelope) else {
-                    return encodeError(.badPayload)
-                }
-                // Server-side gate: never trust the extension's own check.
-                let optedIn = (try engine.store.setting(SettingsKey.pageContextOptIn) ?? "false") == "true"
-                guard optedIn else { return encodeError(.pageContextNotOptedIn) }
-                guard let resolver = contextualForm else { return encodeError(.appUnavailable) }
-                let form = try resolver(req)
-                return try JSONCoding.encoder.encode(GetContextualFormResponse(form: form))
+            case .getOverview:
+                return try JSONCoding.encoder.encode(engine.extensionOverview(now: now))
             case .openDashboard:
+                if envelope.payload != nil {
+                    guard try decodePayload(OpenDashboardRequest.self, envelope) != nil else {
+                        return encodeError(.badPayload)
+                    }
+                }
                 // The app-side listener handles UI activation; core just acks.
                 return Data("{}".utf8)
             }

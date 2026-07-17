@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // German pack generator — hand-curated core (2026.07 seed, IDs preserved)
 // plus a model-authored expansion (2026.08) pending human spot-review
-// (docs/pack-review-2026.08.md). The full FrequencyWords-driven pipeline
+// (docs/pack-review-2026.10.md). The full FrequencyWords-driven pipeline
 // (docs/plan/07-content-pipeline.md, `packtool author`) is still pending;
 // band assignment here is frequency-informed but hand-ordered.
 //
@@ -17,7 +17,7 @@
 //   the D10 determiner-set requirement (which would read unnaturally,
 //   "the Monday") doesn't apply; gender still rides in targetMeta.
 //
-// Usage: node build-seed.mjs > ../../build/de-2026.09.json
+// Usage: node build-seed.mjs > ../../build/de-2026.10.json
 
 const slug = (s) =>
   s.toLowerCase()
@@ -31,12 +31,17 @@ const enIndefinite = (en) => (/^(hour|honest|heir)/i.test(en) || /^[aeiou]/i.tes
 // Noun with full determiner/number variant set (decision D10).
 // `enAliases` adds parallel English sources (film/movie) with their own
 // full variant sets pointing at the same German forms.
-function noun({ en, enAliases = [], enPlAliases = [], de, gender, enPl, dePl, band, explanation, example }) {
+function noun({ en, enAliases = [], enPlAliases = [], de, gender, enPl, dePl, allowIndefinite = true, band, explanation, example }) {
   const indef = gender === "die" ? "eine" : "ein";
   const forms = [];
   for (const source of [en, ...enAliases]) {
     forms.push({ form: `the ${source}`, target: `${gender} ${de}` });
-    forms.push({ form: `${enIndefinite(source)} ${source}`, target: `${indef} ${de}` });
+    // Mass nouns still need the definite and bare D10 forms, but inventing
+    // learner-facing phrases such as "a money" or "a weather" creates bad
+    // page matches. Opt those entries out explicitly.
+    if (allowIndefinite) {
+      forms.push({ form: `${enIndefinite(source)} ${source}`, target: `${indef} ${de}` });
+    }
     forms.push({ form: source, target: de });
   }
   if (enPl && dePl) {
@@ -47,7 +52,7 @@ function noun({ en, enAliases = [], enPlAliases = [], de, gender, enPl, dePl, ba
   }
   return {
     id: `de.word.${slug(de)}`,
-    language: "de", kind: "word",
+    language: "de", sourceLemma: en, kind: "word",
     sourceForms: forms,
     target: de,
     targetMeta: { gender, plural: dePl ?? null, pos: "noun", pronunciation: null },
@@ -66,7 +71,7 @@ function inv({ en, enForms, de, pos, band, explanation, example, gender = null }
   const sources = enForms ?? [en];
   return {
     id: `de.word.${slug(de)}`,
-    language: "de", kind: "word",
+    language: "de", sourceLemma: en ?? sources[0], kind: "word",
     sourceForms: sources.map((form) => ({ form, target: de })),
     target: de,
     targetMeta: { gender, plural: null, pos, pronunciation: null },
@@ -83,7 +88,7 @@ function chunk({ en, enForms, de, band, explanation, example, deps = [] }) {
   const sources = enForms ?? [en];
   return {
     id: `de.chunk.${slug(de)}`,
-    language: "de", kind: "chunk",
+    language: "de", sourceLemma: en ?? sources[0], kind: "chunk",
     sourceForms: sources.map((form) => ({ form, target: de })),
     target: de,
     targetMeta: { gender: null, plural: null, pos: "chunk", pronunciation: null },
@@ -263,7 +268,7 @@ const items = [
   noun({ en: "street", de: "Straße", gender: "die", enPl: "streets", dePl: "Straßen", band: 3,
     explanation: "die Straße (feminine) — street; plural Straßen.",
     example: { source: "The street is quiet.", target: "Die Straße ist ruhig." } }),
-  noun({ en: "money", de: "Geld", gender: "das", band: 3,
+  noun({ en: "money", de: "Geld", gender: "das", allowIndefinite: false, band: 3,
     explanation: "das Geld (neuter) — money.",
     example: { source: "Money is not everything.", target: "Geld ist nicht alles." } }),
   noun({ en: "food", de: "Essen", gender: "das", band: 3,
@@ -566,7 +571,7 @@ const items = [
     example: { source: "A friendly person.", target: "Eine freundliche Person." } }),
   { // die Leute — plural-only noun; determiner form carries the D10 duty.
     id: "de.word.leute",
-    language: "de", kind: "word",
+    language: "de", sourceLemma: "people", kind: "word",
     sourceForms: [
       { form: "people", target: "Leute" },
       { form: "the people", target: "die Leute" },
@@ -628,7 +633,7 @@ const items = [
   noun({ en: "email", de: "E-Mail", gender: "die", enPl: "emails", dePl: "E-Mails", band: 8,
     explanation: "die E-Mail (feminine) — email; plural E-Mails.",
     example: { source: "An email from Anna.", target: "Eine E-Mail von Anna." } }),
-  noun({ en: "internet", de: "Internet", gender: "das", band: 8,
+  noun({ en: "internet", de: "Internet", gender: "das", allowIndefinite: false, band: 8,
     explanation: "das Internet (neuter) — the internet.",
     example: { source: "The internet is down.", target: "Das Internet ist weg." } }),
   noun({ en: "sport", de: "Sport", gender: "der", band: 8,
@@ -710,13 +715,13 @@ const items = [
   noun({ en: "park", de: "Park", gender: "der", enPl: "parks", dePl: "Parks", band: 9,
     explanation: "der Park (masculine) — park; plural Parks.",
     example: { source: "The park is green.", target: "Der Park ist grün." } }),
-  noun({ en: "weather", de: "Wetter", gender: "das", band: 9,
+  noun({ en: "weather", de: "Wetter", gender: "das", allowIndefinite: false, band: 9,
     explanation: "das Wetter (neuter) — weather.",
     example: { source: "The weather is lovely.", target: "Das Wetter ist herrlich." } }),
-  noun({ en: "sun", de: "Sonne", gender: "die", band: 9,
+  noun({ en: "sun", de: "Sonne", gender: "die", allowIndefinite: false, band: 9,
     explanation: "die Sonne (feminine) — sun.",
     example: { source: "The sun is shining.", target: "Die Sonne scheint." } }),
-  noun({ en: "snow", de: "Schnee", gender: "der", band: 9,
+  noun({ en: "snow", de: "Schnee", gender: "der", allowIndefinite: false, band: 9,
     explanation: "der Schnee (masculine) — snow.",
     example: { source: "Fresh snow everywhere.", target: "Überall frischer Schnee." } }),
   noun({ en: "wind", de: "Wind", gender: "der", band: 9,
@@ -1034,17 +1039,30 @@ const extraExamples = {
 }
 
 const pack = {
-  schema: 1,
+  schema: 2,
+  sourceLanguage: "en",
   language: "de",
-  version: "2026.09",
+  version: "2026.10",
   provenance: {
     corpus: "hand-curated seed + model-authored expansion, frequency-informed (full FrequencyWords/OpenSubtitles pipeline pending)",
-    license: "project-original content",
+    license: "project-authored/model-assisted content; MIT",
     packtool: "seed-generator-2.0",
-    authoringModel: "claude-fable-5 (bands 5-10 + additions; human spot-review: docs/pack-review-2026.08.md)",
+    authoringModel: "claude-fable-5 (bands 5-10 + additions; human review incomplete: docs/pack-review-2026.10.md)",
+    promptVersion: "de-seed-v2",
     generatedAt: "2026-07-14",
   },
-  grading: { articles: ["der", "die", "das", "ein", "eine"] },
+  grading: {
+    articles: ["der", "die", "das", "ein", "eine"],
+    localeIdentifier: "de",
+    diacriticInsensitive: true,
+    substitutions: { "ß": "ss" },
+  },
+  validation: {
+    sourceDeterminers: ["the", "a", "an"],
+    nounPartsOfSpeech: ["noun"],
+    disallowedAmbientPartsOfSpeech: ["verb"],
+    allowApproximateAmbient: false,
+  },
   items,
 };
 

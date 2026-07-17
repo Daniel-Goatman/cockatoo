@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "language": "es",
+  "version": "sample-2026.01",
+  "sourceChecksum": "432b45c06086dc361eb125a5713e32964fce6d03073998cbf986c52577ac3be6",
+  "reviewer": "Cockatoo fixture maintainers",
+  "reviewedAt": "2026-07-16",
+  "checklist": {
+    "translations": true,
+    "sourceForms": true,
+    "examples": true,
+    "safety": true,
+    "licensing": true
+  },
+  "notes": "Small project-original fixture used to prove the runtime and authoring pipeline are not German-specific."
+}

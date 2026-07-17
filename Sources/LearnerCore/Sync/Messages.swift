@@ -27,7 +27,7 @@ public enum SyncMethod: String, Codable, CaseIterable, Sendable {
     case getSnapshot
     case postEvents
     case getSettings
-    case getContextualForm
+    case getOverview
     case openDashboard
 }
 
@@ -88,34 +88,54 @@ public struct PostEventsResponse: Codable, Equatable, Sendable {
 public struct GetSettingsResponse: Codable, Equatable, Sendable {
     public var enabled: Bool
     public var blockedHosts: [String]
-    public var pageContextOptIn: Bool
     public var activeLanguage: String
 
-    public init(enabled: Bool, blockedHosts: [String], pageContextOptIn: Bool, activeLanguage: String) {
+    public init(enabled: Bool, blockedHosts: [String], activeLanguage: String) {
         self.enabled = enabled
         self.blockedHosts = blockedHosts
-        self.pageContextOptIn = pageContextOptIn
         self.activeLanguage = activeLanguage
     }
 }
 
-public struct GetContextualFormRequest: Codable, Equatable, Sendable {
-    public var itemId: String
-    public var sentence: String
-    public var sentenceHash: String
+/// A compact, precomputed summary for the browser-extension popup. Swift
+/// decides what is actionable; the extension only renders these values (P1).
+public struct GetOverviewResponse: Codable, Equatable, Sendable {
+    public var activeLanguage: String
+    public var libraryCount: Int
+    public var dueNow: Int
+    public var newAvailable: Int
+    public var knownCount: Int
+    public var availablePracticeItems: Int
 
-    public init(itemId: String, sentence: String, sentenceHash: String) {
-        self.itemId = itemId
-        self.sentence = sentence
-        self.sentenceHash = sentenceHash
+    public init(
+        activeLanguage: String,
+        libraryCount: Int,
+        dueNow: Int,
+        newAvailable: Int,
+        knownCount: Int,
+        availablePracticeItems: Int
+    ) {
+        self.activeLanguage = activeLanguage
+        self.libraryCount = libraryCount
+        self.dueNow = dueNow
+        self.newAvailable = newAvailable
+        self.knownCount = knownCount
+        self.availablePracticeItems = availablePracticeItems
     }
 }
 
-public struct GetContextualFormResponse: Codable, Equatable, Sendable {
-    public var form: String
+public enum OpenDestination: String, Codable, Equatable, Sendable {
+    case practice
+    case library
+}
 
-    public init(form: String) {
-        self.form = form
+public struct OpenDashboardRequest: Codable, Equatable, Sendable {
+    public var itemId: String?
+    public var destination: OpenDestination?
+
+    public init(itemId: String? = nil, destination: OpenDestination? = nil) {
+        self.itemId = itemId
+        self.destination = destination
     }
 }
 
@@ -126,9 +146,6 @@ public enum SyncError: String, Codable, Sendable, Error {
     case appUnavailable
     /// protocolVersion mismatch — popup shows "Update Cockatoo".
     case protocolMismatch
-    /// sendsPageText call while pageContextOptIn is off. Enforced
-    /// server-side, not just UI-side.
-    case pageContextNotOptedIn
     case unknownMethod
     case badPayload
     case internalError

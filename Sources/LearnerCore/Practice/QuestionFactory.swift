@@ -70,13 +70,24 @@ public struct QuestionFactory: Sendable {
     }
 
     /// An example is rebuildable when its target sentence tokenizes to a
-    /// buildable puzzle: 3–10 whitespace tokens.
+    /// buildable puzzle: 3–10 words. Outer punctuation is removed from every
+    /// chip and the authored sentence-initial capital is lowered, otherwise
+    /// those two visual cues reveal the correct order before the learner has
+    /// done any language work.
     public static func rebuildableExample(_ item: VocabItem) -> Example? {
         item.examples.first { rebuildTokens($0) != nil }
     }
 
     static func rebuildTokens(_ example: Example) -> [String]? {
-        let tokens = example.target.split(separator: " ").map(String.init)
+        var tokens = example.target
+            .split(whereSeparator: \.isWhitespace)
+            .compactMap { raw -> String? in
+                let word = String(raw).trimmingCharacters(in: .punctuationCharacters)
+                return word.isEmpty ? nil : word
+            }
+        if let first = tokens.first, let initial = first.first {
+            tokens[0] = initial.lowercased() + String(first.dropFirst())
+        }
         return (3...10).contains(tokens.count) ? tokens : nil
     }
 
@@ -96,7 +107,7 @@ public struct QuestionFactory: Sendable {
             return recall(item: item)
         case .cloze:
             if let sentence, let q = cloze(item: item, sentence: sentence) { return q }
-            // Pack-example cloze: blank the GERMAN word, show the English
+            // Pack-example cloze: blank the target word, show the source
             // sentence as the hint — always answerable, unlike blanking the
             // English word out of a five-word sentence. Drawn at random so
             // rich-example items don't recycle one sentence.
@@ -180,8 +191,8 @@ public struct QuestionFactory: Sendable {
         return .recall(itemId: item.id, prompt: source, expected: displayTarget(item))
     }
 
-    /// Captured-page cloze: blank the English surface form in its real
-    /// context; expected answer is that form's German target. Only usable
+    /// Captured-page cloze: blank the source surface form in its real
+    /// context; expected answer is that form's authored target. Only usable
     /// when the match sits on word boundaries (never "Glam_____gan"), the
     /// sentence is short enough to read as a card, and enough context
     /// survives the blank to identify the word.
@@ -202,7 +213,7 @@ public struct QuestionFactory: Sendable {
     }
 
     /// Pack-example cloze: blank the citation form inside the authored
-    /// German sentence; the English sentence rides along as the hint.
+    /// target-language sentence; the source sentence rides along as the hint.
     func exampleCloze(item: VocabItem, example: Example) -> Question? {
         guard let range = Self.boundedRange(of: item.target, in: example.target) else { return nil }
         let blanked = example.target.replacingCharacters(in: range, with: "_____")

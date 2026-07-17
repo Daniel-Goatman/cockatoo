@@ -1,6 +1,6 @@
 # 07 — Content Pipeline
 
-> `packtool`: frequency list → curated, validated, versioned language pack. Replaces the prototype's 13 hand-authored items defined in three places. The pipeline is language-agnostic; German is v1's only instantiation. LLM-assisted authoring uses the same `ChatProvider` as the app ([06-llm-integration.md](06-llm-integration.md)); the deterministic core stays deterministic (P5) — the model drafts, the validator and a human gate.
+> `packtool`: frequency list → curated, validated, versioned language pack. Replaces the prototype's 13 hand-authored items defined in three places. German is the current instantiation. Future agent/LLM authoring runs in a separate contributor CLI ([06-llm-integration.md](06-llm-integration.md)); the model drafts source, while deterministic validation and a human gate own the build output (P5).
 
 ## Source data and licensing (risk R6)
 
@@ -25,7 +25,7 @@ frequency list ──1─▶ candidates.csv ──2─▶ authored.json ──3�
   - Profanity/sensitive-topic filter.
 - Output: `candidates.csv` — `rank, sourceLemma, band, level, proposedKind, ambientSafety, notes`.
 
-### Stage 2 — LLM authoring (via `ChatProvider`, structured output)
+### Stage 2 — agent/LLM authoring (future standalone CLI, structured output)
 
 For each candidate, generate the full `VocabItem` draft:
 - German target + `targetMeta` (gender, plural, POS, pronunciation).
@@ -52,20 +52,28 @@ Hard failures block the pack:
 
 ### Stage 5 — Emission
 
-- `packs/build/de-2026.07.json` + sha256 checksum, header `{language, version, provenance, counts}`. The app's `Packs` module imports it transactionally with the checksum verified.
+- `packs/build/<language>-<version>.json` + sha256 checksum, header `{language, version, provenance, counts}`. The app's `Packs` module imports it transactionally with the checksum verified.
 
-## Pack JSON schema (v1)
+## Pack JSON schema (v2)
 
 ```jsonc
 {
-  "schema": 1,
+  "schema": 2,
+  "sourceLanguage": "en",
   "language": "de",
-  "version": "2026.07",
+  "version": "2026.10",
   "provenance": { "corpus": "FrequencyWords/OpenSubtitles 2018", "license": "CC-BY-SA-4.0",
                   "packtool": "1.0.0", "authoringModel": "…", "generatedAt": "…" },
-  "items": [ { /* VocabItem — field-identical to the vocab_item row, 03 §schema */ } ]
+  "grading": { /* locale, articles, diacritic and substitution rules */ },
+  "validation": { /* source determiners and ambient POS/fidelity policy */ },
+  "items": [ { /* VocabItem incl. explicit sourceLemma */ } ]
 }
 ```
+
+Accepted source and human review are separate files. `packtool build` binds the
+review to the exact source checksum and emits canonical sorted JSON. Editing a
+built pack directly is unsupported. The complete format and commands are in
+[`packs/README.md`](../../packs/README.md).
 
 ## German v1 scope
 
@@ -75,9 +83,14 @@ Hard failures block the pack:
 
 ## Language-agnosticism requirements
 
-Adding language X later must require **no code changes**, only:
+Adding language X requires **no runtime code changes**, only:
 1. A frequency list + license under `packs/sources/x/`.
 2. Language-specific authoring prompt parameters (what `targetMeta` contains, inflection-safety class rules — config, not code).
-3. A grading config for the review engine (article list for article-optional grading, accent folding rules) shipped **inside the pack header**, so `Grader` ([04-learning-engine.md](04-learning-engine.md)) stays generic.
+3. A grading config for the review engine (articles, locale, diacritic policy,
+   and substitutions) plus source-form validation policy shipped **inside the
+   pack header**, so `Grader` and `PackValidator` stay generic.
+
+The Spanish sample and a French-source determiner test enforce this boundary in
+CI. German remains the only bundled full course.
 
 Anything that would violate this (a `de`-specific branch in packtool or LearnerCore) is a review-blocking defect.

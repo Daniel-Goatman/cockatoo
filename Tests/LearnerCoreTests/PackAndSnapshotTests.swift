@@ -8,7 +8,7 @@ final class PackValidatorTests: XCTestCase {
         PackFile(
             language: "de", version: "1",
             provenance: .init(corpus: "t", license: "t", packtool: "t", generatedAt: "t"),
-            grading: .german, items: items
+            grading: .germanFixture, items: items
         )
     }
 
@@ -24,10 +24,9 @@ final class PackValidatorTests: XCTestCase {
     }
 
     func testAmbientSurfaceFormCollisionFails() {
-        var a = Fixtures.invariant("like", "wie")
+        let a = Fixtures.invariant("like", "wie")
         var b = Fixtures.invariant("like", "mögen")
         b.id = "de.word.moegen"
-        _ = a
         let report = validator.validate(pack([a, b]))
         XCTAssertTrue(report.failures.contains { $0.contains("already claimed") })
     }
@@ -53,11 +52,11 @@ final class PackValidatorTests: XCTestCase {
         XCTAssertTrue(report.failures.contains { $0.contains("approximate") })
     }
 
-    func testAmbientVerbRejectedInV1() {
+    func testPackConfiguredAmbientPartOfSpeechIsRejected() {
         var item = Fixtures.invariant("run", "laufen")
         item.targetMeta = TargetMeta(pos: "verb")
         let report = validator.validate(pack([item]))
-        XCTAssertTrue(report.failures.contains { $0.contains("verbs must be reviewOnly") })
+        XCTAssertTrue(report.failures.contains { $0.contains("part of speech 'verb'") && $0.contains("reviewOnly") })
     }
 
     func testReviewOnlyVerbPasses() {
@@ -134,7 +133,30 @@ final class PackImporterTests: XCTestCase {
     func testGradingConfigComesFromPack() throws {
         let engine = try Fixtures.makeEngine()
         let grading = try engine.importer.gradingConfig(language: "de", store: engine.store)
-        XCTAssertEqual(grading.articles, GradingConfig.german.articles)
+        XCTAssertEqual(grading.articles, GradingConfig.germanFixture.articles)
+    }
+
+    func testPackIdentityDetectsChangedContentAtTheSameVersion() throws {
+        let database = try AppDatabase.inMemory()
+        let engine = LearnerEngine(store: LearnerStore(db: database))
+        var pack = Fixtures.simPack()
+        let originalData = try JSONCoding.encoder.encode(pack)
+        try engine.importPack(pack, rawData: originalData, now: t0)
+
+        let originalIdentity = try engine.store.latestPackIdentity(language: pack.language)
+        XCTAssertEqual(originalIdentity?.version, pack.version)
+        XCTAssertEqual(originalIdentity?.checksum, PackFile.checksum(of: originalData))
+
+        pack.items[0].explanation += " repaired"
+        let repairedData = try JSONCoding.encoder.encode(pack)
+        XCTAssertEqual(pack.version, originalIdentity?.version)
+        XCTAssertNotEqual(PackFile.checksum(of: repairedData), originalIdentity?.checksum)
+
+        try engine.importPack(pack, rawData: repairedData, now: t0.addingTimeInterval(1))
+        XCTAssertEqual(
+            try engine.store.latestPackIdentity(language: pack.language)?.checksum,
+            PackFile.checksum(of: repairedData)
+        )
     }
 }
 
@@ -160,7 +182,6 @@ final class SnapshotTests: XCTestCase {
         XCTAssertEqual(snap.items.count, 4, "learning/known in, mastered evicted")
         XCTAssertEqual(snap.language, "de")
         XCTAssertTrue(snap.settings.enabled)
-        XCTAssertFalse(snap.settings.pageContextOptIn)
         // Forms are lowercased for the matcher.
         let haus = snap.items.first { $0.id == "de.word.haus" }
         XCTAssertNotNil(haus)
@@ -199,7 +220,7 @@ final class SnapshotTests: XCTestCase {
         let pack = PackFile(
             language: "de", version: "big",
             provenance: .init(corpus: "t", license: "t", packtool: "t", generatedAt: "t"),
-            grading: .german, items: items
+            grading: .germanFixture, items: items
         )
         let db = try AppDatabase.inMemory()
         let engine = LearnerEngine(store: LearnerStore(db: db))

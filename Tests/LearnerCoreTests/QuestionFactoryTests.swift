@@ -159,12 +159,31 @@ final class QuestionFactoryTests: XCTestCase {
         }
         XCTAssertEqual(tokens.sorted(), expectedOrder.sorted())
         XCTAssertNotEqual(tokens, expectedOrder)
-        XCTAssertEqual(expectedOrder, item.examples[0].target.split(separator: " ").map(String.init))
+        XCTAssertEqual(expectedOrder, ["ich", "sehe", "das", "Haus"])
 
         var bare = item
         bare.examples = []
         let fallback = factory.question(item: bare, mode: .rebuild, distractorPool: pack.items, sentence: nil, rng: &rng)
         XCTAssertEqual(fallback?.mode, .recall)
+    }
+
+    func testRebuildRemovesOrderingCluesButPreservesWordCapitalization() {
+        var item = Fixtures.invariant("now", "jetzt")
+        item.examples = [
+            Example(source: "We are going now.", target: "Wir gehen jetzt."),
+            Example(source: "Today, we see the house!", target: "Heute, sehen wir das Haus!"),
+        ]
+
+        XCTAssertEqual(
+            QuestionFactory.rebuildTokens(item.examples[0]),
+            ["wir", "gehen", "jetzt"],
+            "sentence case and terminal punctuation must not identify the endpoints"
+        )
+        XCTAssertEqual(
+            QuestionFactory.rebuildTokens(item.examples[1]),
+            ["heute", "sehen", "wir", "das", "Haus"],
+            "outer punctuation is removed while an inherently capitalized noun stays capitalized"
+        )
     }
 
     /// Rich examples (D-R4): cloze and rebuild rotate across an item's

@@ -1,12 +1,14 @@
 {
-  "schema": 1,
+  "schema": 2,
+  "sourceLanguage": "en",
   "language": "de",
-  "version": "2026.09",
+  "version": "2026.10",
   "provenance": {
     "corpus": "hand-curated seed + model-authored expansion, frequency-informed (full FrequencyWords/OpenSubtitles pipeline pending)",
-    "license": "project-original content",
+    "license": "project-authored/model-assisted content; MIT",
     "packtool": "seed-generator-2.0",
-    "authoringModel": "claude-fable-5 (bands 5-10 + additions; human spot-review: docs/pack-review-2026.08.md)",
+    "authoringModel": "claude-fable-5 (bands 5-10 + additions; human review incomplete: docs/pack-review-2026.10.md)",
+    "promptVersion": "de-seed-v2",
     "generatedAt": "2026-07-14"
   },
   "grading": {
@@ -16,12 +18,32 @@
       "das",
       "ein",
       "eine"
-    ]
+    ],
+    "localeIdentifier": "de",
+    "diacriticInsensitive": true,
+    "substitutions": {
+      "ß": "ss"
+    }
+  },
+  "validation": {
+    "sourceDeterminers": [
+      "the",
+      "a",
+      "an"
+    ],
+    "nounPartsOfSpeech": [
+      "noun"
+    ],
+    "disallowedAmbientPartsOfSpeech": [
+      "verb"
+    ],
+    "allowApproximateAmbient": false
   },
   "items": [
     {
       "id": "de.word.und",
       "language": "de",
+      "sourceLemma": "and",
       "kind": "word",
       "sourceForms": [
         {
@@ -60,6 +82,7 @@
     {
       "id": "de.word.aber",
       "language": "de",
+      "sourceLemma": "but",
       "kind": "word",
       "sourceForms": [
         {
@@ -98,6 +121,7 @@
     {
       "id": "de.word.oder",
       "language": "de",
+      "sourceLemma": "or",
       "kind": "word",
       "sourceForms": [
         {
@@ -136,6 +160,7 @@
     {
       "id": "de.word.auch",
       "language": "de",
+      "sourceLemma": "also",
       "kind": "word",
       "sourceForms": [
         {
@@ -174,6 +199,7 @@
     {
       "id": "de.word.nicht",
       "language": "de",
+      "sourceLemma": "not",
       "kind": "word",
       "sourceForms": [
         {
@@ -212,6 +238,7 @@
     {
       "id": "de.word.hier",
       "language": "de",
+      "sourceLemma": "here",
       "kind": "word",
       "sourceForms": [
         {
@@ -250,6 +277,7 @@
     {
       "id": "de.word.jetzt",
       "language": "de",
+      "sourceLemma": "now",
       "kind": "word",
       "sourceForms": [
         {
@@ -288,6 +316,7 @@
     {
       "id": "de.word.heute",
       "language": "de",
+      "sourceLemma": "today",
       "kind": "word",
       "sourceForms": [
         {
@@ -326,6 +355,7 @@
     {
       "id": "de.word.haus",
       "language": "de",
+      "sourceLemma": "house",
       "kind": "word",
       "sourceForms": [
         {
@@ -380,6 +410,7 @@
     {
       "id": "de.word.hund",
       "language": "de",
+      "sourceLemma": "dog",
       "kind": "word",
       "sourceForms": [
         {
@@ -434,6 +465,7 @@
     {
       "id": "de.word.wasser",
       "language": "de",
+      "sourceLemma": "water",
       "kind": "word",
       "sourceForms": [
         {
@@ -480,6 +512,7 @@
     {
       "id": "de.word.buch",
       "language": "de",
+      "sourceLemma": "book",
       "kind": "word",
       "sourceForms": [
         {
@@ -534,6 +567,7 @@
     {
       "id": "de.word.immer",
       "language": "de",
+      "sourceLemma": "always",
       "kind": "word",
       "sourceForms": [
         {
@@ -572,6 +606,7 @@
     {
       "id": "de.word.oft",
       "language": "de",
+      "sourceLemma": "often",
       "kind": "word",
       "sourceForms": [
         {
@@ -610,6 +645,7 @@
     {
       "id": "de.word.nie",
       "language": "de",
+      "sourceLemma": "never",
       "kind": "word",
       "sourceForms": [
         {
@@ -648,6 +684,7 @@
     {
       "id": "de.word.wieder",
       "language": "de",
+      "sourceLemma": "again",
       "kind": "word",
       "sourceForms": [
         {
@@ -686,6 +723,7 @@
     {
       "id": "de.word.sehr",
       "language": "de",
+      "sourceLemma": "very",
       "kind": "word",
       "sourceForms": [
         {
@@ -724,6 +762,7 @@
     {
       "id": "de.word.vielleicht",
       "language": "de",
+      "sourceLemma": "maybe",
       "kind": "word",
       "sourceForms": [
         {
@@ -766,6 +805,7 @@
     {
       "id": "de.word.morgen",
       "language": "de",
+      "sourceLemma": "tomorrow",
       "kind": "word",
       "sourceForms": [
         {
@@ -804,6 +844,7 @@
     {
       "id": "de.word.gestern",
       "language": "de",
+      "sourceLemma": "yesterday",
       "kind": "word",
       "sourceForms": [
         {
@@ -842,6 +883,7 @@
     {
       "id": "de.word.stadt",
       "language": "de",
+      "sourceLemma": "city",
       "kind": "word",
       "sourceForms": [
         {
@@ -896,6 +938,7 @@
     {
       "id": "de.word.kind",
       "language": "de",
+      "sourceLemma": "child",
       "kind": "word",
       "sourceForms": [
         {
@@ -950,6 +993,7 @@
     {
       "id": "de.word.freund",
       "language": "de",
+      "sourceLemma": "friend",
       "kind": "word",
       "sourceForms": [
         {
@@ -1004,6 +1048,7 @@
     {
       "id": "de.word.jahr",
       "language": "de",
+      "sourceLemma": "year",
       "kind": "word",
       "sourceForms": [
         {
@@ -1058,6 +1103,7 @@
     {
       "id": "de.chunk.es-gibt",
       "language": "de",
+      "sourceLemma": "there is",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -1100,6 +1146,7 @@
     {
       "id": "de.chunk.zum-beispiel",
       "language": "de",
+      "sourceLemma": "for example",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -1138,6 +1185,7 @@
     {
       "id": "de.word.mit",
       "language": "de",
+      "sourceLemma": "with",
       "kind": "word",
       "sourceForms": [
         {
@@ -1176,6 +1224,7 @@
     {
       "id": "de.word.ohne",
       "language": "de",
+      "sourceLemma": "without",
       "kind": "word",
       "sourceForms": [
         {
@@ -1214,6 +1263,7 @@
     {
       "id": "de.word.ja",
       "language": "de",
+      "sourceLemma": "yes",
       "kind": "word",
       "sourceForms": [
         {
@@ -1252,6 +1302,7 @@
     {
       "id": "de.word.bitte",
       "language": "de",
+      "sourceLemma": "please",
       "kind": "word",
       "sourceForms": [
         {
@@ -1290,6 +1341,7 @@
     {
       "id": "de.word.hallo",
       "language": "de",
+      "sourceLemma": "hello",
       "kind": "word",
       "sourceForms": [
         {
@@ -1328,6 +1380,7 @@
     {
       "id": "de.word.wirklich",
       "language": "de",
+      "sourceLemma": "really",
       "kind": "word",
       "sourceForms": [
         {
@@ -1366,6 +1419,7 @@
     {
       "id": "de.word.trotzdem",
       "language": "de",
+      "sourceLemma": "nevertheless",
       "kind": "word",
       "sourceForms": [
         {
@@ -1404,6 +1458,7 @@
     {
       "id": "de.word.deshalb",
       "language": "de",
+      "sourceLemma": "therefore",
       "kind": "word",
       "sourceForms": [
         {
@@ -1442,6 +1497,7 @@
     {
       "id": "de.word.fast",
       "language": "de",
+      "sourceLemma": "almost",
       "kind": "word",
       "sourceForms": [
         {
@@ -1480,6 +1536,7 @@
     {
       "id": "de.word.nur",
       "language": "de",
+      "sourceLemma": "only",
       "kind": "word",
       "sourceForms": [
         {
@@ -1518,6 +1575,7 @@
     {
       "id": "de.word.schon",
       "language": "de",
+      "sourceLemma": "already",
       "kind": "word",
       "sourceForms": [
         {
@@ -1556,6 +1614,7 @@
     {
       "id": "de.word.zusammen",
       "language": "de",
+      "sourceLemma": "together",
       "kind": "word",
       "sourceForms": [
         {
@@ -1594,6 +1653,7 @@
     {
       "id": "de.word.bald",
       "language": "de",
+      "sourceLemma": "soon",
       "kind": "word",
       "sourceForms": [
         {
@@ -1632,6 +1692,7 @@
     {
       "id": "de.word.leider",
       "language": "de",
+      "sourceLemma": "unfortunately",
       "kind": "word",
       "sourceForms": [
         {
@@ -1670,6 +1731,7 @@
     {
       "id": "de.word.welt",
       "language": "de",
+      "sourceLemma": "world",
       "kind": "word",
       "sourceForms": [
         {
@@ -1724,6 +1786,7 @@
     {
       "id": "de.word.nacht",
       "language": "de",
+      "sourceLemma": "night",
       "kind": "word",
       "sourceForms": [
         {
@@ -1778,6 +1841,7 @@
     {
       "id": "de.word.tuer",
       "language": "de",
+      "sourceLemma": "door",
       "kind": "word",
       "sourceForms": [
         {
@@ -1832,6 +1896,7 @@
     {
       "id": "de.word.hand",
       "language": "de",
+      "sourceLemma": "hand",
       "kind": "word",
       "sourceForms": [
         {
@@ -1886,6 +1951,7 @@
     {
       "id": "de.chunk.natuerlich",
       "language": "de",
+      "sourceLemma": "of course",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -1924,6 +1990,7 @@
     {
       "id": "de.word.wo",
       "language": "de",
+      "sourceLemma": "where",
       "kind": "word",
       "sourceForms": [
         {
@@ -1962,6 +2029,7 @@
     {
       "id": "de.word.wie",
       "language": "de",
+      "sourceLemma": "how",
       "kind": "word",
       "sourceForms": [
         {
@@ -2000,6 +2068,7 @@
     {
       "id": "de.word.warum",
       "language": "de",
+      "sourceLemma": "why",
       "kind": "word",
       "sourceForms": [
         {
@@ -2038,6 +2107,7 @@
     {
       "id": "de.word.mann",
       "language": "de",
+      "sourceLemma": "man",
       "kind": "word",
       "sourceForms": [
         {
@@ -2092,6 +2162,7 @@
     {
       "id": "de.word.frau",
       "language": "de",
+      "sourceLemma": "woman",
       "kind": "word",
       "sourceForms": [
         {
@@ -2146,6 +2217,7 @@
     {
       "id": "de.word.auto",
       "language": "de",
+      "sourceLemma": "car",
       "kind": "word",
       "sourceForms": [
         {
@@ -2200,6 +2272,7 @@
     {
       "id": "de.word.strasse",
       "language": "de",
+      "sourceLemma": "street",
       "kind": "word",
       "sourceForms": [
         {
@@ -2254,15 +2327,12 @@
     {
       "id": "de.word.geld",
       "language": "de",
+      "sourceLemma": "money",
       "kind": "word",
       "sourceForms": [
         {
           "form": "the money",
           "target": "das Geld"
-        },
-        {
-          "form": "a money",
-          "target": "ein Geld"
         },
         {
           "form": "money",
@@ -2300,6 +2370,7 @@
     {
       "id": "de.word.essen",
       "language": "de",
+      "sourceLemma": "food",
       "kind": "word",
       "sourceForms": [
         {
@@ -2346,6 +2417,7 @@
     {
       "id": "de.word.schule",
       "language": "de",
+      "sourceLemma": "school",
       "kind": "word",
       "sourceForms": [
         {
@@ -2400,6 +2472,7 @@
     {
       "id": "de.chunk.ich-glaube",
       "language": "de",
+      "sourceLemma": "I think",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -2438,6 +2511,7 @@
     {
       "id": "de.word.eigentlich",
       "language": "de",
+      "sourceLemma": "actually",
       "kind": "word",
       "sourceForms": [
         {
@@ -2476,6 +2550,7 @@
     {
       "id": "de.word.genau",
       "language": "de",
+      "sourceLemma": "exactly",
       "kind": "word",
       "sourceForms": [
         {
@@ -2514,6 +2589,7 @@
     {
       "id": "de.word.sofort",
       "language": "de",
+      "sourceLemma": "immediately",
       "kind": "word",
       "sourceForms": [
         {
@@ -2556,6 +2632,7 @@
     {
       "id": "de.word.endlich",
       "language": "de",
+      "sourceLemma": "finally",
       "kind": "word",
       "sourceForms": [
         {
@@ -2594,6 +2671,7 @@
     {
       "id": "de.word.manchmal",
       "language": "de",
+      "sourceLemma": "sometimes",
       "kind": "word",
       "sourceForms": [
         {
@@ -2632,6 +2710,7 @@
     {
       "id": "de.word.ueberall",
       "language": "de",
+      "sourceLemma": "everywhere",
       "kind": "word",
       "sourceForms": [
         {
@@ -2670,6 +2749,7 @@
     {
       "id": "de.word.zuerst",
       "language": "de",
+      "sourceLemma": "at first",
       "kind": "word",
       "sourceForms": [
         {
@@ -2708,6 +2788,7 @@
     {
       "id": "de.word.uebrigens",
       "language": "de",
+      "sourceLemma": "by the way",
       "kind": "word",
       "sourceForms": [
         {
@@ -2746,6 +2827,7 @@
     {
       "id": "de.word.zeit",
       "language": "de",
+      "sourceLemma": "time",
       "kind": "word",
       "sourceForms": [
         {
@@ -2800,6 +2882,7 @@
     {
       "id": "de.word.tag",
       "language": "de",
+      "sourceLemma": "day",
       "kind": "word",
       "sourceForms": [
         {
@@ -2854,6 +2937,7 @@
     {
       "id": "de.word.woche",
       "language": "de",
+      "sourceLemma": "week",
       "kind": "word",
       "sourceForms": [
         {
@@ -2908,6 +2992,7 @@
     {
       "id": "de.word.monat",
       "language": "de",
+      "sourceLemma": "month",
       "kind": "word",
       "sourceForms": [
         {
@@ -2962,6 +3047,7 @@
     {
       "id": "de.chunk.guten-morgen",
       "language": "de",
+      "sourceLemma": "good morning",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3000,6 +3086,7 @@
     {
       "id": "de.chunk.danke",
       "language": "de",
+      "sourceLemma": "thank you",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3038,6 +3125,7 @@
     {
       "id": "de.chunk.bis-bald",
       "language": "de",
+      "sourceLemma": "see you soon",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3078,6 +3166,7 @@
     {
       "id": "de.word.mutter",
       "language": "de",
+      "sourceLemma": "mother",
       "kind": "word",
       "sourceForms": [
         {
@@ -3132,6 +3221,7 @@
     {
       "id": "de.word.vater",
       "language": "de",
+      "sourceLemma": "father",
       "kind": "word",
       "sourceForms": [
         {
@@ -3186,6 +3276,7 @@
     {
       "id": "de.word.bruder",
       "language": "de",
+      "sourceLemma": "brother",
       "kind": "word",
       "sourceForms": [
         {
@@ -3240,6 +3331,7 @@
     {
       "id": "de.word.schwester",
       "language": "de",
+      "sourceLemma": "sister",
       "kind": "word",
       "sourceForms": [
         {
@@ -3294,6 +3386,7 @@
     {
       "id": "de.word.familie",
       "language": "de",
+      "sourceLemma": "family",
       "kind": "word",
       "sourceForms": [
         {
@@ -3348,6 +3441,7 @@
     {
       "id": "de.word.abend",
       "language": "de",
+      "sourceLemma": "evening",
       "kind": "word",
       "sourceForms": [
         {
@@ -3402,6 +3496,7 @@
     {
       "id": "de.word.name",
       "language": "de",
+      "sourceLemma": "name",
       "kind": "word",
       "sourceForms": [
         {
@@ -3456,6 +3551,7 @@
     {
       "id": "de.word.wort",
       "language": "de",
+      "sourceLemma": "word",
       "kind": "word",
       "sourceForms": [
         {
@@ -3510,6 +3606,7 @@
     {
       "id": "de.word.sprache",
       "language": "de",
+      "sourceLemma": "language",
       "kind": "word",
       "sourceForms": [
         {
@@ -3564,6 +3661,7 @@
     {
       "id": "de.word.frage",
       "language": "de",
+      "sourceLemma": "question",
       "kind": "word",
       "sourceForms": [
         {
@@ -3618,6 +3716,7 @@
     {
       "id": "de.word.etwas",
       "language": "de",
+      "sourceLemma": "something",
       "kind": "word",
       "sourceForms": [
         {
@@ -3656,6 +3755,7 @@
     {
       "id": "de.word.nichts",
       "language": "de",
+      "sourceLemma": "nothing",
       "kind": "word",
       "sourceForms": [
         {
@@ -3694,6 +3794,7 @@
     {
       "id": "de.word.mehr",
       "language": "de",
+      "sourceLemma": "more",
       "kind": "word",
       "sourceForms": [
         {
@@ -3732,6 +3833,7 @@
     {
       "id": "de.chunk.ich-weiss",
       "language": "de",
+      "sourceLemma": "I know",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3770,6 +3872,7 @@
     {
       "id": "de.chunk.ich-weiss-nicht",
       "language": "de",
+      "sourceLemma": "I don't know",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3808,6 +3911,7 @@
     {
       "id": "de.chunk.zu-hause",
       "language": "de",
+      "sourceLemma": "at home",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3846,6 +3950,7 @@
     {
       "id": "de.chunk.ich-auch",
       "language": "de",
+      "sourceLemma": "me too",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -3886,6 +3991,7 @@
     {
       "id": "de.word.tisch",
       "language": "de",
+      "sourceLemma": "table",
       "kind": "word",
       "sourceForms": [
         {
@@ -3940,6 +4046,7 @@
     {
       "id": "de.word.stuhl",
       "language": "de",
+      "sourceLemma": "chair",
       "kind": "word",
       "sourceForms": [
         {
@@ -3994,6 +4101,7 @@
     {
       "id": "de.word.zimmer",
       "language": "de",
+      "sourceLemma": "room",
       "kind": "word",
       "sourceForms": [
         {
@@ -4048,6 +4156,7 @@
     {
       "id": "de.word.fenster",
       "language": "de",
+      "sourceLemma": "window",
       "kind": "word",
       "sourceForms": [
         {
@@ -4102,6 +4211,7 @@
     {
       "id": "de.word.brot",
       "language": "de",
+      "sourceLemma": "bread",
       "kind": "word",
       "sourceForms": [
         {
@@ -4156,6 +4266,7 @@
     {
       "id": "de.word.milch",
       "language": "de",
+      "sourceLemma": "milk",
       "kind": "word",
       "sourceForms": [
         {
@@ -4202,6 +4313,7 @@
     {
       "id": "de.word.kaffee",
       "language": "de",
+      "sourceLemma": "coffee",
       "kind": "word",
       "sourceForms": [
         {
@@ -4248,6 +4360,7 @@
     {
       "id": "de.word.tee",
       "language": "de",
+      "sourceLemma": "tea",
       "kind": "word",
       "sourceForms": [
         {
@@ -4294,6 +4407,7 @@
     {
       "id": "de.word.apfel",
       "language": "de",
+      "sourceLemma": "apple",
       "kind": "word",
       "sourceForms": [
         {
@@ -4348,6 +4462,7 @@
     {
       "id": "de.word.lehrer",
       "language": "de",
+      "sourceLemma": "teacher",
       "kind": "word",
       "sourceForms": [
         {
@@ -4402,6 +4517,7 @@
     {
       "id": "de.word.zwei",
       "language": "de",
+      "sourceLemma": "two",
       "kind": "word",
       "sourceForms": [
         {
@@ -4440,6 +4556,7 @@
     {
       "id": "de.word.drei",
       "language": "de",
+      "sourceLemma": "three",
       "kind": "word",
       "sourceForms": [
         {
@@ -4478,6 +4595,7 @@
     {
       "id": "de.word.vier",
       "language": "de",
+      "sourceLemma": "four",
       "kind": "word",
       "sourceForms": [
         {
@@ -4516,6 +4634,7 @@
     {
       "id": "de.word.fuenf",
       "language": "de",
+      "sourceLemma": "five",
       "kind": "word",
       "sourceForms": [
         {
@@ -4554,6 +4673,7 @@
     {
       "id": "de.word.sechs",
       "language": "de",
+      "sourceLemma": "six",
       "kind": "word",
       "sourceForms": [
         {
@@ -4592,6 +4712,7 @@
     {
       "id": "de.word.sieben",
       "language": "de",
+      "sourceLemma": "seven",
       "kind": "word",
       "sourceForms": [
         {
@@ -4630,6 +4751,7 @@
     {
       "id": "de.word.acht",
       "language": "de",
+      "sourceLemma": "eight",
       "kind": "word",
       "sourceForms": [
         {
@@ -4668,6 +4790,7 @@
     {
       "id": "de.word.neun",
       "language": "de",
+      "sourceLemma": "nine",
       "kind": "word",
       "sourceForms": [
         {
@@ -4706,6 +4829,7 @@
     {
       "id": "de.word.zehn",
       "language": "de",
+      "sourceLemma": "ten",
       "kind": "word",
       "sourceForms": [
         {
@@ -4744,6 +4868,7 @@
     {
       "id": "de.word.jedoch",
       "language": "de",
+      "sourceLemma": "however",
       "kind": "word",
       "sourceForms": [
         {
@@ -4782,6 +4907,7 @@
     {
       "id": "de.word.besonders",
       "language": "de",
+      "sourceLemma": "especially",
       "kind": "word",
       "sourceForms": [
         {
@@ -4820,6 +4946,7 @@
     {
       "id": "de.word.schnell",
       "language": "de",
+      "sourceLemma": "quickly",
       "kind": "word",
       "sourceForms": [
         {
@@ -4858,6 +4985,7 @@
     {
       "id": "de.word.langsam",
       "language": "de",
+      "sourceLemma": "slowly",
       "kind": "word",
       "sourceForms": [
         {
@@ -4896,6 +5024,7 @@
     {
       "id": "de.word.entschuldigung",
       "language": "de",
+      "sourceLemma": "excuse me",
       "kind": "word",
       "sourceForms": [
         {
@@ -4938,6 +5067,7 @@
     {
       "id": "de.chunk.ich-moechte",
       "language": "de",
+      "sourceLemma": "I would like",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -4976,6 +5106,7 @@
     {
       "id": "de.chunk.guten-abend",
       "language": "de",
+      "sourceLemma": "good evening",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -5016,6 +5147,7 @@
     {
       "id": "de.chunk.gute-nacht",
       "language": "de",
+      "sourceLemma": "good night",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -5056,6 +5188,7 @@
     {
       "id": "de.chunk.bis-spaeter",
       "language": "de",
+      "sourceLemma": "see you later",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -5094,6 +5227,7 @@
     {
       "id": "de.word.montag",
       "language": "de",
+      "sourceLemma": "Monday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5132,6 +5266,7 @@
     {
       "id": "de.word.dienstag",
       "language": "de",
+      "sourceLemma": "Tuesday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5170,6 +5305,7 @@
     {
       "id": "de.word.mittwoch",
       "language": "de",
+      "sourceLemma": "Wednesday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5208,6 +5344,7 @@
     {
       "id": "de.word.donnerstag",
       "language": "de",
+      "sourceLemma": "Thursday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5246,6 +5383,7 @@
     {
       "id": "de.word.freitag",
       "language": "de",
+      "sourceLemma": "Friday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5284,6 +5422,7 @@
     {
       "id": "de.word.samstag",
       "language": "de",
+      "sourceLemma": "Saturday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5322,6 +5461,7 @@
     {
       "id": "de.word.sonntag",
       "language": "de",
+      "sourceLemma": "Sunday",
       "kind": "word",
       "sourceForms": [
         {
@@ -5360,6 +5500,7 @@
     {
       "id": "de.word.stunde",
       "language": "de",
+      "sourceLemma": "hour",
       "kind": "word",
       "sourceForms": [
         {
@@ -5414,6 +5555,7 @@
     {
       "id": "de.word.minute",
       "language": "de",
+      "sourceLemma": "minute",
       "kind": "word",
       "sourceForms": [
         {
@@ -5468,6 +5610,7 @@
     {
       "id": "de.word.moment",
       "language": "de",
+      "sourceLemma": "moment",
       "kind": "word",
       "sourceForms": [
         {
@@ -5522,6 +5665,7 @@
     {
       "id": "de.word.farbe",
       "language": "de",
+      "sourceLemma": "colour",
       "kind": "word",
       "sourceForms": [
         {
@@ -5596,6 +5740,7 @@
     {
       "id": "de.word.hundert",
       "language": "de",
+      "sourceLemma": "hundred",
       "kind": "word",
       "sourceForms": [
         {
@@ -5634,6 +5779,7 @@
     {
       "id": "de.word.tausend",
       "language": "de",
+      "sourceLemma": "thousand",
       "kind": "word",
       "sourceForms": [
         {
@@ -5672,6 +5818,7 @@
     {
       "id": "de.word.zwischen",
       "language": "de",
+      "sourceLemma": "between",
       "kind": "word",
       "sourceForms": [
         {
@@ -5710,6 +5857,7 @@
     {
       "id": "de.word.wahrscheinlich",
       "language": "de",
+      "sourceLemma": "probably",
       "kind": "word",
       "sourceForms": [
         {
@@ -5748,6 +5896,7 @@
     {
       "id": "de.word.ploetzlich",
       "language": "de",
+      "sourceLemma": "suddenly",
       "kind": "word",
       "sourceForms": [
         {
@@ -5786,6 +5935,7 @@
     {
       "id": "de.word.selten",
       "language": "de",
+      "sourceLemma": "rarely",
       "kind": "word",
       "sourceForms": [
         {
@@ -5828,6 +5978,7 @@
     {
       "id": "de.word.draussen",
       "language": "de",
+      "sourceLemma": "outside",
       "kind": "word",
       "sourceForms": [
         {
@@ -5866,6 +6017,7 @@
     {
       "id": "de.word.weniger",
       "language": "de",
+      "sourceLemma": "less",
       "kind": "word",
       "sourceForms": [
         {
@@ -5904,6 +6056,7 @@
     {
       "id": "de.chunk.keine-ahnung",
       "language": "de",
+      "sourceLemma": "no idea",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -5942,6 +6095,7 @@
     {
       "id": "de.chunk.wie-geht-s",
       "language": "de",
+      "sourceLemma": "how are you",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -5982,6 +6136,7 @@
     {
       "id": "de.chunk.heute-abend",
       "language": "de",
+      "sourceLemma": "tonight",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -6023,6 +6178,7 @@
     {
       "id": "de.word.problem",
       "language": "de",
+      "sourceLemma": "problem",
       "kind": "word",
       "sourceForms": [
         {
@@ -6077,6 +6233,7 @@
     {
       "id": "de.word.idee",
       "language": "de",
+      "sourceLemma": "idea",
       "kind": "word",
       "sourceForms": [
         {
@@ -6131,6 +6288,7 @@
     {
       "id": "de.word.leben",
       "language": "de",
+      "sourceLemma": "life",
       "kind": "word",
       "sourceForms": [
         {
@@ -6177,6 +6335,7 @@
     {
       "id": "de.word.ende",
       "language": "de",
+      "sourceLemma": "end",
       "kind": "word",
       "sourceForms": [
         {
@@ -6231,6 +6390,7 @@
     {
       "id": "de.word.anfang",
       "language": "de",
+      "sourceLemma": "beginning",
       "kind": "word",
       "sourceForms": [
         {
@@ -6285,6 +6445,7 @@
     {
       "id": "de.word.bild",
       "language": "de",
+      "sourceLemma": "picture",
       "kind": "word",
       "sourceForms": [
         {
@@ -6339,6 +6500,7 @@
     {
       "id": "de.word.film",
       "language": "de",
+      "sourceLemma": "film",
       "kind": "word",
       "sourceForms": [
         {
@@ -6413,6 +6575,7 @@
     {
       "id": "de.word.spiel",
       "language": "de",
+      "sourceLemma": "game",
       "kind": "word",
       "sourceForms": [
         {
@@ -6467,6 +6630,7 @@
     {
       "id": "de.word.person",
       "language": "de",
+      "sourceLemma": "person",
       "kind": "word",
       "sourceForms": [
         {
@@ -6521,6 +6685,7 @@
     {
       "id": "de.word.leute",
       "language": "de",
+      "sourceLemma": "people",
       "kind": "word",
       "sourceForms": [
         {
@@ -6563,6 +6728,7 @@
     {
       "id": "de.word.nachricht",
       "language": "de",
+      "sourceLemma": "message",
       "kind": "word",
       "sourceForms": [
         {
@@ -6617,6 +6783,7 @@
     {
       "id": "de.word.telefon",
       "language": "de",
+      "sourceLemma": "telephone",
       "kind": "word",
       "sourceForms": [
         {
@@ -6671,6 +6838,7 @@
     {
       "id": "de.word.computer",
       "language": "de",
+      "sourceLemma": "computer",
       "kind": "word",
       "sourceForms": [
         {
@@ -6725,6 +6893,7 @@
     {
       "id": "de.word.irgendwo",
       "language": "de",
+      "sourceLemma": "somewhere",
       "kind": "word",
       "sourceForms": [
         {
@@ -6763,6 +6932,7 @@
     {
       "id": "de.word.oben",
       "language": "de",
+      "sourceLemma": "upstairs",
       "kind": "word",
       "sourceForms": [
         {
@@ -6801,6 +6971,7 @@
     {
       "id": "de.word.unten",
       "language": "de",
+      "sourceLemma": "downstairs",
       "kind": "word",
       "sourceForms": [
         {
@@ -6839,6 +7010,7 @@
     {
       "id": "de.word.sowieso",
       "language": "de",
+      "sourceLemma": "anyway",
       "kind": "word",
       "sourceForms": [
         {
@@ -6877,6 +7049,7 @@
     {
       "id": "de.chunk.kein-problem",
       "language": "de",
+      "sourceLemma": "no problem",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -6917,6 +7090,7 @@
     {
       "id": "de.chunk.zu-viel",
       "language": "de",
+      "sourceLemma": "too much",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -6955,6 +7129,7 @@
     {
       "id": "de.word.grund",
       "language": "de",
+      "sourceLemma": "reason",
       "kind": "word",
       "sourceForms": [
         {
@@ -7009,6 +7184,7 @@
     {
       "id": "de.word.beispiel",
       "language": "de",
+      "sourceLemma": "example",
       "kind": "word",
       "sourceForms": [
         {
@@ -7063,6 +7239,7 @@
     {
       "id": "de.word.geschichte",
       "language": "de",
+      "sourceLemma": "story",
       "kind": "word",
       "sourceForms": [
         {
@@ -7129,6 +7306,7 @@
     {
       "id": "de.word.reise",
       "language": "de",
+      "sourceLemma": "journey",
       "kind": "word",
       "sourceForms": [
         {
@@ -7203,6 +7381,7 @@
     {
       "id": "de.word.ziel",
       "language": "de",
+      "sourceLemma": "goal",
       "kind": "word",
       "sourceForms": [
         {
@@ -7257,6 +7436,7 @@
     {
       "id": "de.word.e-mail",
       "language": "de",
+      "sourceLemma": "email",
       "kind": "word",
       "sourceForms": [
         {
@@ -7311,15 +7491,12 @@
     {
       "id": "de.word.internet",
       "language": "de",
+      "sourceLemma": "internet",
       "kind": "word",
       "sourceForms": [
         {
           "form": "the internet",
           "target": "das Internet"
-        },
-        {
-          "form": "an internet",
-          "target": "ein Internet"
         },
         {
           "form": "internet",
@@ -7357,6 +7534,7 @@
     {
       "id": "de.word.sport",
       "language": "de",
+      "sourceLemma": "sport",
       "kind": "word",
       "sourceForms": [
         {
@@ -7403,6 +7581,7 @@
     {
       "id": "de.word.januar",
       "language": "de",
+      "sourceLemma": "January",
       "kind": "word",
       "sourceForms": [
         {
@@ -7441,6 +7620,7 @@
     {
       "id": "de.word.februar",
       "language": "de",
+      "sourceLemma": "February",
       "kind": "word",
       "sourceForms": [
         {
@@ -7479,6 +7659,7 @@
     {
       "id": "de.word.april",
       "language": "de",
+      "sourceLemma": "April",
       "kind": "word",
       "sourceForms": [
         {
@@ -7517,6 +7698,7 @@
     {
       "id": "de.word.juni",
       "language": "de",
+      "sourceLemma": "June",
       "kind": "word",
       "sourceForms": [
         {
@@ -7555,6 +7737,7 @@
     {
       "id": "de.word.juli",
       "language": "de",
+      "sourceLemma": "July",
       "kind": "word",
       "sourceForms": [
         {
@@ -7593,6 +7776,7 @@
     {
       "id": "de.word.august",
       "language": "de",
+      "sourceLemma": "August",
       "kind": "word",
       "sourceForms": [
         {
@@ -7631,6 +7815,7 @@
     {
       "id": "de.word.september",
       "language": "de",
+      "sourceLemma": "September",
       "kind": "word",
       "sourceForms": [
         {
@@ -7669,6 +7854,7 @@
     {
       "id": "de.word.oktober",
       "language": "de",
+      "sourceLemma": "October",
       "kind": "word",
       "sourceForms": [
         {
@@ -7707,6 +7893,7 @@
     {
       "id": "de.word.november",
       "language": "de",
+      "sourceLemma": "November",
       "kind": "word",
       "sourceForms": [
         {
@@ -7745,6 +7932,7 @@
     {
       "id": "de.word.dezember",
       "language": "de",
+      "sourceLemma": "December",
       "kind": "word",
       "sourceForms": [
         {
@@ -7783,6 +7971,7 @@
     {
       "id": "de.word.waehrend",
       "language": "de",
+      "sourceLemma": "during",
       "kind": "word",
       "sourceForms": [
         {
@@ -7821,6 +8010,7 @@
     {
       "id": "de.word.uebermorgen",
       "language": "de",
+      "sourceLemma": "the day after tomorrow",
       "kind": "word",
       "sourceForms": [
         {
@@ -7863,6 +8053,7 @@
     {
       "id": "de.chunk.auf-jeden-fall",
       "language": "de",
+      "sourceLemma": "in any case",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -7905,6 +8096,7 @@
     {
       "id": "de.chunk.zum-glueck",
       "language": "de",
+      "sourceLemma": "luckily",
       "kind": "chunk",
       "sourceForms": [
         {
@@ -7947,6 +8139,7 @@
     {
       "id": "de.word.bahnhof",
       "language": "de",
+      "sourceLemma": "train station",
       "kind": "word",
       "sourceForms": [
         {
@@ -8001,6 +8194,7 @@
     {
       "id": "de.word.flughafen",
       "language": "de",
+      "sourceLemma": "airport",
       "kind": "word",
       "sourceForms": [
         {
@@ -8055,6 +8249,7 @@
     {
       "id": "de.word.hotel",
       "language": "de",
+      "sourceLemma": "hotel",
       "kind": "word",
       "sourceForms": [
         {
@@ -8109,6 +8304,7 @@
     {
       "id": "de.word.restaurant",
       "language": "de",
+      "sourceLemma": "restaurant",
       "kind": "word",
       "sourceForms": [
         {
@@ -8163,6 +8359,7 @@
     {
       "id": "de.word.markt",
       "language": "de",
+      "sourceLemma": "market",
       "kind": "word",
       "sourceForms": [
         {
@@ -8217,6 +8414,7 @@
     {
       "id": "de.word.kirche",
       "language": "de",
+      "sourceLemma": "church",
       "kind": "word",
       "sourceForms": [
         {
@@ -8271,6 +8469,7 @@
     {
       "id": "de.word.krankenhaus",
       "language": "de",
+      "sourceLemma": "hospital",
       "kind": "word",
       "sourceForms": [
         {
@@ -8325,6 +8524,7 @@
     {
       "id": "de.word.bibliothek",
       "language": "de",
+      "sourceLemma": "library",
       "kind": "word",
       "sourceForms": [
         {
@@ -8379,6 +8579,7 @@
     {
       "id": "de.word.garten",
       "language": "de",
+      "sourceLemma": "garden",
       "kind": "word",
       "sourceForms": [
         {
@@ -8433,6 +8634,7 @@
     {
       "id": "de.word.park",
       "language": "de",
+      "sourceLemma": "park",
       "kind": "word",
       "sourceForms": [
         {
@@ -8487,15 +8689,12 @@
     {
       "id": "de.word.wetter",
       "language": "de",
+      "sourceLemma": "weather",
       "kind": "word",
       "sourceForms": [
         {
           "form": "the weather",
           "target": "das Wetter"
-        },
-        {
-          "form": "a weather",
-          "target": "ein Wetter"
         },
         {
           "form": "weather",
@@ -8533,15 +8732,12 @@
     {
       "id": "de.word.sonne",
       "language": "de",
+      "sourceLemma": "sun",
       "kind": "word",
       "sourceForms": [
         {
           "form": "the sun",
           "target": "die Sonne"
-        },
-        {
-          "form": "a sun",
-          "target": "eine Sonne"
         },
         {
           "form": "sun",
@@ -8579,15 +8775,12 @@
     {
       "id": "de.word.schnee",
       "language": "de",
+      "sourceLemma": "snow",
       "kind": "word",
       "sourceForms": [
         {
           "form": "the snow",
           "target": "der Schnee"
-        },
-        {
-          "form": "a snow",
-          "target": "ein Schnee"
         },
         {
           "form": "snow",
@@ -8625,6 +8818,7 @@
     {
       "id": "de.word.wind",
       "language": "de",
+      "sourceLemma": "wind",
       "kind": "word",
       "sourceForms": [
         {
@@ -8671,6 +8865,7 @@
     {
       "id": "de.word.vorgestern",
       "language": "de",
+      "sourceLemma": "the day before yesterday",
       "kind": "word",
       "sourceForms": [
         {
@@ -8713,6 +8908,7 @@
     {
       "id": "de.word.berg",
       "language": "de",
+      "sourceLemma": "mountain",
       "kind": "word",
       "sourceForms": [
         {
@@ -8767,6 +8963,7 @@
     {
       "id": "de.word.fluss",
       "language": "de",
+      "sourceLemma": "river",
       "kind": "word",
       "sourceForms": [
         {
@@ -8821,6 +9018,7 @@
     {
       "id": "de.word.see",
       "language": "de",
+      "sourceLemma": "lake",
       "kind": "word",
       "sourceForms": [
         {
@@ -8875,6 +9073,7 @@
     {
       "id": "de.word.meer",
       "language": "de",
+      "sourceLemma": "sea",
       "kind": "word",
       "sourceForms": [
         {
@@ -8929,6 +9128,7 @@
     {
       "id": "de.word.wald",
       "language": "de",
+      "sourceLemma": "forest",
       "kind": "word",
       "sourceForms": [
         {
@@ -8983,6 +9183,7 @@
     {
       "id": "de.word.baum",
       "language": "de",
+      "sourceLemma": "tree",
       "kind": "word",
       "sourceForms": [
         {
@@ -9037,6 +9238,7 @@
     {
       "id": "de.word.blume",
       "language": "de",
+      "sourceLemma": "flower",
       "kind": "word",
       "sourceForms": [
         {
@@ -9091,6 +9293,7 @@
     {
       "id": "de.word.vogel",
       "language": "de",
+      "sourceLemma": "bird",
       "kind": "word",
       "sourceForms": [
         {
@@ -9145,6 +9348,7 @@
     {
       "id": "de.word.katze",
       "language": "de",
+      "sourceLemma": "cat",
       "kind": "word",
       "sourceForms": [
         {
@@ -9199,6 +9403,7 @@
     {
       "id": "de.word.pferd",
       "language": "de",
+      "sourceLemma": "horse",
       "kind": "word",
       "sourceForms": [
         {
@@ -9253,6 +9458,7 @@
     {
       "id": "de.word.fisch",
       "language": "de",
+      "sourceLemma": "fish",
       "kind": "word",
       "sourceForms": [
         {
@@ -9307,6 +9513,7 @@
     {
       "id": "de.word.kopf",
       "language": "de",
+      "sourceLemma": "head",
       "kind": "word",
       "sourceForms": [
         {
@@ -9361,6 +9568,7 @@
     {
       "id": "de.word.auge",
       "language": "de",
+      "sourceLemma": "eye",
       "kind": "word",
       "sourceForms": [
         {
@@ -9415,6 +9623,7 @@
     {
       "id": "de.word.ohr",
       "language": "de",
+      "sourceLemma": "ear",
       "kind": "word",
       "sourceForms": [
         {
@@ -9469,6 +9678,7 @@
     {
       "id": "de.word.nase",
       "language": "de",
+      "sourceLemma": "nose",
       "kind": "word",
       "sourceForms": [
         {
@@ -9523,6 +9733,7 @@
     {
       "id": "de.word.mund",
       "language": "de",
+      "sourceLemma": "mouth",
       "kind": "word",
       "sourceForms": [
         {
@@ -9577,6 +9788,7 @@
     {
       "id": "de.word.herz",
       "language": "de",
+      "sourceLemma": "heart",
       "kind": "word",
       "sourceForms": [
         {
@@ -9631,6 +9843,7 @@
     {
       "id": "de.word.arzt",
       "language": "de",
+      "sourceLemma": "doctor",
       "kind": "word",
       "sourceForms": [
         {

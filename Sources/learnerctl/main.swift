@@ -97,7 +97,7 @@ case "simulate":
     do {
         // Sandbox by default: copy the pack into an in-memory engine so
         // repeated runs never contaminate real learning state.
-        let language = try engine.store.setting(SettingsKey.activeLanguage) ?? "de"
+        let language = try engine.store.setting(SettingsKey.activeLanguage) ?? "und"
         guard try !engine.store.items(language: language).isEmpty else {
             fail("no pack in this database — run 'learnerctl import <pack.json>' against the same --db first")
         }

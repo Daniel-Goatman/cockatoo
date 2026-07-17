@@ -7,7 +7,6 @@ public enum SettingsKey {
     public static let activeLanguage = "activeLanguage"
     public static let enabled = "enabled"
     public static let blockedHosts = "blockedHosts" // JSON array of strings
-    public static let pageContextOptIn = "pageContextOptIn"
     /// User-tunable intake appetite; overrides EngineConfig.newPerDay.
     public static let newPerDay = "newPerDay"
     /// Set (to an ISO-8601 date) once band N's completion has been shown —
@@ -17,8 +16,19 @@ public enum SettingsKey {
 
 /// Data-access facade over the database. All engine components go through
 /// this; the Store API stays behind this type so even a transport change
-/// (XPC fallback scenarios) touches no callers.
+/// (IPC transport fallback scenarios) touches no callers.
 public struct LearnerStore: Sendable {
+    public enum LanguageActivationError: Error, Equatable, LocalizedError {
+        case languageNotInstalled(String)
+
+        public var errorDescription: String? {
+            switch self {
+            case .languageNotInstalled(let language):
+                return "No language pack is installed for \(language)."
+            }
+        }
+    }
+
     public let db: AppDatabase
 
     public init(db: AppDatabase) {
@@ -123,12 +133,41 @@ public struct LearnerStore: Sendable {
     /// app upgrade to a newer bundled pack on launch (upsert import keeps
     /// all progress; stable IDs are validator-enforced).
     public func latestPackVersion(language: String) throws -> String? {
+        try latestPackIdentity(language: language)?.version
+    }
+
+    /// Version alone is not enough to detect a repaired or regenerated pack
+    /// in development. The content hash also lets startup recover from a
+    /// stale record whose label matches the bundled pack.
+    public func latestPackIdentity(language: String) throws -> (version: String, checksum: String)? {
         try db.writer.read { dbc in
-            try PackRecord
+            guard let record = try PackRecord
                 .filter(Column("language") == language)
                 .order(Column("importedAt").desc)
-                .fetchOne(dbc)?
-                .version
+                .fetchOne(dbc)
+            else { return nil }
+            return (record.version, record.checksum)
+        }
+    }
+
+    /// Languages with at least one imported pack, newest import first.
+    public func installedLanguages() throws -> [String] {
+        try db.writer.read { dbc in
+            try String.fetchAll(
+                dbc,
+                sql: "SELECT language FROM pack GROUP BY language ORDER BY MAX(importedAt) DESC"
+            )
+        }
+    }
+
+    /// Switch the single active curriculum and invalidate extension caches.
+    public func activateLanguage(_ language: String) throws {
+        guard try latestPackVersion(language: language) != nil else {
+            throw LanguageActivationError.languageNotInstalled(language)
+        }
+        try db.writer.write { dbc in
+            try SettingRecord(key: SettingsKey.activeLanguage, value: language).save(dbc)
+            try bumpSnapshotVersion(dbc)
         }
     }
 

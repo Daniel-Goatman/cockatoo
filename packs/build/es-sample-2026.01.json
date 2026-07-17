@@ -1,0 +1,259 @@
+{
+  "grading" : {
+    "articles" : [
+      "el",
+      "la",
+      "los",
+      "las",
+      "un",
+      "una"
+    ],
+    "diacriticInsensitive" : false,
+    "localeIdentifier" : "es",
+    "substitutions" : {
+
+    }
+  },
+  "items" : [
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "Bread and water.",
+          "target" : "Pan y agua."
+        }
+      ],
+      "explanation" : "y means and.",
+      "fidelityTier" : "exact",
+      "frequencyBand" : 1,
+      "id" : "es.word.y",
+      "kind" : "word",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "and",
+          "target" : "y"
+        }
+      ],
+      "sourceLemma" : "and",
+      "target" : "y",
+      "targetMeta" : {
+        "pos" : "conjunction"
+      }
+    },
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "Small but comfortable.",
+          "target" : "Pequeño pero cómodo."
+        }
+      ],
+      "explanation" : "pero means but.",
+      "fidelityTier" : "exact",
+      "frequencyBand" : 1,
+      "id" : "es.word.pero",
+      "kind" : "word",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "but",
+          "target" : "pero"
+        }
+      ],
+      "sourceLemma" : "but",
+      "target" : "pero",
+      "targetMeta" : {
+        "pos" : "conjunction"
+      }
+    },
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "We are leaving now.",
+          "target" : "Nos vamos ahora."
+        }
+      ],
+      "explanation" : "ahora means now.",
+      "fidelityTier" : "exact",
+      "frequencyBand" : 1,
+      "id" : "es.word.ahora",
+      "kind" : "word",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "now",
+          "target" : "ahora"
+        }
+      ],
+      "sourceLemma" : "now",
+      "target" : "ahora",
+      "targetMeta" : {
+        "pos" : "adverb"
+      }
+    },
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "The house is small.",
+          "target" : "La casa es pequeña."
+        }
+      ],
+      "explanation" : "la casa means house.",
+      "fidelityTier" : "formMatched",
+      "frequencyBand" : 1,
+      "id" : "es.word.casa",
+      "kind" : "word",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "the house",
+          "target" : "la casa"
+        },
+        {
+          "form" : "a house",
+          "target" : "una casa"
+        },
+        {
+          "form" : "house",
+          "target" : "casa"
+        },
+        {
+          "form" : "houses",
+          "target" : "casas"
+        },
+        {
+          "form" : "the houses",
+          "target" : "las casas"
+        }
+      ],
+      "sourceLemma" : "house",
+      "target" : "casa",
+      "targetMeta" : {
+        "gender" : "la",
+        "plural" : "casas",
+        "pos" : "noun"
+      }
+    },
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "The book is here.",
+          "target" : "El libro está aquí."
+        }
+      ],
+      "explanation" : "el libro means book.",
+      "fidelityTier" : "formMatched",
+      "frequencyBand" : 1,
+      "id" : "es.word.libro",
+      "kind" : "word",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "the book",
+          "target" : "el libro"
+        },
+        {
+          "form" : "a book",
+          "target" : "un libro"
+        },
+        {
+          "form" : "book",
+          "target" : "libro"
+        },
+        {
+          "form" : "books",
+          "target" : "libros"
+        },
+        {
+          "form" : "the books",
+          "target" : "los libros"
+        }
+      ],
+      "sourceLemma" : "book",
+      "target" : "libro",
+      "targetMeta" : {
+        "gender" : "el",
+        "plural" : "libros",
+        "pos" : "noun"
+      }
+    },
+    {
+      "dependencies" : [
+
+      ],
+      "examples" : [
+        {
+          "source" : "Thank you for the book.",
+          "target" : "Gracias por el libro."
+        }
+      ],
+      "explanation" : "gracias means thank you.",
+      "fidelityTier" : "exact",
+      "frequencyBand" : 1,
+      "id" : "es.chunk.gracias",
+      "kind" : "chunk",
+      "language" : "es",
+      "level" : "a1",
+      "replacementPolicy" : "ambientSafe",
+      "sourceForms" : [
+        {
+          "form" : "thank you",
+          "target" : "gracias"
+        }
+      ],
+      "sourceLemma" : "thank you",
+      "target" : "gracias",
+      "targetMeta" : {
+        "pos" : "chunk"
+      }
+    }
+  ],
+  "language" : "es",
+  "provenance" : {
+    "corpus" : "Cockatoo multilingual fixture",
+    "generatedAt" : "2026-07-16",
+    "license" : "project-original content",
+    "packtool" : "2.0.0"
+  },
+  "schema" : 2,
+  "sourceLanguage" : "en",
+  "validation" : {
+    "allowApproximateAmbient" : false,
+    "disallowedAmbientPartsOfSpeech" : [
+      "verb"
+    ],
+    "nounPartsOfSpeech" : [
+      "noun"
+    ],
+    "sourceDeterminers" : [
+      "the",
+      "a",
+      "an"
+    ]
+  },
+  "version" : "sample-2026.01"
+}

@@ -2,7 +2,7 @@ import XCTest
 @testable import LearnerCore
 
 final class GraderTests: XCTestCase {
-    let grader = Grader(grading: .german)
+    let grader = Grader(grading: .germanFixture)
     let now = Fixtures.t0
 
     // MARK: - Typed answer checking

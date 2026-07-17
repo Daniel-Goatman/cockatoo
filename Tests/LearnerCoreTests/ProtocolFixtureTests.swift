@@ -46,6 +46,17 @@ final class ProtocolFixtureTests: XCTestCase {
         let bare = try JSONDecoder().decode(MessageEnvelope.self, from: withoutPayload)
         XCTAssertNil(bare.payload)
 
+        let openPractice = try JSONSerialization.data(withJSONObject: fixtures["openPractice"]!)
+        let openEnvelope = try JSONDecoder().decode(MessageEnvelope.self, from: openPractice)
+        let openRequest = try JSONDecoder().decode(OpenDashboardRequest.self, from: Data(openEnvelope.payload!.utf8))
+        XCTAssertEqual(openRequest.destination, .practice)
+
+        let openLibraryItem = try JSONSerialization.data(withJSONObject: fixtures["openLibraryItem"]!)
+        let libraryEnvelope = try JSONDecoder().decode(MessageEnvelope.self, from: openLibraryItem)
+        let libraryRequest = try JSONDecoder().decode(OpenDashboardRequest.self, from: Data(libraryEnvelope.payload!.utf8))
+        XCTAssertEqual(libraryRequest.destination, .library)
+        XCTAssertEqual(libraryRequest.itemId, "de:jetzt")
+
         // End-to-end: a real service must answer, not error.
         let engine = try Fixtures.makeEngine()
         let service = SyncService(engine: engine)
@@ -54,6 +65,13 @@ final class ProtocolFixtureTests: XCTestCase {
                      "fixture envelope produced an error response: \(String(data: response, encoding: .utf8) ?? "?")")
         let snapshot = try JSONDecoder().decode(GetSnapshotResponse.self, from: response)
         if case .unchanged = snapshot { XCTFail("sinceVersion 412 cannot match a fresh engine") }
+    }
+
+    func testOverviewFixtureDecodes() throws {
+        let overview = try JSONCoding.decoder.decode(GetOverviewResponse.self, from: load("overview.json"))
+        XCTAssertEqual(overview.activeLanguage, "de")
+        XCTAssertEqual(overview.availablePracticeItems, 5)
+        XCTAssertEqual(overview.knownCount, 11)
     }
 
     func testPostEventsFixtureDecodes() throws {

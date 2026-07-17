@@ -5,4 +5,5 @@ extension/dist-resources/
 dist/
 .DS_Store
 xcuserdata/
-build/
+/build/
+App/Config/Local.xcconfig

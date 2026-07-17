@@ -36,8 +36,7 @@ public struct ExposureEvent: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// Cloze material captured locally from browsing. Device-local; participates
-/// in LLM calls only under the sendsPageText privacy tier.
+/// Cloze material captured locally from browsing. It never leaves the device.
 public struct CapturedSentence: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var itemId: String

@@ -20,12 +20,10 @@ public struct Snapshot: Codable, Equatable, Sendable {
 public struct SnapshotSettings: Codable, Equatable, Sendable {
     public var enabled: Bool
     public var blockedHosts: [String]
-    public var pageContextOptIn: Bool
 
-    public init(enabled: Bool, blockedHosts: [String], pageContextOptIn: Bool) {
+    public init(enabled: Bool, blockedHosts: [String]) {
         self.enabled = enabled
         self.blockedHosts = blockedHosts
-        self.pageContextOptIn = pageContextOptIn
     }
 }
 
@@ -46,9 +44,9 @@ public struct SnapshotItem: Codable, Equatable, Sendable {
 }
 
 public struct SnapshotForm: Codable, Equatable, Sendable {
-    /// Lowercased English surface form to match, e.g. "the house".
+    /// Lowercased source-language surface form to match.
     public var match: String
-    /// Target-language display text, e.g. "das Haus".
+    /// Target-language display text.
     public var display: String
 
     public init(match: String, display: String) {
@@ -58,7 +56,7 @@ public struct SnapshotForm: Codable, Equatable, Sendable {
 }
 
 public struct HoverContent: Codable, Equatable, Sendable {
-    /// Canonical target with citation-form article, e.g. "das Haus".
+    /// Canonical target, including a citation-form article when applicable.
     public var target: String
     public var pos: String?
     public var example: Example?
