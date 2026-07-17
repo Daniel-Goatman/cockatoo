@@ -19,7 +19,7 @@ for (const entry of ["content", "background", "popup"]) {
 
 // Stage the complete extension for the Xcode appex target.
 mkdirSync("dist-resources", { recursive: true });
-for (const file of ["manifest.json", "styles.css", "popup.html"]) {
+for (const file of ["manifest.json", "styles.css", "popup.html", "popup.css"]) {
   cpSync(file, `dist-resources/${file}`);
 }
 cpSync("build", "dist-resources/build", { recursive: true });

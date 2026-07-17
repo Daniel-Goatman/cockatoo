@@ -29,7 +29,6 @@ export interface Snapshot {
   settings: {
     enabled: boolean;
     blockedHosts: string[];
-    pageContextOptIn: boolean;
   };
   items: SnapshotItem[];
 }
@@ -50,6 +49,21 @@ export interface PostEventsResponse {
   latestVersion: number;
 }
 
+export interface GetOverviewResponse {
+  activeLanguage: string;
+  libraryCount: number;
+  dueNow: number;
+  newAvailable: number;
+  knownCount: number;
+  /** Due reviews plus introductions Swift has made available right now. */
+  availablePracticeItems: number;
+}
+
+export interface OpenDashboardRequest {
+  itemId?: string;
+  destination?: "practice" | "library";
+}
+
 export type GetSnapshotResponse =
   | { unchanged: true; version: number }
   | { version: number; snapshot: Snapshot };
@@ -57,7 +71,6 @@ export type GetSnapshotResponse =
 export type SyncErrorCode =
   | "appUnavailable"
   | "protocolMismatch"
-  | "pageContextNotOptedIn"
   | "unknownMethod"
   | "badPayload"
   | "internalError";

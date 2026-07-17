@@ -32,6 +32,7 @@ what SRS, tiers, or mastery are (P1 — see repo-root AGENTS.md).
 
 ## Styling
 
-`styles.css` + `popup.html` carry the paper/editorial brand (parchment
-card, warm accent #8a4a26, Newsreader-with-system-serif-fallback). Keep new
-UI in that language; tokens stay subtle (P7: never make a page feel broken).
+`styles.css` + `popup.css` carry the native app's graphite/ivory brand with
+system light/dark variants, Iowan target-language type, blue "on pages"
+tokens, and restrained gold actions. Keep new UI in that language; tokens
+stay subtle (P7: never make a page feel broken).

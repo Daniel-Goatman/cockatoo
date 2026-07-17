@@ -37,7 +37,7 @@ export function makeSnapshot(items: SnapshotItem[], overrides: Partial<Snapshot[
   return {
     version: 1,
     language: "de",
-    settings: { enabled: true, blockedHosts: [], pageContextOptIn: false, ...overrides },
+    settings: { enabled: true, blockedHosts: [], ...overrides },
     items,
   };
 }

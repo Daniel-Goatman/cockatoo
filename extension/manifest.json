@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Cockatoo",
   "version": "1.0",
-  "description": "Learn German while you read — a few words per page, quietly swapped. Hover to see the original.",
+  "description": "Learn a language while you read — a few words per page, quietly swapped. Hover to see the original.",
   "permissions": ["storage", "nativeMessaging", "alarms"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "background": {

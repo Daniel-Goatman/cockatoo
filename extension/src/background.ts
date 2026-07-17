@@ -1,6 +1,6 @@
 import { EventQueue, FLUSH_INTERVAL_MS } from "./core/eventQueue";
 import { SnapshotStore } from "./core/snapshotStore";
-import type { ExposureEvent, SyncErrorResponse, Transport } from "./core/types";
+import type { ExposureEvent, GetOverviewResponse, OpenDashboardRequest, SyncErrorResponse, Transport } from "./core/types";
 import { isSyncError } from "./core/types";
 import { SafariTransport } from "./adapters/safari/transport";
 
@@ -23,6 +23,7 @@ declare const browser: {
 };
 
 const raw = new SafariTransport();
+const OVERVIEW_CACHE_KEY = "popupOverview";
 let appUnavailable = false;
 let lastSyncError: string | null = null;
 
@@ -78,9 +79,10 @@ browser.alarms?.onAlarm.addListener((alarm) => {
 setInterval(() => void queue.flush(), FLUSH_INTERVAL_MS);
 
 interface ContentMessage {
-  kind: "getSnapshot" | "postEvents" | "flushNow" | "openDashboard" | "status";
+  kind: "getSnapshot" | "postEvents" | "flushNow" | "openDashboard" | "cachedStatus" | "status";
   events?: ExposureEvent[];
   itemId?: string;
+  destination?: OpenDashboardRequest["destination"];
 }
 
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -98,26 +100,59 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       void queue.flush().then((ok) => sendResponse({ ok }));
       return true;
     case "openDashboard":
-      void transport.call("openDashboard", { itemId: msg.itemId }).then(() => sendResponse({ ok: true }));
+      void transport
+        .call("openDashboard", { itemId: msg.itemId, destination: msg.destination } satisfies OpenDashboardRequest)
+        .then((response) => {
+          sendResponse(isSyncError(response)
+            ? { ok: false, error: response.detail ?? response.error }
+            : { ok: true });
+        });
       return true;
-    case "status":
-      // Active probe: a popup open is rare and user-initiated, so spend one
-      // native round-trip to report the truth of THIS moment — not the last
-      // remembered flag.
-      void (async () => {
-        if ((await queue.pending()) > 0) {
-          await queue.flush();
-        } else {
-          await snapshots.refreshIfStale();
-        }
-        const [pending, snapshot] = await Promise.all([queue.pending(), snapshots.cached()]);
+    case "cachedStatus":
+      // Popup first paint must be local-only. Safari can render this while a
+      // live native probe proceeds, even with hundreds of queued events.
+      void Promise.all([
+        queue.pending(),
+        snapshots.cached(),
+        transport.cacheGet<GetOverviewResponse>(OVERVIEW_CACHE_KEY),
+      ]).then(([pending, snapshot, overview]) => {
         sendResponse({
           appUnavailable,
           lastSyncError,
           pendingEvents: pending,
           snapshotVersion: snapshot?.version ?? null,
           activeWords: snapshot?.items.length ?? 0,
+          overview: overview ?? null,
+          isCached: true,
         });
+      });
+      return true;
+    case "status":
+      // Active probe: a popup open is rare and user-initiated, so spend one
+      // native round-trip to report the truth of THIS moment — not the last
+      // remembered flag.
+      void (async () => {
+        const [pending, snapshot, overviewReply] = await Promise.all([
+          queue.pending(),
+          snapshots.cached(),
+          transport.call<GetOverviewResponse>("getOverview"),
+        ]);
+        const overview = isSyncError(overviewReply) ? null : overviewReply;
+        if (overview) await transport.cachePut(OVERVIEW_CACHE_KEY, overview);
+        sendResponse({
+          appUnavailable,
+          lastSyncError,
+          pendingEvents: pending,
+          snapshotVersion: snapshot?.version ?? null,
+          activeWords: snapshot?.items.length ?? 0,
+          overview,
+          isCached: false,
+        });
+
+        // These maintenance calls are intentionally detached from popup
+        // rendering. A large event queue should never become UI latency.
+        void queue.flush();
+        void snapshots.refreshIfStale();
       })();
       return true;
   }

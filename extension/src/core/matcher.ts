@@ -73,8 +73,8 @@ export class Matcher {
   }
 }
 
-/** Sentence-start capitalization: "The house" → "Das Haus". German noun
- * capitalization comes from the display form itself. */
+/** Mirror source sentence-start capitalization. Inherent target-language
+ * capitalization comes from the authored display form itself. */
 export function applyCapitalization(source: string, display: string): string {
   if (source.length > 0 && source[0] === source[0].toUpperCase() && /[a-z]/i.test(source[0])) {
     return display[0].toUpperCase() + display.slice(1);

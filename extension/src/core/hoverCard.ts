@@ -2,13 +2,13 @@ import type { SnapshotItem } from "./types";
 
 // Floating hover card: open on hover/focus, 90ms grace on out, click pins,
 // Escape closes, repositions on scroll/resize. The card ALWAYS shows the
-// original English (fidelity transparency requirement 2). Buttons appear
+// original source text (fidelity transparency requirement 2). Buttons appear
 // only if functional (P4): v1 ships exactly one — "Open in Cockatoo".
 
 export const CLOSE_DELAY_MS = 90;
 
 export interface HoverCardDelegate {
-  openDashboard(itemId: string): void;
+  openDashboard(itemId: string): Promise<boolean>;
 }
 
 export class HoverCard {
@@ -73,32 +73,57 @@ export class HoverCard {
     // The ground truth is one hover away, on every token, forever.
     const original = this.doc.createElement("div");
     original.className = "cck-hovercard-original";
-    original.textContent = `English: ${token.dataset.cckOriginal ?? ""}`;
+    original.textContent = `Original: ${token.dataset.cckOriginal ?? ""}`;
     card.append(original);
+
+    const details = this.doc.createElement("details");
+    details.className = "cck-hovercard-details";
+    details.addEventListener("toggle", () => this.reposition());
+
+    const summary = this.doc.createElement("summary");
+    summary.textContent = "Details";
+    details.append(summary);
+
+    const detailBody = this.doc.createElement("div");
+    detailBody.className = "cck-hovercard-detail-body";
 
     if (item.hover.pos) {
       const pos = this.doc.createElement("div");
       pos.className = "cck-hovercard-pos";
       pos.textContent = item.hover.pos;
-      card.append(pos);
+      detailBody.append(pos);
     }
 
     if (item.hover.example) {
       const example = this.doc.createElement("div");
       example.className = "cck-hovercard-example";
       example.textContent = `${item.hover.example.target} — ${item.hover.example.source}`;
-      card.append(example);
+      detailBody.append(example);
     }
 
     const seen = this.doc.createElement("div");
     seen.className = "cck-hovercard-seen";
     seen.textContent = `Seen ${item.hover.seenCount} times`;
-    card.append(seen);
+    detailBody.append(seen);
+    details.append(detailBody);
+    card.append(details);
 
     const openButton = this.doc.createElement("button");
     openButton.className = "cck-hovercard-open";
     openButton.textContent = "Open in Cockatoo";
-    openButton.addEventListener("click", () => this.delegate.openDashboard(item.id));
+    openButton.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openButton.disabled = true;
+      openButton.textContent = "Opening…";
+      const opened = await this.delegate.openDashboard(item.id).catch(() => false);
+      if (opened) {
+        openButton.textContent = "Opened";
+      } else {
+        openButton.textContent = "Couldn’t open — retry";
+        openButton.disabled = false;
+      }
+    });
     card.append(openButton);
 
     return card;

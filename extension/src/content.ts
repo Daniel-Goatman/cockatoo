@@ -49,8 +49,11 @@ async function main(): Promise<void> {
   });
 
   const hoverCard = new HoverCard(document, {
-    openDashboard(itemId) {
-      void browser.runtime.sendMessage({ kind: "openDashboard", itemId });
+    async openDashboard(itemId) {
+      const reply = (await browser.runtime
+        .sendMessage({ kind: "openDashboard", itemId, destination: "library" })
+        .catch(() => null)) as { ok?: boolean } | null;
+      return reply?.ok === true;
     },
   });
 

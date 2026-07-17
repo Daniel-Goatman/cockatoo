@@ -1,35 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <style>
-    body {
-      font: 14px/1.5 "Newsreader", "Iowan Old Style", Georgia, serif;
-      margin: 0; padding: 16px; width: 270px;
-      background: #fffaf0; color: #1f1a14;
-    }
-    h1 {
-      font-size: 17px; font-weight: 600; margin: 0 0 6px;
-      color: #8a4a26; letter-spacing: -0.01em;
-    }
-    #status { color: #4a3f30; }
-    #warning { color: #6e2e2e; margin-top: 8px; display: none; }
-    button {
-      margin-top: 12px; width: 100%;
-      font: 600 13px "Newsreader", Georgia, serif;
-      padding: 8px 12px; border-radius: 7px; border: none; cursor: pointer;
-      background: #f2ecdb; color: #1f1a14;
-      box-shadow: inset 0 1px 0 rgba(255, 250, 235, 0.6), inset 0 -1px 0 rgba(120, 95, 60, 0.10);
-    }
-    button:hover { background: #ebe4cd; }
-    button:active { transform: translateY(1px); }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <h1>Cockatoo</h1>
-  <div id="status">Checking…</div>
-  <div id="warning">Cockatoo isn't running — progress is being saved locally and will sync when it's back.</div>
-  <button id="open">Open Cockatoo</button>
-  <script src="build/popup.js"></script>
+  <main class="popup-shell">
+    <header class="brand-row">
+      <div class="brand">
+        <span class="crest" aria-hidden="true"></span>
+        <span>COCKATOO</span>
+      </div>
+      <div class="connection" aria-live="polite">
+        <span id="connection-dot" class="connection-dot checking" aria-hidden="true"></span>
+        <span id="connection-label">Checking</span>
+      </div>
+    </header>
+
+    <section class="language-block" aria-labelledby="language">
+      <p class="eyebrow">CURRENT LANGUAGE</p>
+      <h1 id="language">Language pack</h1>
+      <p id="status" class="status-copy">Checking your library…</p>
+    </section>
+
+    <section id="stats" class="stats" aria-label="Learning overview" hidden>
+      <div class="stat"><strong id="due-stat">0</strong><span>Due now</span></div>
+      <div class="stat"><strong id="new-stat">0</strong><span>New</span></div>
+      <div class="stat"><strong id="library-stat">0</strong><span>Library</span></div>
+      <div class="stat"><strong id="known-stat">0</strong><span>Known</span></div>
+    </section>
+
+    <p id="warning" class="warning" role="status" hidden>
+      The app is closed. Browsing events stay on this Mac and will sync next time Cockatoo opens.
+    </p>
+
+    <div class="actions">
+      <button id="practice" class="button primary" hidden>Practice words</button>
+      <button id="open" class="button secondary">Open Cockatoo</button>
+    </div>
+
+    <p id="sync-detail" class="sync-detail"></p>
+  </main>
+  <script type="module" src="build/popup.js"></script>
 </body>
 </html>

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ExposureEvent, MessageEnvelope, PostEventsResponse, Snapshot, SyncErrorResponse } from "../src/core/types";
+import type {
+  ExposureEvent,
+  GetOverviewResponse,
+  MessageEnvelope,
+  PostEventsResponse,
+  Snapshot,
+  SyncErrorResponse,
+} from "../src/core/types";
 import { buildEnvelope } from "../src/core/types";
 import { Matcher } from "../src/core/matcher";
 
@@ -24,12 +31,26 @@ describe("protocol fixtures", () => {
   });
 
   it("envelope.json matches what the transport actually builds", () => {
-    const fixture = load<{ withPayload: MessageEnvelope; withoutPayload: MessageEnvelope }>("envelope.json");
+    const fixture = load<{
+      withPayload: MessageEnvelope;
+      withoutPayload: MessageEnvelope;
+      openPractice: MessageEnvelope;
+      openLibraryItem: MessageEnvelope;
+    }>("envelope.json");
     expect(buildEnvelope("getSnapshot", { sinceVersion: 412 })).toEqual(fixture.withPayload);
     expect(buildEnvelope("getSettings")).toEqual(fixture.withoutPayload);
+    expect(buildEnvelope("openDashboard", { destination: "practice" })).toEqual(fixture.openPractice);
+    expect(buildEnvelope("openDashboard", { itemId: "de:jetzt", destination: "library" })).toEqual(fixture.openLibraryItem);
     // The payload is JSON TEXT (string), never base64/object — the Swift
     // side decodes exactly this shape (ProtocolFixtureTests).
     expect(typeof fixture.withPayload.payload).toBe("string");
+  });
+
+  it("overview.json carries only Swift-computed popup facts", () => {
+    const overview = load<GetOverviewResponse>("overview.json");
+    expect(overview.activeLanguage).toBe("de");
+    expect(overview.availablePracticeItems).toBe(5);
+    expect(overview.knownCount).toBe(11);
   });
 
   it("postEvents.json request/response/error decode", () => {
